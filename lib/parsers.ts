@@ -189,6 +189,89 @@ export function detectDocumentType(text: string): DocumentType {
   return "inconnu";
 }
 
+// ─── Parser DossierFacile Connect (profil JSON) ───────────────────────────────
+
+/**
+ * Mappe le profil JSON retourné par l'API DossierFacile
+ * (GET /dfc/tenant/profile) vers DossierLocataire.
+ *
+ * Champs DossierFacile → BailBot :
+ *   profile.firstName          → prenom
+ *   profile.lastName           → nom
+ *   profile.email              → (non stocké dans DossierLocataire, ignoré)
+ *   profile.documents[]        → documents par type (IDENTITY, FINANCIAL, etc.)
+ *   profile.apartmentSharing   → (partenaires, ignoré pour l'instant)
+ *
+ * Référence API : https://dossierfacile.logement.gouv.fr/partenaires
+ *
+ * @param profile - Objet JSON brut de l'API DossierFacile
+ * @returns Partial<DossierLocataire> pré-rempli (champs manquants = "")
+ */
+export function parseDossierFacileProfile(profile: any): Partial<DossierLocataire> {
+  if (!profile || typeof profile !== "object") return {};
+
+  // ─── Identité ─────────────────────────────────────────────────────────────
+  const nom: string = profile.lastName ?? profile.last_name ?? "";
+  const prenom: string = profile.firstName ?? profile.first_name ?? "";
+
+  // ─── Documents indexés par type ──────────────────────────────────────────
+  const docs: any[] = Array.isArray(profile.documents) ? profile.documents : [];
+
+  // Identité (CNI, passeport) — peut contenir une adresse
+  const identityDoc = docs.find((d: any) =>
+    d.documentCategory === "IDENTITY" || d.documentSubCategory === "FRENCH_IDENTITY_CARD"
+  );
+  const adresseActuelle: string = identityDoc?.address ?? "";
+  const numeroCNI: string = identityDoc?.documentNumber ?? identityDoc?.idDocumentNumber ?? "";
+  const nationalite: string = identityDoc?.nationality ?? "Française";
+  const dateNaissance: string = identityDoc?.birthDate ?? identityDoc?.birth_date ?? "";
+
+  // Financier (bulletin de paie, avis d'imposition)
+  const financialDoc = docs.find((d: any) => d.documentCategory === "FINANCIAL");
+  const salaireNetMensuelRaw: number =
+    financialDoc?.monthlySum ?? financialDoc?.monthly_sum ?? 0;
+  const salaireNetMensuel: number = Number(salaireNetMensuelRaw) || 0;
+
+  // Professionnel (contrat de travail, attestation employeur)
+  const professionalDoc = docs.find((d: any) => d.documentCategory === "PROFESSIONAL");
+  const employeur: string = professionalDoc?.employerName ?? professionalDoc?.employer_name ?? "";
+  const typeContrat: string =
+    professionalDoc?.typeEmployment ??
+    professionalDoc?.type_employment ??
+    professionalDoc?.contractType ??
+    "";
+
+  // Résidence (justificatif de domicile)
+  const residencyDoc = docs.find((d: any) => d.documentCategory === "RESIDENCY");
+  const adresseDomicile: string = residencyDoc?.address ?? adresseActuelle;
+
+  // Situation fiscale via apartmentSharing (info sur le dossier global)
+  const sharing = profile.apartmentSharing ?? {};
+  const situationFiscale: string = sharing.applicationType ?? "";
+
+  return {
+    nom: clean(nom),
+    prenom: clean(prenom),
+    dateNaissance,
+    adresseActuelle: clean(adresseActuelle),
+    numeroCNI,
+    nationalite: clean(nationalite) || "Française",
+    employeur: clean(employeur),
+    salaireNetMensuel,
+    typeContrat: typeContrat.toUpperCase(),
+    anciennete: "",       // Non fourni par l'API DossierFacile
+    revenusN1: 0,         // Calcul à partir de monthlySum * 12 si besoin
+    revenusN2: 0,
+    nombreParts: 1,
+    situationFiscale: clean(situationFiscale),
+    iban: "",             // Non fourni par l'API DossierFacile
+    bic: "",
+    titulaireCompte: "",
+    banque: "",
+    adresseDomicile: clean(adresseDomicile),
+  };
+}
+
 export function parseDossier(text: string, forceType?: DocumentType): Partial<DossierLocataire> {
   const type = forceType || detectDocumentType(text);
   switch (type) {

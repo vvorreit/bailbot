@@ -3,9 +3,11 @@
 import { useState, useCallback, useEffect } from "react";
 import DropZone from "@/components/DropZone";
 import DossierForm from "@/components/DossierForm";
+import DossierFacileButton from "@/components/DossierFacileButton";
 import { processDocument } from "@/lib/ocr";
 import {
   parseDossier,
+  parseDossierFacileProfile,
   detectDocumentType,
   DossierLocataire,
   DocumentType,
@@ -68,6 +70,49 @@ export default function Dashboard() {
   const [isStripeLoading, setIsStripeLoading] = useState<string | null>(null);
   const [rawText, setRawText] = useState<Partial<Record<DropType, string>>>({});
   const [showRaw, setShowRaw] = useState<DropType | null>(null);
+
+  // ─── DossierFacile Connect ─────────────────────────────────────────────────
+  // dossierFacileEnabled : true si les env vars sont configurées côté serveur
+  // (exposé via NEXT_PUBLIC_ pour le rendu conditionnel du bouton)
+  const dossierFacileEnabled = Boolean(process.env.NEXT_PUBLIC_DOSSIERFACILE_ENABLED === "true");
+  const [dfImportStatus, setDfImportStatus] = useState<"idle" | "loaded" | "error">("idle");
+
+  useEffect(() => {
+    // Lit le cookie df_profile posé par le callback OAuth après redirection
+    // et applique le parseur pour pré-remplir le formulaire
+    const params = new URLSearchParams(window.location.search);
+    const dossierParam = params.get("dossier");
+
+    if (dossierParam === "loaded") {
+      try {
+        // Lit le cookie df_profile (httpOnly: false → lisible côté JS)
+        const match = document.cookie.match(/(?:^|; )df_profile=([^;]*)/);
+        if (match) {
+          const profile = JSON.parse(decodeURIComponent(match[1]));
+          const parsed = parseDossierFacileProfile(profile);
+          setDossier((prev) => ({ ...prev, ...parsed }));
+          setDfImportStatus("loaded");
+
+          // Supprime le cookie après lecture (usage unique)
+          document.cookie = "df_profile=; Max-Age=0; path=/";
+        }
+      } catch (err) {
+        console.error("[DossierFacile] Cookie parse error:", err);
+        setDfImportStatus("error");
+      }
+
+      // Nettoie le query param sans recharger la page
+      const url = new URL(window.location.href);
+      url.searchParams.delete("dossier");
+      window.history.replaceState({}, "", url.toString());
+    } else if (dossierParam === "error") {
+      setDfImportStatus("error");
+      const url = new URL(window.location.href);
+      url.searchParams.delete("dossier");
+      url.searchParams.delete("reason");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, []);
 
   const [userData, setUserData] = useState<{
     clientCount: number;
@@ -298,6 +343,36 @@ export default function Dashboard() {
 
           {/* Main Area */}
           <div className="lg:col-span-2 space-y-6">
+            {/* ─── DossierFacile Connect ─────────────────────────────────── */}
+            {/* Section visible uniquement si NEXT_PUBLIC_DOSSIERFACILE_ENABLED=true */}
+            {(dossierFacileEnabled || process.env.NODE_ENV === "development") && (
+              <div className="bg-white border border-slate-100 rounded-2xl p-5 space-y-3 shadow-sm">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div>
+                    <p className="text-sm font-bold text-slate-800">Import DossierFacile</p>
+                    <p className="text-xs text-slate-500">
+                      Pré-remplissez le dossier automatiquement depuis DossierFacile
+                    </p>
+                  </div>
+                  <DossierFacileButton />
+                </div>
+
+                {/* Statut d'import */}
+                {dfImportStatus === "loaded" && (
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
+                    <span>✅</span>
+                    <span>Dossier importé depuis DossierFacile — Vérifiez et validez les données</span>
+                  </div>
+                )}
+                {dfImportStatus === "error" && (
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold">
+                    <span>⚠️</span>
+                    <span>Échec de l'import DossierFacile. Réessayez ou utilisez l'OCR ci-dessous.</span>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Drop Zones — 2 colonnes */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {dropZones.map(({ type, label, icon }) => (
