@@ -38,6 +38,15 @@
       "css": [
         "content.css"
       ]
+    },
+    {
+      "matches": [
+        "https://certificate.garantme.fr/demande-garantie-definitive*"
+      ],
+      "js": [
+        "garantme.js"
+      ],
+      "run_at": "document_idle"
     }
   ]
 }

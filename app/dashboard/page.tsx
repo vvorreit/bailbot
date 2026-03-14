@@ -184,6 +184,22 @@ export default function Dashboard() {
     setVisaleResult(result);
   }, [dossier, loyerMensuel, villeEstParis, hasVisaleData]);
 
+  // Synchronise le dossier actif avec l'extension Chrome BailBot via postMessage
+  useEffect(() => {
+    if (hasDossier) {
+      const payload = {
+        locataire: dossier,
+        agence: userData?.profile || {},
+        bail: {
+          loyerHC: loyerMensuel ? parseFloat(loyerMensuel) : undefined,
+        },
+        bailleur: {},
+        certificatGarantMe: "",
+      };
+      window.postMessage({ type: "BAILBOT_DOSSIER", payload }, "*");
+    }
+  }, [dossier, userData, loyerMensuel, hasDossier]);
+
   const handleFile = useCallback(
     async (file: File, type: DropType) => {
       if (isLimitReached) {
