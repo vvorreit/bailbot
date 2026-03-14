@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import DropZone from "@/components/DropZone";
 import DossierForm from "@/components/DossierForm";
 import DossierFacileButton from "@/components/DossierFacileButton";
+import EligibiliteVisaleCard from "@/components/EligibiliteVisaleCard";
 import { processDocument } from "@/lib/ocr";
 import {
   parseDossier,
@@ -12,6 +13,7 @@ import {
   DossierLocataire,
   DocumentType,
 } from "@/lib/parsers";
+import { calculerEligibiliteVisale, EligibiliteVisale } from "@/lib/eligibilite-visale";
 import { STATIC_BOOKMARKLET } from "@/lib/autofill";
 import {
   getUserDashboardData,
@@ -70,6 +72,11 @@ export default function Dashboard() {
   const [isStripeLoading, setIsStripeLoading] = useState<string | null>(null);
   const [rawText, setRawText] = useState<Partial<Record<DropType, string>>>({});
   const [showRaw, setShowRaw] = useState<DropType | null>(null);
+
+  // ─── Éligibilité Visale ────────────────────────────────────────────────────
+  const [loyerMensuel, setLoyerMensuel] = useState<string>("");
+  const [villeEstParis, setVilleEstParis] = useState<boolean>(false);
+  const [visaleResult, setVisaleResult] = useState<EligibiliteVisale | null>(null);
 
   // ─── DossierFacile Connect ─────────────────────────────────────────────────
   // dossierFacileEnabled : true si les env vars sont configurées côté serveur
@@ -162,6 +169,20 @@ export default function Dashboard() {
   };
 
   const hasDossier = Object.values(dossier).some((v) => v !== "" && v !== 0 && v !== undefined);
+
+  // Données minimales pour Visale : CNI (dateNaissance) + bulletin (salaireNetMensuel)
+  const hasVisaleData = Boolean(dossier.dateNaissance && dossier.salaireNetMensuel);
+
+  // Recalcule l'éligibilité Visale chaque fois que loyer, ville ou dossier changent
+  useEffect(() => {
+    const loyer = parseFloat(loyerMensuel);
+    if (!hasVisaleData || !loyerMensuel || isNaN(loyer) || loyer <= 0) {
+      setVisaleResult(null);
+      return;
+    }
+    const result = calculerEligibiliteVisale(dossier, loyer, villeEstParis);
+    setVisaleResult(result);
+  }, [dossier, loyerMensuel, villeEstParis, hasVisaleData]);
 
   const handleFile = useCallback(
     async (file: File, type: DropType) => {
@@ -428,6 +449,45 @@ export default function Dashboard() {
           {/* Sidebar */}
           <div className="space-y-6">
             <BookmarkletInstallButton />
+
+            {/* ─── Loyer mensuel + Éligibilité Visale ──────────────────── */}
+            {(hasVisaleData || hasDossier) && (
+              <div className="bg-white border border-slate-100 rounded-2xl p-5 space-y-4 shadow-sm">
+                <p className="text-sm font-bold text-slate-800">Loyer mensuel</p>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-slate-500 shrink-0">Charges comprises :</label>
+                    <div className="flex items-center gap-1 flex-1">
+                      <input
+                        type="number"
+                        min={0}
+                        placeholder="ex. 850"
+                        value={loyerMensuel}
+                        onChange={(e) => setLoyerMensuel(e.target.value)}
+                        className="flex-1 min-w-0 border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                      />
+                      <span className="text-sm font-semibold text-slate-500">€</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-slate-500 shrink-0">Ville :</label>
+                    <select
+                      value={villeEstParis ? "paris" : "autre"}
+                      onChange={(e) => setVilleEstParis(e.target.value === "paris")}
+                      className="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white"
+                    >
+                      <option value="autre">Autre (plafond 1 500 €)</option>
+                      <option value="paris">Paris / IDF (plafond 1 800 €)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <EligibiliteVisaleCard
+              result={loyerMensuel && parseFloat(loyerMensuel) > 0 ? visaleResult : null}
+              hasData={hasVisaleData && Boolean(loyerMensuel) && parseFloat(loyerMensuel) > 0}
+            />
 
             {hasDossier && (
               <div className="p-8 rounded-[32px] shadow-xl space-y-6 bg-emerald-600 shadow-emerald-200">
