@@ -1,0 +1,56 @@
+services:
+  app:
+    image: ghcr.io/vvorreit/optibot:latest   # image pré-compilée via CI/CD
+    build: .                                   # utilisé uniquement en local (docker compose build)
+    container_name: optibot-app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://optibot_user:optibot_password@db:5432/optibot_prod
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+      - NODE_ENV=production
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      # Email transactionnel (Resend)
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - SMTP_FROM=${SMTP_FROM}
+      # LBO credentials (server-side uniquement)
+      - LBO_LOGIN=${LBO_LOGIN}
+      - LBO_PASSWORD=${LBO_PASSWORD}
+      # Stripe
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+      - STRIPE_PRICE_SOLO=${STRIPE_PRICE_SOLO}
+      - STRIPE_PRICE_DUO=${STRIPE_PRICE_DUO}
+      - STRIPE_PRICE_SOLO_AMOUNT=${STRIPE_PRICE_SOLO_AMOUNT}
+      - STRIPE_PRICE_DUO_AMOUNT=${STRIPE_PRICE_DUO_AMOUNT}
+      # Limites
+      - NEXT_PUBLIC_FREE_LIMIT=${NEXT_PUBLIC_FREE_LIMIT}
+    depends_on:
+      - db
+    networks:
+      - optibot-network
+
+  db:
+    image: postgres:16-alpine
+    container_name: optibot-db
+    restart: always
+    environment:
+      POSTGRES_USER: optibot_user
+      POSTGRES_PASSWORD: optibot_password
+      POSTGRES_DB: optibot_prod
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - optibot-network
+
+volumes:
+  postgres_data:
+
+networks:
+  optibot-network:
+    driver: bridge

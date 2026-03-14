@@ -1,0 +1,120 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  @db.Text
+  access_token       String?  @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?  @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+
+  password      String?   // null pour les comptes OAuth (Google, etc.)
+
+  // --- OptiBot Core ---
+  clientCount   Int       @default(0)
+  isPro         Boolean   @default(false)
+  role          String    @default("USER") // Global role: USER or ADMIN (System Admin)
+  
+  // --- Team ---
+  teamId        String?
+  team          Team?     @relation(fields: [teamId], references: [id])
+  teamRole      String?   @default("MEMBER") // OWNER, ADMIN, MEMBER
+  invitationsSent Invitation[]
+
+  syncToken     String?   @unique @default(cuid())
+
+  passwordChangedAt DateTime?
+
+  // --- Plan ---
+  plan          String    @default("FREE") // FREE, SOLO, DUO
+
+  // --- Stripe (Personal) ---
+  stripeCustomerId       String?   @unique
+  stripeSubscriptionId   String?   @unique
+
+  createdAt     DateTime  @default(now())
+  lastActiveAt  DateTime  @default(now())
+
+  @@index([teamId])
+  @@index([role])
+  @@index([createdAt])
+}
+
+model Team {
+  id            String    @id @default(cuid())
+  name          String
+  ownerId       String    // References User.id (logic enforced, not FK to avoid cycle/complexity initially, or we can make it FK)
+  
+  // --- Stripe (Team) ---
+  stripeCustomerId       String?   @unique
+  stripeSubscriptionId   String?   @unique
+  plan                   String    @default("FREE") // FREE, PRO, ENTERPRISE
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  users         User[]
+  invitations   Invitation[]
+
+  @@index([ownerId])
+}
+
+model Invitation {
+  id            String    @id @default(cuid())
+  email         String
+  token         String    @unique
+  role          String    @default("MEMBER")
+  expires       DateTime
+  
+  teamId        String
+  team          Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  inviterId     String
+  inviter       User      @relation(fields: [inviterId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, email])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}

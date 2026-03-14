@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { width: 320px; padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f9fafb; color: #1f2937; margin: 0; }
+    .container { display: flex; flex-direction: column; gap: 12px; }
+    h2 { color: #2563eb; font-size: 18px; margin: 0; display: flex; align-items: center; gap: 8px; }
+    .card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .section-title { font-weight: 600; font-size: 13px; color: #4b5563; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .data-item { font-size: 12px; margin-bottom: 4px; display: flex; border-bottom: 1px solid #f3f4f6; padding-bottom: 4px; }
+    .data-label { color: #6b7280; width: 80px; flex-shrink: 0; }
+    .data-value { font-weight: 500; color: #111827; word-break: break-all; }
+    .no-data { font-style: italic; color: #9ca3af; text-align: center; padding: 10px; font-size: 12px; }
+    .status { background: #eff6ff; padding: 8px 12px; border-radius: 6px; font-size: 12px; color: #1e40af; border: 1px solid #bfdbfe; line-height: 1.4; }
+    .clear-btn { font-size: 11px; background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; padding: 2px 8px; border-radius: 4px; cursor: pointer; }
+    .edit-btn { font-size: 11px; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; padding: 2px 8px; border-radius: 4px; cursor: pointer; margin-right: 4px; }
+    .save-btn { font-size: 11px; background: #2563eb; color: white; border: 1px solid #1d4ed8; padding: 2px 8px; border-radius: 4px; cursor: pointer; margin-right: 4px; }
+    .cancel-btn { font-size: 11px; background: white; color: #374151; border: 1px solid #d1d5db; padding: 2px 8px; border-radius: 4px; cursor: pointer; }
+    
+    .edit-input { width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 2px 6px; font-size: 12px; font-family: inherit; box-sizing: border-box; }
+    .edit-input:focus { outline: 2px solid #2563eb; border-color: transparent; }
+    .data-item.editing { padding-top: 4px; padding-bottom: 8px; flex-direction: column; gap: 4px; }
+    .data-item.editing .data-label { width: 100%; margin-bottom: 2px; font-weight: 600; }
+    
+    .actions-group { display: flex; align-items: center; }
+    .tag { display: inline-block; padding: 2px 6px; border-radius: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; background: #dcfce7; color: #166534; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>OptiBot Pro 🤖</h2>
+    
+    <div id="data-container">
+      <!-- Les données seront injectées ici -->
+      <div class="no-data">Chargement des données...</div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Instructions</div>
+      <div class="status">
+        1. Copiez vos données depuis l'application OptiBot.<br>
+        2. Les données apparaîtront ici automatiquement.<br>
+        3. Ouvrez un formulaire client pour l'auto-remplissage.
+      </div>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

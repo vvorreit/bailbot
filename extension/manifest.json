@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "BailBot",
+  "version": "1.0",
+  "description": "Auto-saisie dossiers locataires — Visale, GarantMe, DossierFacile (à venir).",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "bailbot-extension@vvorreit.fr"
+    }
+  },
+  "permissions": [
+    "clipboardRead",
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://*.visale.fr/*",
+    "https://*.garantme.fr/*",
+    "https://*.unkle.fr/*",
+    "https://*.periimmo.com/*",
+    "https://*.dossierfacile.logement.gouv.fr/*"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.visale.fr/*",
+        "https://*.garantme.fr/*",
+        "https://*.unkle.fr/*",
+        "https://*.periimmo.com/*",
+        "https://*.dossierfacile.logement.gouv.fr/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ]
+    }
+  ]
+}
