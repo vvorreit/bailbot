@@ -1,11 +1,10 @@
-import { createWorker } from "tesseract.js";
-
 // ── Image → texte via Tesseract ───────────────────────────────────────────────
 
 export async function extractTextFromImage(
   file: File,
   onProgress?: (progress: number) => void
 ): Promise<string> {
+  const { createWorker } = await import("tesseract.js");
   const worker = await createWorker("fra+eng", 1, {
     logger: (m) => {
       if (m.status === "recognizing text" && onProgress) {

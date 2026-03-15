@@ -132,7 +132,7 @@ function SignInForm() {
             onClick={() => signIn("google", { callbackUrl })}
             className="w-full flex items-center justify-center gap-4 py-4 px-6 bg-white border-2 border-slate-100 rounded-2xl text-slate-900 font-bold hover:bg-slate-50 hover:border-emerald-100 transition-all shadow-sm active:scale-95"
           >
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" loading="lazy" />
             Continuer avec Google
           </button>
 

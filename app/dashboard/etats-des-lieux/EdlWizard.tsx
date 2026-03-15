@@ -642,7 +642,7 @@ function StepPieces({
                   <div className="flex items-center gap-2 flex-wrap">
                     {elem.photos.map((photo, phi) => (
                       <div key={phi} className="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-200">
-                        <img src={photo} alt="" className="w-full h-full object-cover" />
+                        <img src={photo} alt="" className="w-full h-full object-cover" loading="lazy" />
                         <button
                           onClick={() => removePhoto(pi, ei, phi)}
                           className="absolute top-0 right-0 bg-red-500 text-white rounded-bl-lg p-0.5"
@@ -803,7 +803,7 @@ function StepCompteurs({
         <div className="flex items-center gap-2 flex-wrap">
           {photos.map((photo, i) => (
             <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-slate-200">
-              <img src={photo} alt="" className="w-full h-full object-cover" />
+              <img src={photo} alt="" className="w-full h-full object-cover" loading="lazy" />
               <button
                 onClick={() => onPhotosChange(photos.filter((_, j) => j !== i))}
                 className="absolute top-0 right-0 bg-red-500 text-white rounded-bl-lg p-0.5"
