@@ -62,6 +62,9 @@ export const FEATURES = {
 
   // ESPACE LOCATAIRE
   ESPACE_LOCATAIRE:       ['AGENCE', 'GESTIONNAIRE'],
+
+  // COPROPRIETE
+  ANALYSE_COPRO:          ['PROPRIETAIRE', 'AGENCE', 'GESTIONNAIRE'],
 } as const
 
 export type Feature = keyof typeof FEATURES

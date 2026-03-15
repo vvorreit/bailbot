@@ -75,6 +75,7 @@ export default function NavMenu() {
     { href: "/dashboard/etats-des-lieux", label: "États des lieux", icon: ClipboardList, show: hasAccess(metier, "ETAT_DES_LIEUX") },
     { href: "/dashboard/comptabilite", label: "Comptabilité", icon: Calculator, show: hasAccess(metier, "COMPTABILITE_FISCALE") },
     { href: "/dashboard/espaces-locataires", label: "Locataires", icon: Home, show: hasAccess(metier, "ESPACE_LOCATAIRE") },
+    { href: "/dashboard/copro", label: "Copropriété", icon: Building2, show: hasAccess(metier, "ANALYSE_COPRO") },
     { href: "/dashboard/stats", label: "Statistiques", icon: BarChart2, show: hasAccess(metier, "STATS_DASHBOARD") },
     { href: "/dashboard/team", label: "Mon équipe", icon: Users, show: showTeam && hasAccess(metier, "MULTI_USERS") },
     { href: "/dashboard/depot", label: "Dépôt locataire", icon: Upload, show: true },
