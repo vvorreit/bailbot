@@ -99,8 +99,8 @@ export default function DossierModal({ candidature, bien, onClose, onUpdated, on
   const handleArchive = async () => {
     setArchiveLoading(true);
     try {
-      const { genererArchiveDossier } = await import('@/lib/archive-dossier');
-      await genererArchiveDossier(candidature, bien);
+      const { genererArchiveMulti } = await import('@/lib/archive-dossier');
+      await genererArchiveMulti(candidature, bien);
     } finally {
       setArchiveLoading(false);
     }
