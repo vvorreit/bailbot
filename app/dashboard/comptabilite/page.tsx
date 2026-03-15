@@ -30,6 +30,7 @@ import {
   type ConfigFiscalBien,
 } from "@/lib/recapitulatif-fiscal";
 import { getTransactionsAnnuelles } from "@/app/actions/export-transactions";
+import { getRecapFiscal } from "@/app/actions/recap-fiscal";
 import { generateCSV as buildCSV } from "@/lib/export-csv";
 
 /* ─── localStorage helpers pour persister les configs fiscales ──────────── */
@@ -147,6 +148,18 @@ function ComptabiliteContent() {
     a.click();
     URL.revokeObjectURL(url);
   }, [biens, paiements, annee]);
+
+  /* Export PDF fiscal 2044 */
+  const handlePDFFiscal2044 = useCallback(async () => {
+    const data = await getRecapFiscal(biens, paiements, configs, annee);
+    const { genererPDFFiscal2044 } = await import("@/lib/pdf-fiscal");
+    const nomProprietaire = (() => {
+      try { return JSON.parse(localStorage.getItem('bailbot_infos_bailleur') || '{}').nomBailleur || ''; }
+      catch { return ''; }
+    })();
+    const doc = genererPDFFiscal2044(data, nomProprietaire, annee);
+    doc.save(`recap-fiscal-2044-${annee}.pdf`);
+  }, [biens, paiements, configs, annee]);
 
   /* Export transactions Excel */
   const handleTransactionsExcel = useCallback(async () => {
@@ -286,12 +299,21 @@ function ComptabiliteContent() {
       {/* Tableau récap */}
       <RecapFiscalAnnuel recap={recap} onConfigChange={handleConfigChange} />
 
-      {/* Info export 2044 */}
+      {/* Info export 2044 + bouton PDF fiscal */}
       {recap.biens.length > 0 && (
         <div className="mt-6 bg-blue-50 border border-blue-100 rounded-2xl p-5">
-          <p className="text-sm text-blue-800 font-bold mb-1">
-            Préparer votre déclaration fiscale
-          </p>
+          <div className="flex items-center justify-between gap-4 mb-2">
+            <p className="text-sm text-blue-800 font-bold">
+              Préparer votre déclaration fiscale
+            </p>
+            <button
+              onClick={handlePDFFiscal2044}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 rounded-xl text-sm font-bold text-white hover:bg-blue-700 transition-colors shrink-0"
+            >
+              <FileText className="w-4 h-4" />
+              Télécharger PDF fiscal {annee}
+            </button>
+          </div>
           <p className="text-xs text-blue-600">
             Exportez le CSV et transmettez-le à votre comptable pour
             pré-remplir le formulaire 2044 (revenus fonciers) ou 2042-C-PRO
