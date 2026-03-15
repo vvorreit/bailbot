@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { X, Download, Trash2, ChevronDown, Package, FileText, Receipt, Banknote } from 'lucide-react';
+import { PrerequisButton } from '@/components/ui/PrerequisList';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import Link from 'next/link';
 import GenerateurBailModal from './GenerateurBailModal';
@@ -273,15 +274,15 @@ export default function DossierModal({ candidature, bien, onClose, onUpdated, on
             visaleResult={visaleResult}
             compact
           />
-          {dossier?.nom && (
-            <button
-              onClick={() => setShowBailModal(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 transition-colors"
-            >
-              <FileText aria-hidden="true" className="w-4 h-4" />
-              📄 Générer le bail
-            </button>
-          )}
+          <PrerequisButton
+            items={[
+              { label: "Nom du locataire", met: Boolean(dossier?.nom) },
+              { label: "Loyer defini", met: loyer > 0 },
+            ]}
+            onClick={() => setShowBailModal(true)}
+            label="Generer le bail"
+            icon={<FileText aria-hidden="true" className="w-4 h-4" />}
+          />
           <button
             onClick={() => setShowQuittanceModal(true)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-bold hover:bg-amber-600 transition-colors"

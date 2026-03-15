@@ -12,6 +12,8 @@ import CompletudeCard from "@/components/CompletudeCard";
 import ComparateurGLI from "@/components/ComparateurGLI";
 import Onboarding from "@/components/Onboarding";
 import ShortcutsModal from "@/components/ShortcutsModal";
+import { useSearchParams } from "next/navigation";
+import { addToast } from "@/hooks/useToast";
 import { useShortcuts } from "@/hooks/useShortcuts";
 import { processDocument } from "@/lib/ocr";
 import {
@@ -38,6 +40,7 @@ import {
 import { Copy, FileText, ShieldCheck, Building2 } from "lucide-react";
 import GenerateurBailModal from "@/components/GenerateurBailModal";
 import ImprimerDossier from "@/components/ImprimerDossier";
+import { PrerequisList, PrerequisButton } from "@/components/ui/PrerequisList";
 import Link from "next/link";
 
 const EMPTY_DOSSIER: Partial<DossierLocataire> = {};
@@ -109,8 +112,16 @@ export default function Dashboard() {
   const [dfImportStatus, setDfImportStatus] = useState<"idle" | "loaded" | "error">("idle");
 
   useEffect(() => {
-    // Lit le cookie df_profile posé par le callback OAuth après redirection
-    // et applique le parseur pour pré-remplir le formulaire
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("welcome") === "1") {
+      addToast("success", "Bienvenue ! Votre compte est configure.");
+      window.history.replaceState({}, "", "/dashboard");
+    }
+  }, []);
+
+  useEffect(() => {
+    // Lit le cookie df_profile pose par le callback OAuth apres redirection
+    // et applique le parseur pour pre-remplir le formulaire
     const params = new URLSearchParams(window.location.search);
     const dossierParam = params.get("dossier");
 
@@ -356,16 +367,17 @@ export default function Dashboard() {
                 </div>
                 <h1 className="text-3xl font-black">BailBot</h1>
               </div>
-              {(dossier.nom || dossier.dateNaissance) && (parseFloat(loyerMensuel) > 0) && (
-                <button
-                  id="generate-bail-btn"
-                  onClick={() => setShowBailModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-black hover:bg-emerald-700 transition-colors shadow-sm shrink-0"
-                >
-                  <FileText className="w-4 h-4" />
-                  📄 Générer le bail
-                </button>
-              )}
+              <PrerequisButton
+                id="generate-bail-btn"
+                items={[
+                  { label: "Nom du locataire", met: Boolean(dossier.nom), fieldId: "nom" },
+                  { label: "Date de naissance", met: Boolean(dossier.dateNaissance), fieldId: "dateNaissance" },
+                  { label: "Loyer mensuel", met: parseFloat(loyerMensuel) > 0, fieldId: "loyerMensuel" },
+                ]}
+                onClick={() => setShowBailModal(true)}
+                label="Generer le bail"
+                icon={<FileText className="w-4 h-4" />}
+              />
             </div>
             <p className="text-slate-500 font-medium">
               Déposez les documents du locataire et récupérez le dossier complet en 5 minutes.
