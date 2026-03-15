@@ -205,6 +205,7 @@ model BailActif {
   id                  String      @id @default(cuid())
   userId              String
   bienId              String
+  descriptionLot      String?     // ex: "Chambre 1", "Studio RDC", "Appartement T2"
   locataireNom        String
   locataireEmail      String
   dateSignature       DateTime
@@ -219,9 +220,23 @@ model BailActif {
   statut              StatutBail  @default(ACTIF)
   createdAt           DateTime    @default(now())
   alertes             AlerteBail[]
+  quittancesAuto      QuittanceAuto[]
 
   @@index([userId])
   @@index([bienId])
+}
+
+model QuittanceAuto {
+  id             String    @id @default(cuid())
+  bailId         String
+  mois           String    // "2026-03"
+  envoyeeLe      DateTime  @default(now())
+  emailLocataire String
+  emailProprio   String
+  bail           BailActif @relation(fields: [bailId], references: [id], onDelete: Cascade)
+
+  @@unique([bailId, mois])
+  @@index([bailId])
 }
 
 model AlerteBail {

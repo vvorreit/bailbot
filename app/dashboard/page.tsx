@@ -344,7 +344,7 @@ export default function Dashboard() {
 
   return (
     <main className="bg-slate-50 text-slate-900 pb-10">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8">
 
         {/* Header */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10 items-stretch">
@@ -565,7 +565,7 @@ export default function Dashboard() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            <BookmarkletInstallButton />
+            {/* BookmarkletInstallButton supprimé */}
 
             {/* ─── Loyer mensuel + Éligibilité Visale ──────────────────── */}
             {(hasVisaleData || hasDossier) && (

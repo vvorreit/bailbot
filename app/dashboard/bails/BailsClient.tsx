@@ -11,7 +11,11 @@ import {
   ChevronDown,
   ChevronUp,
   Users,
+  Download,
+  X,
 } from 'lucide-react';
+import { genererBailPDF, type DonneesBail } from '@/lib/generateur-bail';
+import { useSession } from 'next-auth/react';
 import { listerBiens, type Bien } from '@/lib/db-local';
 import CreerBailActifModal from '@/components/CreerBailActifModal';
 import TimelineBail from '@/components/TimelineBail';
@@ -272,6 +276,54 @@ function BailCard({
 }) {
   const cfg = STATUT_CONFIG[bail.statut];
   const alertesActives = bail.alertes.filter((a) => !a.traitee).length;
+  const [showPdfModal, setShowPdfModal] = useState(false);
+  const [pdfForm, setPdfForm] = useState({
+    nomBailleur: '',
+    adresseBailleur: '',
+    prenomLocataire: '',
+    dateNaissanceLocataire: '',
+    adresseActuelleLocataire: '',
+    typeBien: 'appartement' as 'appartement' | 'maison',
+    surface: '',
+    depot: '',
+    jourPaiement: '5',
+    villeSignature: '',
+    clauseResolutoire: true,
+  });
+
+  function genererPDF() {
+    const donnees: DonneesBail = {
+      nomBailleur: pdfForm.nomBailleur,
+      adresseBailleur: pdfForm.adresseBailleur,
+      nomLocataire: bail.locataireNom,
+      prenomLocataire: pdfForm.prenomLocataire,
+      dateNaissanceLocataire: pdfForm.dateNaissanceLocataire,
+      adresseActuelle: pdfForm.adresseActuelleLocataire,
+      adresseBien: bienLabel,
+      typeBien: pdfForm.typeBien,
+      surface: parseFloat(pdfForm.surface) || 0,
+      loyerHC: bail.loyerMensuel,
+      charges: bail.chargesMensuelles,
+      depot: parseFloat(pdfForm.depot) || bail.loyerMensuel,
+      dateEffet: new Date(bail.dateDebut).toLocaleDateString('fr-FR'),
+      duree: bail.dateFin
+        ? Math.round((new Date(bail.dateFin).getTime() - new Date(bail.dateDebut).getTime()) / (30 * 24 * 60 * 60 * 1000))
+        : 12,
+      jourPaiement: parseInt(pdfForm.jourPaiement) || 5,
+      zoneTendue: false,
+      clauseResolutoire: pdfForm.clauseResolutoire,
+      villeSignature: pdfForm.villeSignature || 'Paris',
+      dateSignature: new Date(bail.dateSignature).toLocaleDateString('fr-FR'),
+    };
+    const blob = genererBailPDF(donnees);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bail-${bail.locataireNom.replace(/\s+/g, '-').toLowerCase()}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setShowPdfModal(false);
+  }
 
   return (
     <div className="bg-white rounded-2xl border border-slate-100 hover:shadow-md transition-shadow">
@@ -332,6 +384,91 @@ function BailCard({
             Chronologie
           </h4>
           <TimelineBail bail={bail} />
+
+          {/* Bouton PDF */}
+          <div className="mt-4 pt-4 border-t border-slate-100">
+            <button
+              onClick={() => setShowPdfModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              Télécharger le bail PDF
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal complétion données PDF */}
+      {showPdfModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100">
+              <h3 className="text-base font-black text-slate-900">Générer le bail PDF</h3>
+              <button onClick={() => setShowPdfModal(false)} className="p-1 hover:bg-slate-100 rounded-lg">
+                <X className="w-4 h-4 text-slate-400" />
+              </button>
+            </div>
+            <div className="p-5 space-y-3">
+              <p className="text-xs text-slate-400 mb-2">Complétez les informations manquantes pour générer le PDF.</p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Nom du bailleur *</label>
+                  <input type="text" value={pdfForm.nomBailleur} onChange={(e) => setPdfForm((p) => ({ ...p, nomBailleur: e.target.value }))} placeholder="Jean Martin" className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Adresse du bailleur *</label>
+                  <input type="text" value={pdfForm.adresseBailleur} onChange={(e) => setPdfForm((p) => ({ ...p, adresseBailleur: e.target.value }))} placeholder="12 rue de la Paix, 75001 Paris" className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Prénom locataire</label>
+                  <input type="text" value={pdfForm.prenomLocataire} onChange={(e) => setPdfForm((p) => ({ ...p, prenomLocataire: e.target.value }))} placeholder="Marie" className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Date naissance locataire</label>
+                  <input type="date" value={pdfForm.dateNaissanceLocataire} onChange={(e) => setPdfForm((p) => ({ ...p, dateNaissanceLocataire: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Adresse actuelle locataire</label>
+                  <input type="text" value={pdfForm.adresseActuelleLocataire} onChange={(e) => setPdfForm((p) => ({ ...p, adresseActuelleLocataire: e.target.value }))} placeholder="45 avenue Hugo, 69003 Lyon" className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Type de bien</label>
+                  <select value={pdfForm.typeBien} onChange={(e) => setPdfForm((p) => ({ ...p, typeBien: e.target.value as any }))} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                    <option value="appartement">Appartement</option>
+                    <option value="maison">Maison</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Surface (m²) *</label>
+                  <input type="number" value={pdfForm.surface} onChange={(e) => setPdfForm((p) => ({ ...p, surface: e.target.value }))} placeholder="42" className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Dépôt de garantie (€)</label>
+                  <input type="number" value={pdfForm.depot} onChange={(e) => setPdfForm((p) => ({ ...p, depot: e.target.value }))} placeholder={String(bail.loyerMensuel)} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Jour de paiement</label>
+                  <input type="number" min="1" max="28" value={pdfForm.jourPaiement} onChange={(e) => setPdfForm((p) => ({ ...p, jourPaiement: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Ville de signature</label>
+                  <input type="text" value={pdfForm.villeSignature} onChange={(e) => setPdfForm((p) => ({ ...p, villeSignature: e.target.value }))} placeholder="Paris" className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 p-5 border-t border-slate-100">
+              <button onClick={() => setShowPdfModal(false)} className="px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-xl">Annuler</button>
+              <button
+                onClick={genererPDF}
+                disabled={!pdfForm.nomBailleur || !pdfForm.surface}
+                className="flex items-center gap-2 px-5 py-2 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                Générer le PDF
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       dateSignature: new Date(dateSignature || dateDebut),
       dateDebut: new Date(dateDebut),
       dateFin: dateFin ? new Date(dateFin) : null,
-      dureePreavisMois: dureePreavisMois ?? 3,
+      dureePreavisMois: parseInt(dureePreavisMois ?? '3', 10),
       loyerMensuel: parseFloat(loyerMensuel),
       chargesMensuelles: parseFloat(chargesMensuelles || '0'),
       indiceRevision: indiceRevision || 'IRL',

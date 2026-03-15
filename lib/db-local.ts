@@ -42,6 +42,15 @@ export interface Diagnostic {
   dateExpiration?: number;
 }
 
+export type TypeAnnexe = 'parking' | 'garage' | 'box' | 'cave' | 'jardin' | 'terrasse' | 'grenier' | 'autre';
+
+export interface Annexe {
+  id: string;
+  type: TypeAnnexe;
+  description?: string; // ex: "Place n°12", "Cave lot B"
+  loyer: number;        // loyer mensuel de l'annexe
+}
+
 export interface Bien {
   id: string;
   adresse: string;
@@ -61,6 +70,8 @@ export interface Bien {
   diagnostics?: Diagnostic[];
   // Statut
   statut?: 'loue' | 'selection' | 'vacant';
+  // Annexes (parking, cave, garage, etc.)
+  annexes?: Annexe[];
 }
 
 export interface Completude {
