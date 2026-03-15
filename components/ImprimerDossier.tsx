@@ -48,9 +48,7 @@ function buildPrintHTML(
   });
 
   const nomComplet = [dossier.prenom, dossier.nom].filter(Boolean).join(' ') || '—';
-  const ratio = bailScore?.ratioLoyerRevenus
-    ? `${Math.round(bailScore.ratioLoyerRevenus * 100)}%`
-    : loyerMensuel && dossier.salaireNetMensuel
+  const ratio = loyerMensuel && dossier.salaireNetMensuel && Number(dossier.salaireNetMensuel) > 0
     ? `${Math.round((parseFloat(loyerMensuel) / Number(dossier.salaireNetMensuel)) * 100)}%`
     : '—';
 
@@ -256,20 +254,20 @@ function buildPrintHTML(
         <div class="label">${scoreLabel}</div>
       </div>
       <div class="score-details">
-        ${bailScore.solvabilite !== undefined ? `
+        ${bailScore.dimensions?.solvabilite ? `
         <div class="row">
           <span class="label">Solvabilité</span>
-          <span class="value">${bailScore.solvabilite}/${bailScore.maxSolvabilite ?? 40}</span>
+          <span class="value">${bailScore.dimensions.solvabilite.score}/${bailScore.dimensions.solvabilite.max}</span>
         </div>` : ''}
-        ${bailScore.stabilite !== undefined ? `
+        ${bailScore.dimensions?.stabilite ? `
         <div class="row">
           <span class="label">Stabilité</span>
-          <span class="value">${bailScore.stabilite}/${bailScore.maxStabilite ?? 30}</span>
+          <span class="value">${bailScore.dimensions.stabilite.score}/${bailScore.dimensions.stabilite.max}</span>
         </div>` : ''}
-        ${bailScore.completude !== undefined ? `
+        ${bailScore.dimensions?.completude ? `
         <div class="row">
           <span class="label">Complétude</span>
-          <span class="value">${bailScore.completude}/${bailScore.maxCompletude ?? 20}</span>
+          <span class="value">${bailScore.dimensions.completude.score}/${bailScore.dimensions.completude.max}</span>
         </div>` : ''}
       </div>
     </div>
@@ -293,10 +291,10 @@ function buildPrintHTML(
         <span class="label">Ratio loyer / revenus</span>
         <span class="value">${ratio}</span>
       </div>` : ''}
-      ${visaleResult?.motif ? `
+      ${visaleResult?.motifs_refus?.length ? `
       <div class="row">
         <span class="label">Motif</span>
-        <span class="value" style="font-size:10pt;color:#555">${visaleResult.motif}</span>
+        <span class="value" style="font-size:10pt;color:#555">${visaleResult.motifs_refus[0]}</span>
       </div>` : ''}
     </div>
   </div>

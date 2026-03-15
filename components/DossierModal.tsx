@@ -10,6 +10,7 @@ import { mettreAJourCandidature, supprimerCandidature } from '@/lib/db-local';
 import { calculerBailScore } from '@/lib/bailscore';
 import { calculerEligibiliteVisale } from '@/lib/eligibilite-visale';
 import EligibiliteVisaleCard from './EligibiliteVisaleCard';
+import ComparateurGLI from './ComparateurGLI';
 
 interface Props {
   candidature: Candidature;
@@ -206,6 +207,11 @@ export default function DossierModal({ candidature, bien, onClose, onUpdated, on
 
           {/* Eligibilité Visale */}
           <EligibiliteVisaleCard result={visaleResult} hasData={hasVisaleData} />
+
+          {/* Comparateur GLI */}
+          {dossier && loyer > 0 && (
+            <ComparateurGLI dossier={dossier as any} loyerCC={loyer} />
+          )}
 
           {/* Garant */}
           {aGarant && dossierGarant && (
