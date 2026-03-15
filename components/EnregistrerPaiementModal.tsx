@@ -1,9 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { X, Zap } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Zap, AlertTriangle, Send, Copy, Check } from 'lucide-react';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { creerPaiement, listerPaiements, type Bien } from '@/lib/db-local';
+import { useMessageTemplate, interpolerTemplate } from '@/hooks/useMessageTemplate';
+import { envoyerRelanceLoyer } from '@/app/actions/envoyer-relance';
+import type { MessageTemplate } from '@/app/actions/templates';
 
 interface Props {
   biens: Bien[];
@@ -308,6 +311,19 @@ export default function EnregistrerPaiementModal({ biens, moisDefaut, onClose, o
               placeholder="Remarques, références…"
             />
           </div>
+
+          {/* US 26 — Relance inline si paiement en retard */}
+          {(statut === 'retard' || statut === 'impaye') && (
+            <RelanceInline
+              bienId={bienId}
+              mois={mois}
+              locataireNom={locataireNom}
+              locatairePrenom={locatairePrenom}
+              locataireEmail={locataireEmail}
+              loyerCC={loyerCC}
+              adresse={bienSelectionne?.adresse || ''}
+            />
+          )}
         </div>
 
         {/* Footer */}
@@ -326,6 +342,197 @@ export default function EnregistrerPaiementModal({ biens, moisDefaut, onClose, o
             {loading ? 'Enregistrement…' : 'Enregistrer'}
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Relance Inline (US 26) ─────────────────────────────────────────────── */
+
+function RelanceInline({
+  bienId,
+  mois,
+  locataireNom,
+  locatairePrenom,
+  locataireEmail,
+  loyerCC,
+  adresse,
+}: {
+  bienId: string;
+  mois: string;
+  locataireNom: string;
+  locatairePrenom: string;
+  locataireEmail: string;
+  loyerCC: string;
+  adresse: string;
+}) {
+  const { templates, getByType, interpoler } = useMessageTemplate();
+  const [showComposer, setShowComposer] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState('');
+  const [relanceEmail, setRelanceEmail] = useState(locataireEmail);
+  const [relanceObjet, setRelanceObjet] = useState('');
+  const [relanceCorps, setRelanceCorps] = useState('');
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const variables = {
+    nom_locataire: `${locatairePrenom} ${locataireNom}`.trim() || locataireNom,
+    adresse: adresse || '[adresse]',
+    montant: loyerCC || '[montant]',
+    date: getMoisLabel(mois),
+  };
+
+  useEffect(() => {
+    if (templates.length > 0 && !selectedTemplateId) {
+      const relanceTemplate = getByType('RELANCE_LOYER');
+      if (relanceTemplate) {
+        setSelectedTemplateId(relanceTemplate.id);
+        const { sujet, corps } = interpoler(relanceTemplate, variables);
+        setRelanceObjet(sujet);
+        setRelanceCorps(corps);
+      }
+    }
+  }, [templates]);
+
+  const handleTemplateChange = (templateId: string) => {
+    setSelectedTemplateId(templateId);
+    const template = templates.find((t) => t.id === templateId);
+    if (template) {
+      const { sujet, corps } = interpoler(template, variables);
+      setRelanceObjet(sujet);
+      setRelanceCorps(corps);
+    }
+  };
+
+  const handleEnvoyer = async () => {
+    if (!relanceObjet || !relanceCorps || !relanceEmail) return;
+    setSending(true);
+    try {
+      await envoyerRelanceLoyer({
+        bailId: bienId,
+        bienId,
+        mois,
+        emailLocataire: relanceEmail,
+        objet: relanceObjet,
+        message: relanceCorps,
+        templateId: selectedTemplateId || undefined,
+        envoyeVia: 'email',
+      });
+      setSent(true);
+    } catch {
+      /* ignore */
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleCopier = async () => {
+    const text = `Objet: ${relanceObjet}\n\n${relanceCorps}`;
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  if (sent) {
+    return (
+      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center">
+        <Check className="w-5 h-5 text-emerald-600 mx-auto mb-1" />
+        <p className="text-sm font-bold text-emerald-700">Relance envoyée</p>
+      </div>
+    );
+  }
+
+  if (!showComposer) {
+    return (
+      <button
+        onClick={() => setShowComposer(true)}
+        className="w-full flex items-center justify-center gap-2 py-3 bg-red-50 border border-red-200 text-red-700 font-bold rounded-xl text-sm hover:bg-red-100 transition-colors"
+      >
+        <AlertTriangle className="w-4 h-4" />
+        Envoyer une relance
+      </button>
+    );
+  }
+
+  return (
+    <div className="bg-red-50 border border-red-200 rounded-xl p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-black text-red-700 uppercase tracking-wider flex items-center gap-1.5">
+          <AlertTriangle className="w-3.5 h-3.5" />
+          Relance loyer
+        </p>
+        <button onClick={() => setShowComposer(false)} className="text-red-400 hover:text-red-600">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Template selector */}
+      <div>
+        <label className="block text-xs font-bold text-red-600 mb-1">Modèle</label>
+        <select
+          value={selectedTemplateId}
+          onChange={(e) => handleTemplateChange(e.target.value)}
+          className="w-full border border-red-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-300"
+        >
+          <option value="">-- Choisir un modèle --</option>
+          {templates.map((t) => (
+            <option key={t.id} value={t.id}>{t.nom}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Email */}
+      <div>
+        <label className="block text-xs font-bold text-red-600 mb-1">Email locataire</label>
+        <input
+          type="email"
+          value={relanceEmail}
+          onChange={(e) => setRelanceEmail(e.target.value)}
+          className="w-full border border-red-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-300"
+          placeholder="email@locataire.fr"
+        />
+      </div>
+
+      {/* Objet */}
+      <div>
+        <label className="block text-xs font-bold text-red-600 mb-1">Objet</label>
+        <input
+          type="text"
+          value={relanceObjet}
+          onChange={(e) => setRelanceObjet(e.target.value)}
+          className="w-full border border-red-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-300"
+        />
+      </div>
+
+      {/* Message */}
+      <div>
+        <label className="block text-xs font-bold text-red-600 mb-1">Message</label>
+        <textarea
+          value={relanceCorps}
+          onChange={(e) => setRelanceCorps(e.target.value)}
+          rows={6}
+          className="w-full border border-red-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-300 resize-none font-mono"
+        />
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={handleEnvoyer}
+          disabled={sending || !relanceEmail || !relanceObjet}
+          className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white font-bold rounded-lg text-sm hover:bg-red-700 transition-colors disabled:opacity-50"
+        >
+          <Send className="w-3.5 h-3.5" />
+          {sending ? 'Envoi…' : 'Envoyer par email'}
+        </button>
+        <button
+          onClick={handleCopier}
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-red-200 text-red-700 font-bold rounded-lg text-sm hover:bg-red-50 transition-colors"
+        >
+          {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+          {copied ? 'Copié !' : 'Copier'}
+        </button>
       </div>
     </div>
   );

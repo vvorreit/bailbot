@@ -10,6 +10,8 @@ import {
   genererTextRelance,
   type EtapeRelance,
 } from '@/lib/relances-impaye';
+import { useMessageTemplate, interpolerTemplate } from '@/hooks/useMessageTemplate';
+import { envoyerRelanceLoyer } from '@/app/actions/envoyer-relance';
 
 interface Props {
   paiement: Paiement;
@@ -38,6 +40,7 @@ function downloadBlob(blob: Blob, filename: string) {
 
 export default function RelanceModal({ paiement, bien, bailleur, moisImpayes, onClose, onSaved }: Props) {
   const trapRef = useFocusTrap(true);
+  const { templates, getByType, interpoler: interpolerTpl } = useMessageTemplate();
 
   const prochainEtape = getProchainEtape(paiement);
   const [etapeSelectionnee, setEtapeSelectionnee] = useState<EtapeRelance>(
@@ -51,6 +54,7 @@ export default function RelanceModal({ paiement, bien, bailleur, moisImpayes, on
   const [methode, setMethode] = useState<'email' | 'sms' | 'courrier' | 'lrar'>('email');
   const [emailSending, setEmailSending] = useState(false);
   const [toast, setToast] = useState('');
+  const [selectedTemplateId, setSelectedTemplateId] = useState('');
 
   const infoBailleur = {
     nom: bailleur?.nom || 'Le Bailleur',
@@ -59,11 +63,18 @@ export default function RelanceModal({ paiement, bien, bailleur, moisImpayes, on
     ville: bailleur?.ville || 'Paris',
   };
 
+  const templateVariables = {
+    nom_locataire: `${paiement.locatairePrenom} ${paiement.locataireNom}`.trim(),
+    adresse: bien?.adresse ?? '',
+    montant: String(paiement.loyerCC),
+    date: paiement.mois,
+  };
+
   useEffect(() => {
     const { objet, corps } = genererTextRelance(etapeSelectionnee, paiement, infoBailleur);
     setTexteObjet(objet);
     setTexteCorps(corps);
-    // Pré-sélectionner la méthode selon l'étape
+    setSelectedTemplateId('');
     if (etapeSelectionnee.numero === 3 || etapeSelectionnee.numero === 2) {
       setMethode('lrar');
     } else {
@@ -71,6 +82,17 @@ export default function RelanceModal({ paiement, bien, bailleur, moisImpayes, on
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [etapeSelectionnee, paiement.id]);
+
+  const handleTemplateSelect = (templateId: string) => {
+    setSelectedTemplateId(templateId);
+    if (!templateId) return;
+    const tpl = templates.find((t) => t.id === templateId);
+    if (tpl) {
+      const { sujet, corps } = interpolerTpl(tpl, templateVariables);
+      setTexteObjet(sujet);
+      setTexteCorps(corps);
+    }
+  };
 
   const handleCopier = async () => {
     const full = `Objet: ${texteObjet}\n\n${texteCorps}`;
@@ -266,6 +288,23 @@ export default function RelanceModal({ paiement, bien, bailleur, moisImpayes, on
                   Le PDF regroupera les <strong>{moisImpayes.length} mois impayés</strong> dans le tableau des sommes dues.
                 </span>
               )}
+            </div>
+          )}
+
+          {/* Sélecteur de template (US 25) */}
+          {templates.length > 0 && (
+            <div>
+              <label className="block text-xs font-bold text-slate-500 mb-1.5">Utiliser un modèle</label>
+              <select
+                value={selectedTemplateId}
+                onChange={(e) => handleTemplateSelect(e.target.value)}
+                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white"
+              >
+                <option value="">-- Texte par défaut (étape) --</option>
+                {templates.map((t) => (
+                  <option key={t.id} value={t.id}>{t.nom}</option>
+                ))}
+              </select>
             </div>
           )}
 
