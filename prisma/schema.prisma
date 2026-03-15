@@ -218,6 +218,10 @@ model BailActif {
   dateProchRevision   DateTime
   dateFinDiagnostics  DateTime?
   statut              StatutBail  @default(ACTIF)
+  colocataires        Json?       @default("[]")
+  garants             Json?       @default("[]")
+  dateSortie          DateTime?
+  motifSortie         String?
   createdAt           DateTime    @default(now())
   alertes             AlerteBail[]
   quittancesAuto      QuittanceAuto[]
@@ -230,6 +234,7 @@ model QuittanceAuto {
   id             String    @id @default(cuid())
   bailId         String
   mois           String    // "2026-03"
+  numero         String?   @unique // QUI-YYYY-NNNN
   envoyeeLe      DateTime  @default(now())
   emailLocataire String
   emailProprio   String
@@ -317,6 +322,77 @@ model DemandeLocataire {
   espace    EspaceLocataire @relation(fields: [espaceId], references: [id], onDelete: Cascade)
 
   @@index([espaceId])
+}
+
+// ─── Biens (migration depuis IndexedDB) ─────────────────────────────────
+
+model Bien {
+  id              String   @id @default(cuid())
+  userId          String
+  adresse         String
+  loyer           Float
+  charges         Float    @default(0)
+  typeBail        TypeBail @default(HABITATION_VIDE)
+  locataireNom    String?
+  locatairePrenom String?
+  dateEntree      DateTime?
+  dateFin         DateTime?
+  preavisMois     Int?
+  dateRevision    DateTime?
+  indiceReference String?
+  diagnostics     Json?    @default("[]")
+  statut          String?  @default("vacant")
+  annexes         Json?    @default("[]")
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ─── Paiements (migration depuis IndexedDB) ─────────────────────────────
+
+model PaiementBien {
+  id              String    @id @default(cuid())
+  userId          String
+  bienId          String
+  locataireNom    String
+  locatairePrenom String?
+  locataireEmail  String?
+  loyerCC         Float
+  dateAttendue    DateTime
+  dateReelle      DateTime?
+  statut          String    @default("attendu")
+  montantRecu     Float?
+  mois            String
+  notes           String?
+  relances        Json      @default("[]")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([bienId])
+  @@index([mois])
+}
+
+// ─── Candidatures (migration depuis IndexedDB) ──────────────────────────
+
+model CandidatureLocal {
+  id             String   @id @default(cuid())
+  userId         String
+  bienId         String
+  statut         String   @default("en_attente")
+  dossier        Json     @default("{}")
+  bailScore      Float?
+  scoreGrade     String?
+  eligibleVisale Boolean?
+  alertesFraude  Int?
+  aGarant        Boolean  @default(false)
+  dossierGarant  Json?
+  completude     Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId])
+  @@index([bienId])
 }
 
 // ─── Bail Professionnel ───────────────────────────────────────────────────────

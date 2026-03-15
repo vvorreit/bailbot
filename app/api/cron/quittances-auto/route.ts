@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendMail } from "@/lib/mailer";
 import { genererQuittancePDF } from "@/lib/generateur-quittance";
+import { generateQuittanceNumero } from "@/lib/quittance-numero";
 
 export async function GET(req: NextRequest) {
   if (process.env.NODE_ENV === "production") {
@@ -47,6 +48,7 @@ export async function GET(req: NextRequest) {
     locataireEmail: string;
     descriptionLot: string | null;
     base64: string;
+    numero: string;
   }
 
   const resultats: PdfResult[] = [];
@@ -67,6 +69,8 @@ export async function GET(req: NextRequest) {
       const adresseLot = bail.descriptionLot
         ? `${bail.descriptionLot} — ${bail.bienId}`
         : bail.bienId;
+
+      const numero = await generateQuittanceNumero();
 
       const blob = genererQuittancePDF({
         nomBailleur: user.name || "Le bailleur",
@@ -94,6 +98,7 @@ export async function GET(req: NextRequest) {
         locataireEmail: bail.locataireEmail,
         descriptionLot: bail.descriptionLot,
         base64,
+        numero,
       });
 
       /* ── Email locataire ── */
@@ -197,6 +202,7 @@ export async function GET(req: NextRequest) {
         data: {
           bailId: r.bailId,
           mois: moisCle,
+          numero: r.numero,
           emailLocataire: r.locataireEmail,
           emailProprio: user?.email || "",
         },
