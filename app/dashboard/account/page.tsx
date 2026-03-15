@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { updatePassword, exportUserData } from "./actions";
-import { Download } from "lucide-react";
+import { Download, Building2 } from "lucide-react";
+import ProfilBailleurForm from "@/components/ui/ProfilBailleurForm";
 
 export default function AccountPage() {
   const { data: session } = useSession();
@@ -65,6 +66,18 @@ export default function AccountPage() {
               <p className="text-slate-900 font-semibold">{user?.email || "—"}</p>
             </div>
           </div>
+        </div>
+
+        {/* Profil bailleur */}
+        <div className="bg-white rounded-[28px] border border-slate-100 shadow-sm p-8">
+          <div className="flex items-center gap-2 mb-6">
+            <Building2 className="w-5 h-5 text-emerald-600" />
+            <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest">Profil bailleur</h2>
+          </div>
+          <p className="text-sm font-medium text-slate-500 mb-5">
+            Configurez votre profil bailleur pour pré-remplir automatiquement vos baux, quittances et courriers.
+          </p>
+          <ProfilBailleurForm />
         </div>
 
         {/* Changer mot de passe — uniquement pour les comptes credentials */}

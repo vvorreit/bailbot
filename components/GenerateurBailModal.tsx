@@ -8,6 +8,7 @@ import { genererBailPDF, calculerDateFin, type DonneesBail } from '@/lib/generat
 import ChecklistAlur from './ChecklistAlur';
 import { FeatureGate } from './FeatureGate';
 import { UpgradePrompt } from './UpgradePrompt';
+import { PrerequisList } from '@/components/ui/PrerequisList';
 
 interface Props {
   dossier: Partial<DossierLocataire>;
@@ -85,13 +86,27 @@ export default function GenerateurBailModal({ dossier, loyerHC: loyerHCProp, cha
     return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
   });
 
-  // Charger infos bailleur depuis localStorage
+  // Charger infos bailleur depuis Prisma (profil bailleur) puis fallback localStorage
   useEffect(() => {
-    const infos = loadInfosBailleur();
-    setNomBailleur(infos.nomBailleur);
-    setAdresseBailleur(infos.adresseBailleur);
-    setIbanBailleur(infos.ibanBailleur);
-    setVilleSignature(infos.villeSignature);
+    async function loadProfil() {
+      try {
+        const { getProfilBailleur } = await import('@/app/actions/profil-bailleur');
+        const profil = await getProfilBailleur();
+        if (profil && (profil.nom || profil.prenom)) {
+          setNomBailleur([profil.prenom, profil.nom].filter(Boolean).join(' '));
+          setAdresseBailleur([profil.adresse, profil.codePostal, profil.ville].filter(Boolean).join(', '));
+          setIbanBailleur(profil.iban || '');
+          setVilleSignature(profil.ville || '');
+          return;
+        }
+      } catch {}
+      const infos = loadInfosBailleur();
+      setNomBailleur(infos.nomBailleur);
+      setAdresseBailleur(infos.adresseBailleur);
+      setIbanBailleur(infos.ibanBailleur);
+      setVilleSignature(infos.villeSignature);
+    }
+    loadProfil();
   }, []);
 
   // Pré-remplir IBAN bailleur depuis RIB si disponible
@@ -523,14 +538,27 @@ export default function GenerateurBailModal({ dossier, loyerHC: loyerHCProp, cha
         </div>}
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-white border-t border-slate-100 px-6 py-4 flex items-center gap-3 rounded-b-2xl">
+        <div className="sticky bottom-0 bg-white border-t border-slate-100 px-6 py-4 space-y-3 rounded-b-2xl">
+          <PrerequisList
+            items={[
+              { label: "Nom du bailleur", met: Boolean(nomBailleur), fieldId: "nomBailleur" },
+              { label: "Adresse du bailleur", met: Boolean(adresseBailleur), fieldId: "adresseBailleur" },
+              { label: "Adresse du bien", met: Boolean(adresseBien), fieldId: "adresseBien" },
+              { label: "Surface", met: parseFloat(surface) > 0, fieldId: "surface" },
+              { label: "Loyer hors charges", met: parseFloat(loyerHC) > 0, fieldId: "loyerHC" },
+              { label: "Date d'effet", met: Boolean(dateEffet), fieldId: "dateEffet" },
+              { label: "Ville de signature", met: Boolean(villeSignature), fieldId: "villeSignature" },
+              { label: "Date de signature", met: Boolean(dateSignature), fieldId: "dateSignature" },
+            ]}
+          />
+          <div className="flex items-center gap-3">
           <button
             onClick={handleGenerer}
             disabled={generating}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-black hover:bg-emerald-700 transition-colors disabled:opacity-60 shadow-sm"
           >
             <FileText aria-hidden="true" className="w-4 h-4" />
-            {generating ? '⏳ Génération...' : '📄 Générer le PDF'}
+            {generating ? 'Generation...' : 'Generer le PDF'}
           </button>
           <button
             onClick={handleSaveInfosBailleur}
@@ -547,6 +575,7 @@ export default function GenerateurBailModal({ dossier, loyerHC: loyerHCProp, cha
           >
             Annuler
           </button>
+          </div>
         </div>
       </div>
     </div>

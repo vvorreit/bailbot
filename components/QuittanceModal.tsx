@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, FileText, Mail, Send, Loader2 } from 'lucide-react';
+import { PrerequisList } from '@/components/ui/PrerequisList';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { genererQuittancePDF, type DonneesQuittance } from '@/lib/generateur-quittance';
 
@@ -116,9 +117,22 @@ export default function QuittanceModal({
   const moisDisponibles = getMoisDisponibles();
 
   useEffect(() => {
-    // Charger infos bailleur
-    const bailleur = loadInfosBailleur();
-    setInfos(bailleur);
+    async function loadProfil() {
+      try {
+        const { getProfilBailleur } = await import('@/app/actions/profil-bailleur');
+        const profil = await getProfilBailleur();
+        if (profil && (profil.nom || profil.prenom)) {
+          setInfos({
+            nomBailleur: [profil.prenom, profil.nom].filter(Boolean).join(' '),
+            adresseBailleur: [profil.adresse, profil.codePostal, profil.ville].filter(Boolean).join(', '),
+          });
+          return;
+        }
+      } catch {}
+      const bailleur = loadInfosBailleur();
+      setInfos(bailleur);
+    }
+    loadProfil();
 
     // Charger dossier actif depuis localStorage si pas de props
     try {
@@ -384,23 +398,33 @@ export default function QuittanceModal({
         )}
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-white border-t border-slate-100 px-6 py-4 flex items-center gap-3 rounded-b-2xl flex-wrap">
-          <button
-            onClick={handleTelecharger}
-            disabled={!isValid || generating}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50"
-          >
-            <FileText aria-hidden="true" className="w-4 h-4" />
-            {generating ? 'Génération...' : 'Télécharger PDF'}
-          </button>
-          <button
-            onClick={handleEnvoyerEmail}
-            disabled={!isValid || !emailLocataire || sending}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors disabled:opacity-50"
-          >
-            {sending ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Send className="w-4 h-4" aria-hidden="true" />}
-            {sending ? 'Envoi...' : 'Envoyer par email'}
-          </button>
+        <div className="sticky bottom-0 bg-white border-t border-slate-100 px-6 py-4 space-y-3 rounded-b-2xl">
+          <PrerequisList
+            items={[
+              { label: "Nom du bailleur", met: Boolean(infos.nomBailleur), fieldId: "nomBailleur" },
+              { label: "Nom du locataire", met: Boolean(locNom), fieldId: "locNom" },
+              { label: "Adresse du bien", met: Boolean(adresse), fieldId: "adresse" },
+              { label: "Loyer hors charges", met: loyerHCVal > 0, fieldId: "loyerHC" },
+            ]}
+          />
+          <div className="flex items-center gap-3 flex-wrap">
+            <button
+              onClick={handleTelecharger}
+              disabled={!isValid || generating}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50"
+            >
+              <FileText aria-hidden="true" className="w-4 h-4" />
+              {generating ? 'Generation...' : 'Telecharger PDF'}
+            </button>
+            <button
+              onClick={handleEnvoyerEmail}
+              disabled={!isValid || !emailLocataire || sending}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors disabled:opacity-50"
+            >
+              {sending ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Send className="w-4 h-4" aria-hidden="true" />}
+              {sending ? 'Envoi...' : 'Envoyer par email'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, TrendingUp, FileText, Copy, Check, AlertCircle, Info, Send, Loader2 } from 'lucide-react';
+import { PrerequisList } from '@/components/ui/PrerequisList';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import {
   calculerRevisionLoyer,
@@ -35,6 +36,21 @@ export default function RevisionLoyerModal({ onClose }: Props) {
   const [nomLocataire, setNomLocataire] = useState('');
   const [emailLocataire, setEmailLocataire] = useState('');
   const [villeSignature, setVilleSignature] = useState(() => loadInfosBailleur().villeSignature || '');
+
+  // Pre-remplir depuis profil bailleur Prisma
+  useEffect(() => {
+    async function loadProfil() {
+      try {
+        const { getProfilBailleur } = await import('@/app/actions/profil-bailleur');
+        const profil = await getProfilBailleur();
+        if (profil && (profil.nom || profil.prenom)) {
+          setNomBailleur([profil.prenom, profil.nom].filter(Boolean).join(' '));
+          if (profil.ville) setVilleSignature(profil.ville);
+        }
+      } catch {}
+    }
+    loadProfil();
+  }, []);
 
   // Infos bail
   const [loyerActuel, setLoyerActuel] = useState('');
@@ -308,12 +324,20 @@ export default function RevisionLoyerModal({ onClose }: Props) {
             </div>
           </FeatureGate>
 
+          {/* Pre-requis */}
+          <PrerequisList
+            items={[
+              { label: "Loyer actuel", met: parseFloat(loyerActuel) > 0, fieldId: "loyerActuel" },
+              { label: "Date de signature (JJ/MM/AAAA)", met: /^\d{2}\/\d{2}\/\d{4}$/.test(dateSignature), fieldId: "dateSignature" },
+            ]}
+          />
+
           {/* Bouton calculer */}
           <button
             onClick={handleCalculer}
             className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-black py-3 rounded-xl transition-colors"
           >
-            Calculer la révision
+            Calculer la revision
           </button>
 
           {/* Résultat */}

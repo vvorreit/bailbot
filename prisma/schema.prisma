@@ -84,6 +84,8 @@ model User {
 
   messageTemplates Json? @default("[]") // US 25 — modèles de message personnalisables
 
+  profilBailleur Json? // US 18 — profil bailleur complet pour pré-remplissage PDF
+
   createdAt     DateTime  @default(now())
   lastActiveAt  DateTime  @default(now())
 
