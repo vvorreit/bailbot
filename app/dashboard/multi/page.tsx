@@ -15,7 +15,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Plus, Search, Trash2, X, AlertTriangle, Download } from 'lucide-react';
+import { Plus, Search, Trash2, X, AlertTriangle, Download, GitCompareArrows } from 'lucide-react';
 import type { Bien, Candidature, TypeBail } from '@/lib/db-local';
 import {
   listerBiens,
@@ -35,6 +35,7 @@ import {
 } from '@/lib/export-candidatures';
 import { FeatureGate } from '@/components/FeatureGate';
 import { UpgradePrompt } from '@/components/UpgradePrompt';
+import ComparateurCandidats from '@/components/ComparateurCandidats';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -229,6 +230,8 @@ export default function MultiDossierPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
+  const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
+  const [showComparateur, setShowComparateur] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -473,6 +476,23 @@ export default function MultiDossierPage() {
             </h2>
             <div className="flex items-center gap-2">
               <span className="text-xs text-slate-400">{candidaturesDuBien.length} candidature{candidaturesDuBien.length > 1 ? 's' : ''}</span>
+              {candidaturesDuBien.length >= 2 && (
+                <button
+                  onClick={() => {
+                    if (selectedForCompare.length === 2) {
+                      setShowComparateur(true);
+                    } else {
+                      showToast('Sélectionnez exactement 2 dossiers à comparer');
+                    }
+                  }}
+                  disabled={selectedForCompare.length !== 2}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors disabled:opacity-40"
+                  title="Comparer deux candidats"
+                >
+                  <GitCompareArrows className="w-3.5 h-3.5" />
+                  Comparer ({selectedForCompare.length}/2)
+                </button>
+              )}
               {candidaturesDuBien.length > 0 && (
                 <div className="flex items-center gap-1">
                   <button
@@ -528,6 +548,36 @@ export default function MultiDossierPage() {
               )}
             </div>
           </div>
+
+          {/* Sélection pour comparaison */}
+          {candidaturesDuBien.length >= 2 && (
+            <div className="mb-4 bg-purple-50 border border-purple-100 rounded-xl p-3">
+              <p className="text-xs font-bold text-purple-700 mb-2">Sélectionnez 2 candidats à comparer :</p>
+              <div className="flex flex-wrap gap-2">
+                {candidaturesDuBien.map((c) => {
+                  const nom = [c.dossier?.prenom, c.dossier?.nom].filter(Boolean).join(' ') || 'Sans nom';
+                  const checked = selectedForCompare.includes(c.id);
+                  return (
+                    <label key={c.id} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${checked ? 'bg-purple-200 text-purple-900' : 'bg-white text-slate-600 hover:bg-purple-100'}`}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => {
+                          setSelectedForCompare((prev) => {
+                            if (prev.includes(c.id)) return prev.filter((id) => id !== c.id);
+                            if (prev.length >= 2) return [prev[1], c.id];
+                            return [...prev, c.id];
+                          });
+                        }}
+                        className="w-3.5 h-3.5 accent-purple-600"
+                      />
+                      {nom} {c.bailScore ? `(${c.bailScore})` : ''}
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <DndContext
             sensors={sensors}
@@ -611,6 +661,20 @@ export default function MultiDossierPage() {
           }}
         />
       )}
+
+      {showComparateur && selectedForCompare.length === 2 && (() => {
+        const cA = candidaturesDuBien.find((c) => c.id === selectedForCompare[0]);
+        const cB = candidaturesDuBien.find((c) => c.id === selectedForCompare[1]);
+        if (!cA || !cB || !selectedBien) return null;
+        return (
+          <ComparateurCandidats
+            candidatA={cA}
+            candidatB={cB}
+            loyerCC={selectedBien.loyer + selectedBien.charges}
+            onClose={() => setShowComparateur(false)}
+          />
+        );
+      })()}
     </div>
     </FeatureGate>
   );
