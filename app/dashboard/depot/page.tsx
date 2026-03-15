@@ -10,6 +10,7 @@ interface DepotTokenInfo {
   token: string;
   bienAdresse: string;
   message: string | null;
+  candidatEmail: string | null;
   expiresAt: string;
   used: boolean;
   createdAt: string;
@@ -170,6 +171,9 @@ export default function DepotDashboardPage() {
                         {t._count.fichiers} fichier{t._count.fichiers !== 1 ? 's' : ''} reçu{t._count.fichiers !== 1 ? 's' : ''}
                       </span>
                     </div>
+                    {t.candidatEmail && (
+                      <p className="text-xs text-emerald-600 font-medium mt-1">📧 {t.candidatEmail}</p>
+                    )}
                     {t.message && (
                       <p className="text-xs text-slate-400 mt-1 italic truncate">"{t.message}"</p>
                     )}

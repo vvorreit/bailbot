@@ -26,6 +26,33 @@ export async function GET(
   });
 }
 
+// PATCH /api/depot/[token] — public, save candidate email during deposit
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ token: string }> }
+) {
+  const { token } = await params;
+  const body = await req.json();
+  const { candidatEmail } = body;
+
+  if (!candidatEmail) {
+    return NextResponse.json({ error: 'candidatEmail requis' }, { status: 400 });
+  }
+
+  const depot = await prisma.depotToken.findUnique({ where: { token } });
+  if (!depot) return NextResponse.json({ error: 'Token invalide' }, { status: 404 });
+  if (depot.expiresAt < new Date()) {
+    return NextResponse.json({ error: 'Ce lien a expiré' }, { status: 410 });
+  }
+
+  await prisma.depotToken.update({
+    where: { token },
+    data: { candidatEmail },
+  });
+
+  return NextResponse.json({ success: true });
+}
+
 // DELETE /api/depot/[token] — gestionnaire authentifié
 export async function DELETE(
   req: NextRequest,

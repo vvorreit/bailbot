@@ -72,6 +72,17 @@ model User {
   metier        Metier?   // null = onboarding incomplet
 
   rechercheMasquee Boolean @default(false)
+  onboardingCompleted Boolean @default(false)
+  pushSubscriptions   Json    @default("[]")
+
+  // Profil bailleur (rempli a l'onboarding)
+  telephone      String?
+  ville          String?
+  bailleurNom    String?
+  bailleurAdresse String?
+  siret          String?
+
+  messageTemplates Json? @default("[]") // US 25 — modèles de message personnalisables
 
   createdAt     DateTime  @default(now())
   lastActiveAt  DateTime  @default(now())
@@ -125,16 +136,17 @@ model VerificationToken {
 }
 
 model DepotToken {
-  id          String   @id @default(cuid())
-  token       String   @unique
-  userId      String
-  bienAdresse String
-  message     String?
-  expiresAt   DateTime
-  used        Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  fichiers    FichierChiffre[]
+  id             String   @id @default(cuid())
+  token          String   @unique
+  userId         String
+  bienAdresse    String
+  message        String?
+  candidatEmail  String?
+  expiresAt      DateTime
+  used           Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fichiers       FichierChiffre[]
 }
 
 model FichierChiffre {
@@ -220,11 +232,15 @@ model BailActif {
   statut              StatutBail  @default(ACTIF)
   colocataires        Json?       @default("[]")
   garants             Json?       @default("[]")
+  depotGarantie       Float?
   dateSortie          DateTime?
   motifSortie         String?
+  assigneA            String?     // US 23 — userId du collaborateur assigné
+  tokenProprietaire   String?     @unique // US 24 — token portail propriétaire
   createdAt           DateTime    @default(now())
   alertes             AlerteBail[]
   quittancesAuto      QuittanceAuto[]
+  relancesLoyer       RelanceLoyer[]
 
   @@index([userId])
   @@index([bienId])
@@ -345,6 +361,13 @@ model Bien {
   diagnostics     Json?    @default("[]")
   statut          String?  @default("vacant")
   annexes         Json?    @default("[]")
+  surface         Float?
+  dateDPE         DateTime?
+  dateElectricite DateTime?
+  dateGaz         DateTime?
+  datePlomb       DateTime?
+  dateAmiante     DateTime?
+  assigneA        String?  // US 23 — userId du collaborateur assigné
   createdAt       DateTime @default(now())
 
   @@index([userId])
@@ -517,5 +540,26 @@ model DocumentCopro {
   createdAt   DateTime     @default(now())
 
   @@index([userId])
+  @@index([bienId])
+}
+
+// ─── Relances Loyer (US 26) ─────────────────────────────────────────────────
+
+model RelanceLoyer {
+  id              String    @id @default(cuid())
+  userId          String
+  bailId          String
+  bienId          String
+  mois            String    // "2026-03"
+  templateId      String?
+  objet           String
+  message         String
+  emailLocataire  String
+  envoyeVia       String    @default("email") // email, whatsapp, sms
+  createdAt       DateTime  @default(now())
+  bail            BailActif @relation(fields: [bailId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([bailId])
   @@index([bienId])
 }

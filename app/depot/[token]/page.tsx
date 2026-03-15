@@ -50,6 +50,7 @@ export default function DepotPage() {
   const [valide, setValide] = useState(false);
   const [expiry, setExpiry] = useState('');
   const [dragging, setDragging] = useState(false);
+  const [candidatEmail, setCandidatEmail] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -124,9 +125,19 @@ export default function DepotPage() {
     if (e.target.files?.length) processFiles(e.target.files);
   };
 
-  const handleValider = () => {
+  const handleValider = async () => {
     const done = fichiers.filter(f => f.status === 'done').length;
     if (done === 0) { alert('Veuillez déposer au moins un document'); return; }
+    if (!candidatEmail) { alert('Veuillez saisir votre adresse email'); return; }
+
+    try {
+      await fetch(`/api/depot/${token}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ candidatEmail }),
+      });
+    } catch {}
+
     setValide(true);
   };
 
@@ -255,6 +266,19 @@ export default function DepotPage() {
           </div>
         )}
 
+        {/* Email candidat */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+          <label className="block text-sm font-bold text-slate-700 mb-2">Votre adresse email *</label>
+          <input
+            type="email"
+            value={candidatEmail}
+            onChange={(e) => setCandidatEmail(e.target.value)}
+            placeholder="votre.email@exemple.com"
+            className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+          <p className="text-xs text-slate-400 mt-1.5">Pour vous recontacter en cas de besoin.</p>
+        </div>
+
         {/* Mention RGPD */}
         <div className="flex items-start gap-3 bg-emerald-50 border border-emerald-100 rounded-2xl p-4 text-sm text-emerald-800">
           <Shield className="w-5 h-5 mt-0.5 shrink-0 text-emerald-600" />
@@ -267,7 +291,7 @@ export default function DepotPage() {
         {/* Bouton valider */}
         <button
           onClick={handleValider}
-          disabled={fichiers.filter(f => f.status === 'done').length === 0}
+          disabled={fichiers.filter(f => f.status === 'done').length === 0 || !candidatEmail}
           className="w-full py-3.5 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           ✅ Valider mon dépôt
