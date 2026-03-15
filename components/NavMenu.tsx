@@ -261,6 +261,16 @@ export default function NavMenu() {
         </div>
       )}
 
+      {/* B2C Particulier link — small footer hint */}
+      <div className="hidden md:block border-t border-slate-50 py-2 px-4 text-center">
+        <p className="text-[10px] text-slate-400 font-medium">
+          Vous êtes propriétaire bailleur particulier ?{" "}
+          <Link href="/particulier" className="text-emerald-600 hover:underline font-bold">
+            Voir nos offres →
+          </Link>
+        </p>
+      </div>
+
       {/* Message Templates Modal */}
       {messagesOpen && <MessageTemplates onClose={() => setMessagesOpen(false)} />}
 

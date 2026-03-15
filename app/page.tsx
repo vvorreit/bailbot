@@ -493,6 +493,18 @@ function LandingContent() {
         </div>
       </section>
 
+      {/* B2C Particulier CTA */}
+      <section className="py-8 bg-white px-6">
+        <div className="max-w-7xl mx-auto text-center">
+          <p className="text-slate-500 font-medium">
+            👤 Vous êtes propriétaire bailleur particulier ?{" "}
+            <Link href="/particulier" className="text-emerald-600 font-black hover:underline">
+              Découvrez BailBot Particulier →
+            </Link>
+          </p>
+        </div>
+      </section>
+
       {/* FAQ Section */}
       <section className="py-32 bg-slate-50 px-6 border-y border-slate-100">
         <div className="max-w-4xl mx-auto">
