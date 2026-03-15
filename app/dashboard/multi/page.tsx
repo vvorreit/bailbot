@@ -15,7 +15,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Plus, Search, Trash2, X, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Trash2, X, AlertTriangle, Download } from 'lucide-react';
 import type { Bien, Candidature } from '@/lib/db-local';
 import {
   listerBiens,
@@ -28,6 +28,11 @@ import {
 import KanbanCard from '@/components/KanbanCard';
 import DossierModal from '@/components/DossierModal';
 import AdresseSearch from '@/components/AdresseSearch';
+import {
+  exporterCandidaturesCSV,
+  exporterCandidaturesXLSX,
+  nomFichierExport,
+} from '@/lib/export-candidatures';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -216,6 +221,7 @@ export default function MultiDossierPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -305,6 +311,31 @@ export default function MultiDossierPage() {
     setBiens((prev) => prev.filter((b) => b.id !== id));
     if (selectedBienId === id) setSelectedBienId(null);
     showToast('Bien supprimé');
+  };
+
+  const handleExport = async (format: 'csv' | 'xlsx') => {
+    if (!selectedBien || candidaturesDuBien.length === 0) return;
+    setExportLoading(true);
+    try {
+      let blob: Blob;
+      if (format === 'csv') {
+        blob = exporterCandidaturesCSV(selectedBien, candidaturesDuBien);
+      } else {
+        blob = await exporterCandidaturesXLSX(selectedBien, candidaturesDuBien);
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nomFichierExport(selectedBien, format);
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast(`Export ${format.toUpperCase()} téléchargé ✅`);
+    } catch (e) {
+      console.error(e);
+      showToast('Erreur lors de l\'export');
+    } finally {
+      setExportLoading(false);
+    }
   };
 
   const biensFiltres = biens.filter((b) =>
@@ -402,11 +433,35 @@ export default function MultiDossierPage() {
       {/* Kanban */}
       {selectedBien ? (
         <div>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
             <h2 className="text-sm font-black text-slate-600 uppercase tracking-wider">
               📍 {selectedBien.adresse} — {selectedBien.loyer}€ + {selectedBien.charges}€ charges
             </h2>
-            <span className="text-xs text-slate-400">{candidaturesDuBien.length} candidature{candidaturesDuBien.length > 1 ? 's' : ''}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400">{candidaturesDuBien.length} candidature{candidaturesDuBien.length > 1 ? 's' : ''}</span>
+              {candidaturesDuBien.length > 0 && (
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => handleExport('xlsx')}
+                    disabled={exportLoading}
+                    title="Exporter en Excel"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors disabled:opacity-50"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    📊 XLSX
+                  </button>
+                  <button
+                    onClick={() => handleExport('csv')}
+                    disabled={exportLoading}
+                    title="Exporter en CSV"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors disabled:opacity-50"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    CSV
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           <DndContext

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Download, Trash2, ChevronDown, Package, FileText } from 'lucide-react';
+import { X, Download, Trash2, ChevronDown, Package, FileText, Receipt } from 'lucide-react';
 import GenerateurBailModal from './GenerateurBailModal';
+import QuittanceModal from './QuittanceModal';
 import type { Candidature, Bien } from '@/lib/db-local';
 import { mettreAJourCandidature, supprimerCandidature } from '@/lib/db-local';
 import { calculerBailScore } from '@/lib/bailscore';
@@ -49,6 +50,7 @@ export default function DossierModal({ candidature, bien, onClose, onUpdated, on
   const [archiveLoading, setArchiveLoading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showBailModal, setShowBailModal] = useState(false);
+  const [showQuittanceModal, setShowQuittanceModal] = useState(false);
 
   const { dossier, bailScore, scoreGrade, alertesFraude, completude, aGarant, dossierGarant } = candidature;
 
@@ -264,6 +266,13 @@ export default function DossierModal({ candidature, bien, onClose, onUpdated, on
               📄 Générer le bail
             </button>
           )}
+          <button
+            onClick={() => setShowQuittanceModal(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-bold hover:bg-amber-600 transition-colors"
+          >
+            <Receipt className="w-4 h-4" />
+            🧾 Quittance
+          </button>
           <div className="flex-1" />
           <button
             onClick={handleDelete}
@@ -287,6 +296,18 @@ export default function DossierModal({ candidature, bien, onClose, onUpdated, on
           loyerHC={bien ? bien.loyer : undefined}
           charges={bien ? bien.charges : undefined}
           onClose={() => setShowBailModal(false)}
+        />
+      )}
+
+      {/* Quittance */}
+      {showQuittanceModal && (
+        <QuittanceModal
+          nomLocataire={dossier?.nom ?? ''}
+          prenomLocataire={dossier?.prenom ?? ''}
+          adresseBien={bien?.adresse ?? ''}
+          loyerHC={bien?.loyer ?? 0}
+          charges={bien?.charges ?? 0}
+          onClose={() => setShowQuittanceModal(false)}
         />
       )}
     </div>

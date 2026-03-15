@@ -4,9 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Users, ShieldCheck, CreditCard, User, LogOut, Menu, X, ChevronDown, LifeBuoy, Building2, Layers, BarChart2, Mail, Upload } from "lucide-react";
+import { LayoutDashboard, Users, ShieldCheck, CreditCard, User, LogOut, Menu, X, ChevronDown, LifeBuoy, Building2, Layers, BarChart2, Mail, Upload, Receipt } from "lucide-react";
 import { createPortalSession } from "@/app/dashboard/actions";
 import MessageTemplates from "@/components/MessageTemplates";
+import QuittanceModal from "@/components/QuittanceModal";
 
 export default function NavMenu() {
   const { data: session } = useSession();
@@ -16,6 +17,7 @@ export default function NavMenu() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
+  const [quittanceOpen, setQuittanceOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const user = session?.user as any;
@@ -92,6 +94,15 @@ export default function NavMenu() {
             );
           })}
         </div>
+
+        {/* Quittance button */}
+        <button
+          onClick={() => setQuittanceOpen(true)}
+          className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+        >
+          <Receipt className="w-4 h-4" />
+          Quittance
+        </button>
 
         {/* Messages button */}
         <button
@@ -215,6 +226,13 @@ export default function NavMenu() {
             );
           })}
           <button
+            onClick={() => { setMobileOpen(false); setQuittanceOpen(true); }}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+          >
+            <Receipt className="w-4 h-4" />
+            🧾 Quittance
+          </button>
+          <button
             onClick={() => { setMobileOpen(false); setMessagesOpen(true); }}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"
           >
@@ -235,6 +253,9 @@ export default function NavMenu() {
 
       {/* Message Templates Modal */}
       {messagesOpen && <MessageTemplates onClose={() => setMessagesOpen(false)} />}
+
+      {/* Quittance Modal */}
+      {quittanceOpen && <QuittanceModal onClose={() => setQuittanceOpen(false)} />}
     </nav>
   );
 }

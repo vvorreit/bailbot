@@ -170,6 +170,50 @@ export async function toutesLesCandidatures(): Promise<Candidature[]> {
 
 // ─── RGPD — Purge automatique ────────────────────────────────────────────────
 
+// ─── RECHERCHE FULL-TEXT ──────────────────────────────────────────────────────
+
+/**
+ * Normalise une chaîne pour la recherche (minuscules, sans accents)
+ */
+function normaliser(str: string): string {
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+/**
+ * Recherche full-text dans toutes les candidatures
+ * Cherche dans : nom, prénom, employeur, adresse bien, adresse actuelle
+ * Minimum 2 caractères
+ */
+export async function rechercherCandidatures(query: string): Promise<Candidature[]> {
+  if (query.length < 2) return [];
+  const q = normaliser(query);
+  const all = await toutesLesCandidatures();
+  // Récupérer tous les biens pour l'adresse
+  const biens = await listerBiensMap();
+  
+  return all.filter((c) => {
+    const d = c.dossier;
+    const bien = biens[c.bienId];
+    const champs = [
+      d.nom || '',
+      d.prenom || '',
+      d.employeur || '',
+      d.adresseDomicile || '',
+      d.adresseActuelle || '',
+      bien?.adresse || '',
+    ];
+    return champs.some((champ) => normaliser(champ).includes(q));
+  });
+}
+
+async function listerBiensMap(): Promise<Record<string, Bien>> {
+  const biens = await listerBiens();
+  return Object.fromEntries(biens.map((b) => [b.id, b]));
+}
+
 export async function purgerAnciensDossiers(joursMax: number = 90): Promise<number> {
   const db = await getDB();
   const all = await db.getAll('candidatures');
