@@ -86,6 +86,7 @@ export const authOptions: NextAuthOptions = {
         const isTeamPro = dbUser?.team?.plan === "PRO" || dbUser?.team?.plan === "ENTERPRISE";
         token.isPro = dbUser?.isPro || isTeamPro || false;
         token.rechercheMasquee = dbUser?.rechercheMasquee ?? false;
+        token.onboardingCompleted = dbUser?.onboardingCompleted ?? false;
       }
 
       if (trigger === "update" && session) {
@@ -145,6 +146,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).teamRole = token.teamRole;
         (session.user as any).metier = token.metier ?? null;
         (session.user as any).rechercheMasquee = token.rechercheMasquee ?? false;
+        (session.user as any).onboardingCompleted = token.onboardingCompleted ?? false;
         (session as any).error = token.error;
       }
       return session;
