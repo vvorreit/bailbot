@@ -8,6 +8,7 @@ import {
   type ConfigFiscalBien,
   type RegimeFiscal,
   REGIME_LABELS,
+  estRegimeMicro,
 } from '@/lib/recapitulatif-fiscal';
 
 function euros(n: number) {
@@ -128,11 +129,14 @@ export default function RecapFiscalAnnuel({
               <th className="px-4 py-3 text-right text-xs font-black text-slate-500 uppercase tracking-wider min-w-[130px]">
                 Charges <span className="normal-case font-normal">(cliquer pour éditer)</span>
               </th>
+              <th className="px-4 py-3 text-right text-xs font-black text-slate-500 uppercase tracking-wider min-w-[100px]">
+                Abattement
+              </th>
               <th className="px-4 py-3 text-center text-xs font-black text-slate-500 uppercase tracking-wider min-w-[160px]">
                 Régime fiscal
               </th>
-              <th className="px-4 py-3 text-right text-xs font-black text-slate-700 uppercase tracking-wider min-w-[110px]">
-                Revenu net
+              <th className="px-4 py-3 text-right text-xs font-black text-slate-700 uppercase tracking-wider min-w-[130px]">
+                Base imposable
               </th>
             </tr>
           </thead>
@@ -167,32 +171,53 @@ export default function RecapFiscalAnnuel({
                   )}
                 </td>
                 <td className="px-4 py-3.5 text-right">
-                  <CellEdit
-                    label="charges annuelles"
-                    value={b.chargesDeductibles}
-                    onSave={(v) =>
-                      onConfigChange(b.bien.id, { ...b.config, chargesAnnuelles: v })
-                    }
-                  />
+                  {estRegimeMicro(b.config.regime) ? (
+                    <span className="text-slate-300 font-mono text-xs" title="Non utilisé en régime micro (abattement forfaitaire)">
+                      {b.chargesDeductibles > 0 ? euros(b.chargesDeductibles) : '—'}
+                    </span>
+                  ) : (
+                    <CellEdit
+                      label="charges annuelles"
+                      value={b.chargesDeductibles}
+                      onSave={(v) =>
+                        onConfigChange(b.bien.id, { ...b.config, chargesAnnuelles: v })
+                      }
+                    />
+                  )}
+                </td>
+                <td className="px-4 py-3.5 text-right font-mono text-slate-500">
+                  {b.abattementMontant > 0 ? (
+                    <span title={`Abattement forfaitaire ${b.config.regime === 'MICRO_FONCIER' ? '30%' : '50%'}`}>
+                      −{euros(b.abattementMontant)}
+                    </span>
+                  ) : (
+                    <span className="text-slate-300">—</span>
+                  )}
                 </td>
                 <td className="px-4 py-3.5 text-center">
                   <RegimeSelect
                     value={b.config.regime}
                     onChange={(r) => onConfigChange(b.bien.id, { ...b.config, regime: r })}
                   />
+                  <span className="block text-[10px] text-slate-400 mt-0.5">
+                    {b.formulaire}
+                  </span>
                 </td>
                 <td className="px-4 py-3.5 text-right">
                   <span
                     className={`font-bold font-mono ${
-                      b.revenuNet < 0
+                      b.baseImposable < 0
                         ? 'text-red-600'
-                        : b.revenuNet === 0
+                        : b.baseImposable === 0
                         ? 'text-slate-400'
                         : 'text-slate-900'
                     }`}
                   >
-                    {euros(b.revenuNet)}
+                    {euros(b.baseImposable)}
                   </span>
+                  {b.baseImposable < 0 && (
+                    <span className="block text-[10px] text-red-500">déficit foncier</span>
+                  )}
                 </td>
               </tr>
             ))}
@@ -212,9 +237,12 @@ export default function RecapFiscalAnnuel({
               <td className="px-4 py-3 text-right font-mono font-bold text-slate-300">
                 {euros(recap.totalCharges)}
               </td>
+              <td className="px-4 py-3 text-right font-mono font-bold text-slate-300">
+                {recap.totalAbattement > 0 ? euros(recap.totalAbattement) : '—'}
+              </td>
               <td className="px-4 py-3" />
               <td className="px-4 py-3 text-right font-mono font-black text-white text-base">
-                {euros(recap.totalNet)}
+                {euros(recap.totalBaseImposable)}
               </td>
             </tr>
           </tfoot>
