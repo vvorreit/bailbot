@@ -26,6 +26,47 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+/* ─── Push Notifications ─────────────────────────────────────────────────── */
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  try {
+    const data = event.data.json();
+    const title = data.title || 'BailBot';
+    const options = {
+      body: data.body || '',
+      icon: data.icon || '/icon-192x192.png',
+      badge: '/icon-192x192.png',
+      data: { url: data.url || '/dashboard' },
+      vibrate: [100, 50, 100],
+      tag: 'bailbot-notification',
+      renotify: true,
+    };
+
+    event.waitUntil(self.registration.showNotification(title, options));
+  } catch (e) {
+    /* silently ignore malformed push payloads */
+  }
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || '/dashboard';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.navigate(url);
+          return client.focus();
+        }
+      }
+      return clients.openWindow(url);
+    })
+  );
+});
+
+/* ─── Fetch (Cache) ──────────────────────────────────────────────────────── */
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
