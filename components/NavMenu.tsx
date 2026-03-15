@@ -4,8 +4,9 @@ import { useState, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Users, ShieldCheck, CreditCard, User, LogOut, Menu, X, ChevronDown, LifeBuoy, Building2, Layers } from "lucide-react";
+import { LayoutDashboard, Users, ShieldCheck, CreditCard, User, LogOut, Menu, X, ChevronDown, LifeBuoy, Building2, Layers, BarChart2, Mail } from "lucide-react";
 import { createPortalSession } from "@/app/dashboard/actions";
+import MessageTemplates from "@/components/MessageTemplates";
 
 export default function NavMenu() {
   const { data: session } = useSession();
@@ -14,6 +15,7 @@ export default function NavMenu() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [messagesOpen, setMessagesOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const user = session?.user as any;
@@ -52,6 +54,7 @@ export default function NavMenu() {
   const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, show: true },
     { href: "/dashboard/multi", label: "Multi-dossiers", icon: Layers, show: true },
+    { href: "/dashboard/stats", label: "Statistiques", icon: BarChart2, show: true },
     { href: "/dashboard/team", label: "Mon équipe", icon: Users, show: showTeam },
     { href: "/admin", label: "Administration", icon: ShieldCheck, show: isAdmin },
   ].filter((l) => l.show);
@@ -88,6 +91,15 @@ export default function NavMenu() {
             );
           })}
         </div>
+
+        {/* Messages button */}
+        <button
+          onClick={() => setMessagesOpen(true)}
+          className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+        >
+          <Mail className="w-4 h-4" />
+          Messages
+        </button>
 
         {/* Right side */}
         <div className="flex items-center gap-3">
@@ -201,6 +213,13 @@ export default function NavMenu() {
               </Link>
             );
           })}
+          <button
+            onClick={() => { setMobileOpen(false); setMessagesOpen(true); }}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+          >
+            <Mail className="w-4 h-4" />
+            ✉️ Messages
+          </button>
           <div className="border-t border-slate-100 pt-2 mt-2">
             <button
               onClick={() => signOut({ callbackUrl: "/auth/signin" })}
@@ -212,6 +231,9 @@ export default function NavMenu() {
           </div>
         </div>
       )}
+
+      {/* Message Templates Modal */}
+      {messagesOpen && <MessageTemplates onClose={() => setMessagesOpen(false)} />}
     </nav>
   );
 }

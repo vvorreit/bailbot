@@ -27,17 +27,18 @@ import {
 } from '@/lib/db-local';
 import KanbanCard from '@/components/KanbanCard';
 import DossierModal from '@/components/DossierModal';
+import AdresseSearch from '@/components/AdresseSearch';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
 type StatutColonne = Candidature['statut'];
 
-const COLONNES: { id: StatutColonne; label: string; color: string }[] = [
-  { id: 'en_attente',  label: 'EN ATTENTE',  color: 'bg-slate-100 text-slate-600 border-slate-200' },
-  { id: 'en_analyse',  label: 'EN ANALYSE',  color: 'bg-blue-50 text-blue-600 border-blue-200' },
-  { id: 'complet',     label: 'COMPLET',     color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  { id: 'selectionne', label: 'SÉLECTIONNÉ', color: 'bg-purple-50 text-purple-700 border-purple-200' },
-  { id: 'refuse',      label: 'REFUSÉ',      color: 'bg-red-50 text-red-600 border-red-200' },
+const COLONNES: { id: StatutColonne; label: string; headerClass: string; bodyClass: string }[] = [
+  { id: 'en_attente',  label: 'EN ATTENTE',  headerClass: 'bg-slate-200 text-slate-800 border-slate-300', bodyClass: 'bg-slate-100' },
+  { id: 'en_analyse',  label: 'EN ANALYSE',  headerClass: 'bg-blue-100 text-blue-800 border-blue-200',   bodyClass: 'bg-blue-50' },
+  { id: 'complet',     label: 'COMPLET',     headerClass: 'bg-emerald-100 text-emerald-900 border-emerald-300', bodyClass: 'bg-emerald-50' },
+  { id: 'selectionne', label: 'SÉLECTIONNÉ', headerClass: 'bg-purple-100 text-purple-900 border-purple-300', bodyClass: 'bg-purple-50' },
+  { id: 'refuse',      label: 'REFUSÉ',      headerClass: 'bg-red-100 text-red-900 border-red-300',      bodyClass: 'bg-red-50' },
 ];
 
 // ─── Modal création bien ───────────────────────────────────────────────────────
@@ -72,38 +73,36 @@ function ModalCreerBien({ onClose, onCreated }: { onClose: () => void; onCreated
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1">Adresse *</label>
-            <input
-              type="text"
+            <label className="block text-xs font-bold text-slate-700 mb-1">Adresse *</label>
+            <AdresseSearch
               value={adresse}
-              onChange={(e) => setAdresse(e.target.value)}
+              onChange={setAdresse}
               placeholder="12 rue de la Paix, Paris 75002"
-              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               required
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-600 mb-1">Loyer HC *</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Loyer HC *</label>
               <input
                 type="number"
                 value={loyer}
                 onChange={(e) => setLoyer(e.target.value)}
                 placeholder="1000"
                 min="0"
-                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 required
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-600 mb-1">Charges</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Charges</label>
               <input
                 type="number"
                 value={charges}
                 onChange={(e) => setCharges(e.target.value)}
                 placeholder="200"
                 min="0"
-                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
           </div>
@@ -176,13 +175,15 @@ function KanbanColonne({
   onChangerStatut: (id: string, statut: StatutColonne) => void;
 }) {
   return (
-    <div className="flex-1 min-w-[200px] max-w-[260px]">
-      <div className={`rounded-xl border px-3 py-2 mb-3 flex items-center justify-between ${colonne.color}`}>
+    <div className="flex-1 min-w-[220px] max-w-[280px]">
+      {/* Colonne header */}
+      <div className={`rounded-xl border px-3 py-2 mb-3 flex items-center justify-between ${colonne.headerClass}`}>
         <span className="text-[11px] font-black tracking-wider">{colonne.label}</span>
-        <span className="text-[11px] font-black opacity-60">{candidatures.length}</span>
+        <span className="text-[11px] font-black bg-white/60 text-slate-700 px-1.5 py-0.5 rounded-full">{candidatures.length}</span>
       </div>
+      {/* Cards */}
       <SortableContext items={candidatures.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-        <div className="space-y-2 min-h-[100px]">
+        <div className={`space-y-2 min-h-[120px] p-2 rounded-xl ${colonne.bodyClass}`}>
           {candidatures.map((c) => (
             <KanbanCard
               key={c.id}
@@ -192,8 +193,8 @@ function KanbanColonne({
             />
           ))}
           {candidatures.length === 0 && (
-            <div className="border-2 border-dashed border-slate-200 rounded-xl h-20 flex items-center justify-center">
-              <span className="text-xs text-slate-300 font-medium">Vide</span>
+            <div className="border-2 border-dashed border-slate-300 rounded-xl h-20 flex items-center justify-center">
+              <span className="text-xs text-slate-500 font-medium">Vide</span>
             </div>
           )}
         </div>

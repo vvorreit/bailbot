@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Download, Trash2, ChevronDown, Package } from 'lucide-react';
+import { X, Download, Trash2, ChevronDown, Package, FileText } from 'lucide-react';
+import GenerateurBailModal from './GenerateurBailModal';
 import type { Candidature, Bien } from '@/lib/db-local';
 import { mettreAJourCandidature, supprimerCandidature } from '@/lib/db-local';
 import { calculerBailScore } from '@/lib/bailscore';
@@ -47,6 +48,7 @@ export default function DossierModal({ candidature, bien, onClose, onUpdated, on
   const [loading, setLoading] = useState(false);
   const [archiveLoading, setArchiveLoading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showBailModal, setShowBailModal] = useState(false);
 
   const { dossier, bailScore, scoreGrade, alertesFraude, completude, aGarant, dossierGarant } = candidature;
 
@@ -244,7 +246,7 @@ export default function DossierModal({ candidature, bien, onClose, onUpdated, on
         </div>
 
         {/* Footer actions */}
-        <div className="sticky bottom-0 bg-white border-t border-slate-100 px-6 py-4 flex items-center gap-3 rounded-b-2xl">
+        <div className="sticky bottom-0 bg-white border-t border-slate-100 px-6 py-4 flex items-center gap-3 rounded-b-2xl flex-wrap">
           <button
             onClick={handleArchive}
             disabled={archiveLoading}
@@ -253,6 +255,15 @@ export default function DossierModal({ candidature, bien, onClose, onUpdated, on
             <Package className="w-4 h-4" />
             {archiveLoading ? '⏳ Génération...' : '📦 Télécharger ZIP'}
           </button>
+          {dossier?.nom && (
+            <button
+              onClick={() => setShowBailModal(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 transition-colors"
+            >
+              <FileText className="w-4 h-4" />
+              📄 Générer le bail
+            </button>
+          )}
           <div className="flex-1" />
           <button
             onClick={handleDelete}
@@ -268,6 +279,16 @@ export default function DossierModal({ candidature, bien, onClose, onUpdated, on
           </button>
         </div>
       </div>
+
+      {/* Générateur de bail */}
+      {showBailModal && (
+        <GenerateurBailModal
+          dossier={dossier as any}
+          loyerHC={bien ? bien.loyer : undefined}
+          charges={bien ? bien.charges : undefined}
+          onClose={() => setShowBailModal(false)}
+        />
+      )}
     </div>
   );
 }

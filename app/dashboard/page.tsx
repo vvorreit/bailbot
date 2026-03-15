@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import DropZone from "@/components/DropZone";
+import UniversalDropZone from "@/components/UniversalDropZone";
 import DossierForm from "@/components/DossierForm";
 import DossierFacileButton from "@/components/DossierFacileButton";
 import EligibiliteVisaleCard from "@/components/EligibiliteVisaleCard";
@@ -31,6 +32,7 @@ import {
   upgradePlan,
 } from "./actions";
 import { Copy, FileText, ShieldCheck, Building2 } from "lucide-react";
+import GenerateurBailModal from "@/components/GenerateurBailModal";
 import Link from "next/link";
 
 const EMPTY_DOSSIER: Partial<DossierLocataire> = {};
@@ -91,6 +93,7 @@ export default function Dashboard() {
   const [completude, setCompletude] = useState<CompletudeDossier | null>(null);
   const [isArchiveLoading, setIsArchiveLoading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<FichierDossier[]>([]);
+  const [showBailModal, setShowBailModal] = useState(false);
 
   // ─── DossierFacile Connect ─────────────────────────────────────────────────
   // dossierFacileEnabled : true si les env vars sont configurées côté serveur
@@ -310,11 +313,22 @@ export default function Dashboard() {
         {/* Header */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10 items-stretch">
           <div className="lg:col-span-2 bg-white p-8 rounded-[32px] shadow-sm border border-slate-100 flex flex-col justify-center relative overflow-hidden">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow">
-                <Building2 className="w-5 h-5" />
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow">
+                  <Building2 className="w-5 h-5" />
+                </div>
+                <h1 className="text-3xl font-black">BailBot</h1>
               </div>
-              <h1 className="text-3xl font-black">BailBot</h1>
+              {(dossier.nom || dossier.dateNaissance) && (parseFloat(loyerMensuel) > 0) && (
+                <button
+                  onClick={() => setShowBailModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-black hover:bg-emerald-700 transition-colors shadow-sm shrink-0"
+                >
+                  <FileText className="w-4 h-4" />
+                  📄 Générer le bail
+                </button>
+              )}
             </div>
             <p className="text-slate-500 font-medium">
               Déposez les documents du locataire et récupérez le dossier complet en 5 minutes.
@@ -445,21 +459,34 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* Drop Zones — 2 colonnes */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {dropZones.map(({ type, label, icon }) => (
-                <div key={type} className={isLimitReached ? "opacity-40 grayscale pointer-events-none" : ""}>
-                  <DropZone
-                    label={label}
-                    icon={icon}
-                    onFile={(f) => handleFile(f, type)}
-                    isLoading={docStates[type].loading}
-                    progress={docStates[type].progress}
-                    fileName={docStates[type].fileName}
-                  />
-                </div>
-              ))}
-            </div>
+            {/* ─── Zone de drop universelle ─────────────────────────────── */}
+            <UniversalDropZone
+              disabled={isLimitReached}
+              onDossierUpdate={(patch) => setDossier((prev) => ({ ...prev, ...patch }))}
+              onFilesUpdate={(files) => setUploadedFiles(files)}
+            />
+
+            {/* Drop Zones individuelles — pour déposer directement dans une section */}
+            <details className="group">
+              <summary className="cursor-pointer text-xs font-bold text-slate-400 hover:text-emerald-600 transition-colors select-none list-none flex items-center gap-1.5">
+                <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
+                Déposer dans une section spécifique (avancé)
+              </summary>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-3">
+                {dropZones.map(({ type, label, icon }) => (
+                  <div key={type} className={isLimitReached ? "opacity-40 grayscale pointer-events-none" : ""}>
+                    <DropZone
+                      label={label}
+                      icon={icon}
+                      onFile={(f) => handleFile(f, type)}
+                      isLoading={docStates[type].loading}
+                      progress={docStates[type].progress}
+                      fileName={docStates[type].fileName}
+                    />
+                  </div>
+                ))}
+              </div>
+            </details>
 
             {hasDossier && (
               <div className="flex items-start gap-3 px-4 py-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800">
@@ -614,6 +641,14 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      {/* Modal Générateur de Bail */}
+      {showBailModal && (
+        <GenerateurBailModal
+          dossier={dossier}
+          loyerHC={parseFloat(loyerMensuel) || undefined}
+          onClose={() => setShowBailModal(false)}
+        />
+      )}
     </main>
   );
 }
