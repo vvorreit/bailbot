@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     bienAdresse: depot.bienAdresse,
     lienDepot,
     docsManquants: docsManquants ?? [],
-    nomGestionnaire: user.name ?? undefined,
+    nomGestionnaire: user.rechercheMasquee ? undefined : (user.name ?? undefined),
   });
 
   // Upsert relance en base

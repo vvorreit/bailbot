@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
       const tpl = getTemplate(1, {
         bienAdresse: depot.bienAdresse,
         lienDepot: `${baseUrl}/depot/${r.depotToken}`,
-        nomGestionnaire: gestionnaire?.name ?? undefined,
+        nomGestionnaire: gestionnaire?.rechercheMasquee ? undefined : (gestionnaire?.name ?? undefined),
       });
 
       await sendMail({ to: r.email, subject: tpl.sujet, html: tpl.corps });
@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
       const tpl = getTemplate(2, {
         bienAdresse: depot.bienAdresse,
         lienDepot: `${baseUrl}/depot/${r.depotToken}`,
-        nomGestionnaire: gestionnaire?.name ?? undefined,
+        nomGestionnaire: gestionnaire?.rechercheMasquee ? undefined : (gestionnaire?.name ?? undefined),
       });
 
       await sendMail({ to: r.email, subject: tpl.sujet, html: tpl.corps });
@@ -99,7 +99,7 @@ export async function GET(req: NextRequest) {
       const tpl = getTemplate(3, {
         bienAdresse: depot.bienAdresse,
         lienDepot: `${baseUrl}/depot/${r.depotToken}`,
-        nomGestionnaire: gestionnaire?.name ?? undefined,
+        nomGestionnaire: gestionnaire?.rechercheMasquee ? undefined : (gestionnaire?.name ?? undefined),
       });
 
       await sendMail({ to: r.email, subject: tpl.sujet, html: tpl.corps });

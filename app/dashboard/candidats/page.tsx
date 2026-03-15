@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
 import { FeatureGate } from '@/components/FeatureGate';
 import RelanceCandidatModal from '@/components/RelanceCandidatModal';
+import { toggleRechercheMasquee } from './actions';
 import {
   Users,
   Mail,
@@ -15,6 +17,8 @@ import {
   Loader2,
   FileText,
   RefreshCw,
+  Lock,
+  Unlock,
 } from 'lucide-react';
 
 interface DepotTokenInfo {
@@ -126,12 +130,29 @@ function CompletionBar({ pct }: { pct: number }) {
 }
 
 export default function CandidatsPage() {
+  const { data: session, update: updateSession } = useSession();
   const [depots, setDepots] = useState<DepotTokenInfo[]>([]);
   const [relances, setRelances] = useState<RelanceInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatut, setFilterStatut] = useState<string>('');
   const [relanceModal, setRelanceModal] = useState<CandidatRow | null>(null);
   const [emailInputs, setEmailInputs] = useState<Record<string, string>>({});
+  const [masquee, setMasquee] = useState(false);
+
+  useEffect(() => {
+    const user = session?.user as any;
+    if (user?.rechercheMasquee !== undefined) {
+      setMasquee(user.rechercheMasquee);
+    }
+  }, [session]);
+
+  const handleToggleMasquee = async () => {
+    const result = await toggleRechercheMasquee();
+    if ('rechercheMasquee' in result) {
+      setMasquee(result.rechercheMasquee);
+      await updateSession({ rechercheMasquee: result.rechercheMasquee });
+    }
+  };
 
   const charger = useCallback(async () => {
     setLoading(true);
@@ -238,8 +259,8 @@ export default function CandidatsPage() {
           </div>
         </div>
 
-        {/* Filter */}
-        <div className="flex items-center gap-3 mb-6">
+        {/* Filter + Toggle masquée */}
+        <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
           <div className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm">
             <Filter className="w-4 h-4 text-slate-400" />
             <select
@@ -257,6 +278,25 @@ export default function CandidatsPage() {
               <option value="ABANDONNE">Abandonné</option>
             </select>
           </div>
+
+          <FeatureGate feature="RECHERCHE_MASQUEE_PROPRIO">
+            <button
+              onClick={handleToggleMasquee}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-colors ${
+                masquee
+                  ? 'bg-violet-100 text-violet-700 ring-2 ring-violet-300'
+                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              {masquee ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+              Recherche masquée
+              {masquee && (
+                <span className="text-[10px] bg-violet-600 text-white px-1.5 py-0.5 rounded-full ml-1">
+                  ACTIF
+                </span>
+              )}
+            </button>
+          </FeatureGate>
         </div>
 
         {/* List */}
@@ -294,7 +334,10 @@ export default function CandidatsPage() {
                     <div className="flex flex-wrap items-center gap-4">
                       {/* Bien */}
                       <div className="flex-1 min-w-[180px]">
-                        <p className="text-sm font-bold text-slate-800">{row.depot.bienAdresse}</p>
+                        <p className="text-sm font-bold text-slate-800">
+                          {row.depot.bienAdresse}
+                          {masquee && <Lock className="w-3 h-3 inline ml-1.5 text-violet-500" />}
+                        </p>
                         <p className="text-xs text-slate-400 mt-0.5">
                           {row.depot._count.fichiers} fichier{row.depot._count.fichiers !== 1 ? 's' : ''} reçu{row.depot._count.fichiers !== 1 ? 's' : ''}
                           {expired && ' · Expiré'}

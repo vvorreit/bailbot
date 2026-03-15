@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Users, ShieldCheck, CreditCard, User, LogOut, Menu, X, ChevronDown, LifeBuoy, Building2, Layers, BarChart2, Mail, Upload, TrendingUp, UserCheck, FileText, ClipboardList, Calculator, Home } from "lucide-react";
+import { LayoutDashboard, Users, ShieldCheck, CreditCard, User, LogOut, Menu, X, ChevronDown, LifeBuoy, Building2, Layers, BarChart2, Mail, Upload, TrendingUp, UserCheck, FileText, ClipboardList, Calculator, Home, Lock } from "lucide-react";
 import { Banknote } from "lucide-react";
 import { createPortalSession } from "@/app/dashboard/actions";
 import MessageTemplates from "@/components/MessageTemplates";
@@ -31,6 +31,7 @@ export default function NavMenu() {
   const showTeam = Boolean(session);
   const isPro = user?.isPro;
   const metier = user?.metier ?? null;
+  const rechercheMasquee = user?.rechercheMasquee ?? false;
 
   // Charger le nombre d'impayés
   useEffect(() => {
@@ -155,6 +156,12 @@ export default function NavMenu() {
           {isPro && (
             <span className="hidden sm:inline-flex px-2.5 py-1 bg-emerald-600 text-white text-[10px] font-black rounded-full uppercase tracking-wider">
               PRO
+            </span>
+          )}
+          {rechercheMasquee && (
+            <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 bg-violet-600 text-white text-[10px] font-black rounded-full uppercase tracking-wider">
+              <Lock className="w-3 h-3" />
+              Anonyme
             </span>
           )}
 

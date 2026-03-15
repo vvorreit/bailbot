@@ -71,6 +71,8 @@ model User {
 
   metier        Metier?   // null = onboarding incomplet
 
+  rechercheMasquee Boolean @default(false)
+
   createdAt     DateTime  @default(now())
   lastActiveAt  DateTime  @default(now())
 
