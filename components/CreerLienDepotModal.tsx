@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Copy, Check, QrCode, Loader2 } from 'lucide-react';
+import { X, Copy, Check, QrCode, Loader2, Send } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { genererCle, exporterCle } from '@/lib/crypto-client';
 import AdresseSearch from '@/components/AdresseSearch';
@@ -20,6 +20,10 @@ export default function CreerLienDepotModal({ onClose, onCreated }: Props) {
   const [result, setResult] = useState<{ lien: string; token: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [showQr, setShowQr] = useState(false);
+  const [candidatEmail, setCandidatEmail] = useState('');
+  const [messageEmail, setMessageEmail] = useState('');
+  const [emailSending, setEmailSending] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
   const trapRef = useFocusTrap(true);
 
   const handleCreer = async () => {
@@ -47,11 +51,38 @@ export default function CreerLienDepotModal({ onClose, onCreated }: Props) {
       localStorage.setItem(`bailbot_depot_cle_${data.token}`, cleBase64);
 
       setResult({ lien: lienComplet, token: data.token });
+      setMessageEmail(`Bonjour,\n\nMerci de déposer votre dossier de candidature via ce lien sécurisé :\n${lienComplet}\n\nCordialement`);
       onCreated?.(data.token);
     } catch (e: any) {
       alert(`Erreur : ${e.message}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEnvoyerEmail = async () => {
+    if (!result || !candidatEmail) return;
+    setEmailSending(true);
+    try {
+      const expiresAt = new Date(Date.now() + dureeHeures * 3600000).toISOString();
+      const res = await fetch('/api/candidatures/send-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          candidatEmail,
+          bienAdresse,
+          lienDepot: result.lien,
+          message: messageEmail || undefined,
+          expiresAt,
+        }),
+      });
+      if (!res.ok) throw new Error('Erreur envoi');
+      setToast('Email envoyé avec succès !');
+      setTimeout(() => setToast(null), 3000);
+    } catch {
+      alert('Erreur lors de l\'envoi de l\'email');
+    } finally {
+      setEmailSending(false);
     }
   };
 
@@ -149,6 +180,37 @@ export default function CreerLienDepotModal({ onClose, onCreated }: Props) {
               {showQr && (
                 <div className="flex justify-center p-4 bg-white border border-slate-100 rounded-xl">
                   <QRCodeSVG value={result.lien} size={180} />
+                </div>
+              )}
+
+              <div className="border-t border-slate-100 pt-4 space-y-3">
+                <p className="text-sm font-semibold text-slate-700">Envoyer par email</p>
+                <input
+                  type="email"
+                  value={candidatEmail}
+                  onChange={(e) => setCandidatEmail(e.target.value)}
+                  placeholder="Email du candidat"
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                />
+                <textarea
+                  value={messageEmail}
+                  onChange={(e) => setMessageEmail(e.target.value)}
+                  rows={4}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                />
+                <button
+                  onClick={handleEnvoyerEmail}
+                  disabled={emailSending || !candidatEmail}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors text-sm disabled:opacity-40"
+                >
+                  {emailSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  {emailSending ? 'Envoi…' : 'Envoyer par email'}
+                </button>
+              </div>
+
+              {toast && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-sm text-emerald-700 font-medium text-center">
+                  {toast}
                 </div>
               )}
 
