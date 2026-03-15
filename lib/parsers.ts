@@ -3,6 +3,18 @@
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export interface Garant {
+  nom: string;
+  prenom: string;
+  dateNaissance: string;
+  lienParente: string; // parent, ami, employeur...
+  salaireNetMensuel: number;
+  typeContrat: string;
+  revenusN1: number;
+  iban: string;
+  adresse: string;
+}
+
 export interface DossierLocataire {
   // CNI
   nom: string;
@@ -17,6 +29,7 @@ export interface DossierLocataire {
   salaireNetMensuel: number;
   typeContrat: string; // CDI, CDD, interim
   anciennete: string;
+  bulletinsCount: number; // nombre de bulletins fournis (1, 2 ou 3)
 
   // Avis d'imposition
   revenusN1: number;
@@ -32,6 +45,9 @@ export interface DossierLocataire {
 
   // Justificatif de domicile
   adresseDomicile: string;
+
+  // Garant (optionnel)
+  garant?: Garant;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 "use client";
 
-import { DossierLocataire } from "@/lib/parsers";
+import { useState } from "react";
+import { DossierLocataire, Garant } from "@/lib/parsers";
 
 interface Props {
   data: Partial<DossierLocataire>;
@@ -35,8 +36,21 @@ function Field({ label, value, onChange, placeholder, colSpan, type }: {
   );
 }
 
+const EMPTY_GARANT: Garant = {
+  nom: "",
+  prenom: "",
+  dateNaissance: "",
+  lienParente: "",
+  salaireNetMensuel: 0,
+  typeContrat: "",
+  revenusN1: 0,
+  iban: "",
+  adresse: "",
+};
+
 export default function DossierForm({ data, onChange }: Props) {
   const d = data ?? {};
+  const [showGarant, setShowGarant] = useState(Boolean(d.garant));
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-8">
@@ -96,6 +110,99 @@ export default function DossierForm({ data, onChange }: Props) {
         <div className="grid grid-cols-1 gap-3">
           <Field label="Adresse actuelle" value={d.adresseDomicile ?? ""} onChange={(v) => onChange({ ...d, adresseDomicile: v })} placeholder="12 rue de la Paix, 75001 Paris" colSpan />
         </div>
+      </div>
+
+      {/* Garant extérieur */}
+      <div className="border-t border-gray-100 pt-4">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Garant extérieur</p>
+          <button
+            type="button"
+            onClick={() => {
+              const next = !showGarant;
+              setShowGarant(next);
+              if (!next) {
+                onChange({ ...d, garant: undefined });
+              } else {
+                onChange({ ...d, garant: d.garant ?? EMPTY_GARANT });
+              }
+            }}
+            className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 transition-colors duration-200 ease-in-out focus:outline-none
+              ${showGarant ? "bg-emerald-500 border-emerald-500" : "bg-gray-200 border-gray-200"}`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out
+                ${showGarant ? "translate-x-5" : "translate-x-0"}`}
+            />
+          </button>
+        </div>
+
+        {showGarant && (
+          <div className="space-y-4 bg-slate-50 rounded-xl p-4 border border-slate-100">
+            <p className="text-xs text-slate-500 font-medium">
+              Renseignez les informations du garant. Le BailScore tiendra compte de ses revenus.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field
+                label="Nom garant"
+                value={d.garant?.nom ?? ""}
+                onChange={(v) => onChange({ ...d, garant: { ...(d.garant ?? EMPTY_GARANT), nom: v } })}
+                placeholder="NOM"
+              />
+              <Field
+                label="Prénom garant"
+                value={d.garant?.prenom ?? ""}
+                onChange={(v) => onChange({ ...d, garant: { ...(d.garant ?? EMPTY_GARANT), prenom: v } })}
+                placeholder="Prénom"
+              />
+              <Field
+                label="Date de naissance"
+                value={d.garant?.dateNaissance ?? ""}
+                onChange={(v) => onChange({ ...d, garant: { ...(d.garant ?? EMPTY_GARANT), dateNaissance: v } })}
+                placeholder="JJ/MM/AAAA"
+              />
+              <Field
+                label="Lien de parenté"
+                value={d.garant?.lienParente ?? ""}
+                onChange={(v) => onChange({ ...d, garant: { ...(d.garant ?? EMPTY_GARANT), lienParente: v } })}
+                placeholder="parent, ami, employeur..."
+              />
+              <Field
+                label="Salaire net mensuel (€)"
+                value={d.garant?.salaireNetMensuel ?? ""}
+                onChange={(v) => onChange({ ...d, garant: { ...(d.garant ?? EMPTY_GARANT), salaireNetMensuel: parseFloat(v) || 0 } })}
+                placeholder="ex: 3 000"
+                type="number"
+              />
+              <Field
+                label="Type de contrat"
+                value={d.garant?.typeContrat ?? ""}
+                onChange={(v) => onChange({ ...d, garant: { ...(d.garant ?? EMPTY_GARANT), typeContrat: v } })}
+                placeholder="CDI / CDD"
+              />
+              <Field
+                label="Revenus N-1 (€)"
+                value={d.garant?.revenusN1 ?? ""}
+                onChange={(v) => onChange({ ...d, garant: { ...(d.garant ?? EMPTY_GARANT), revenusN1: parseFloat(v) || 0 } })}
+                placeholder="Revenus fiscaux"
+                type="number"
+              />
+              <Field
+                label="IBAN garant"
+                value={d.garant?.iban ?? ""}
+                onChange={(v) => onChange({ ...d, garant: { ...(d.garant ?? EMPTY_GARANT), iban: v } })}
+                placeholder="FR76..."
+              />
+              <Field
+                label="Adresse garant"
+                value={d.garant?.adresse ?? ""}
+                onChange={(v) => onChange({ ...d, garant: { ...(d.garant ?? EMPTY_GARANT), adresse: v } })}
+                placeholder="Adresse complète"
+                colSpan
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

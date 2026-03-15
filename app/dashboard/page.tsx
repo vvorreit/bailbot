@@ -5,6 +5,9 @@ import DropZone from "@/components/DropZone";
 import DossierForm from "@/components/DossierForm";
 import DossierFacileButton from "@/components/DossierFacileButton";
 import EligibiliteVisaleCard from "@/components/EligibiliteVisaleCard";
+import BailScoreCard from "@/components/BailScoreCard";
+import FraudeCard from "@/components/FraudeCard";
+import CompletudeCard from "@/components/CompletudeCard";
 import { processDocument } from "@/lib/ocr";
 import {
   parseDossier,
@@ -14,6 +17,10 @@ import {
   DocumentType,
 } from "@/lib/parsers";
 import { calculerEligibiliteVisale, EligibiliteVisale } from "@/lib/eligibilite-visale";
+import { calculerBailScore, BailScore } from "@/lib/bailscore";
+import { analyserFraude, ResultatFraude } from "@/lib/fraude-detection";
+import { verifierCompletude, CompletudeDossier } from "@/lib/completude-dossier";
+import { genererArchiveDossier, telechargerArchive, FichierDossier } from "@/lib/archive-dossier";
 import { STATIC_BOOKMARKLET } from "@/lib/autofill";
 import {
   getUserDashboardData,
@@ -77,6 +84,13 @@ export default function Dashboard() {
   const [loyerMensuel, setLoyerMensuel] = useState<string>("");
   const [villeEstParis, setVilleEstParis] = useState<boolean>(false);
   const [visaleResult, setVisaleResult] = useState<EligibiliteVisale | null>(null);
+
+  // ─── BailScore + Fraude + Complétude ──────────────────────────────────────
+  const [bailScore, setBailScore] = useState<BailScore | null>(null);
+  const [fraudeResult, setFraudeResult] = useState<ResultatFraude | null>(null);
+  const [completude, setCompletude] = useState<CompletudeDossier | null>(null);
+  const [isArchiveLoading, setIsArchiveLoading] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<FichierDossier[]>([]);
 
   // ─── DossierFacile Connect ─────────────────────────────────────────────────
   // dossierFacileEnabled : true si les env vars sont configurées côté serveur
@@ -184,6 +198,22 @@ export default function Dashboard() {
     setVisaleResult(result);
   }, [dossier, loyerMensuel, villeEstParis, hasVisaleData]);
 
+  // Recalcule BailScore, fraude et complétude quand dossier ou loyer changent
+  useEffect(() => {
+    if (!hasDossier) {
+      setBailScore(null);
+      setFraudeResult(null);
+      setCompletude(null);
+      return;
+    }
+    const loyer = parseFloat(loyerMensuel) || 0;
+    if (loyer > 0) {
+      setBailScore(calculerBailScore(dossier, loyer));
+    }
+    setFraudeResult(analyserFraude(dossier));
+    setCompletude(verifierCompletude(dossier as DossierLocataire, Boolean(dossier.garant)));
+  }, [dossier, loyerMensuel, hasDossier]);
+
   // Synchronise le dossier actif avec l'extension Chrome BailBot via postMessage
   useEffect(() => {
     if (hasDossier) {
@@ -230,6 +260,11 @@ export default function Dashboard() {
             : "domicile";
         const parsed = parseDossier(text, docType);
         setDossier((prev) => ({ ...prev, ...parsed }));
+        // Track uploaded file for archive ZIP
+        setUploadedFiles((prev) => {
+          const filtered = prev.filter((f) => f.type !== type);
+          return [...filtered, { type, file }];
+        });
       } catch (err) {
         console.error(err);
         alert("Erreur lors de l'analyse du document.");
@@ -505,6 +540,21 @@ export default function Dashboard() {
               hasData={hasVisaleData && Boolean(loyerMensuel) && parseFloat(loyerMensuel) > 0}
             />
 
+            {/* ─── BailScore ────────────────────────────────────────── */}
+            {bailScore && (
+              <BailScoreCard score={bailScore} />
+            )}
+
+            {/* ─── Fraude ───────────────────────────────────────────── */}
+            {fraudeResult && (
+              <FraudeCard resultat={fraudeResult} />
+            )}
+
+            {/* ─── Complétude ───────────────────────────────────────── */}
+            {completude && (
+              <CompletudeCard completude={completude} />
+            )}
+
             {hasDossier && (
               <div className="p-8 rounded-[32px] shadow-xl space-y-6 bg-emerald-600 shadow-emerald-200">
                 <div className="text-left space-y-2">
@@ -531,6 +581,34 @@ export default function Dashboard() {
                     </div>
                   )}
                 </div>
+                {/* ─── Archive ZIP ─────────────────────────────────── */}
+                {uploadedFiles.length > 0 && (
+                  <button
+                    onClick={async () => {
+                      setIsArchiveLoading(true);
+                      try {
+                        const blob = await genererArchiveDossier(
+                          dossier,
+                          uploadedFiles,
+                          { score: bailScore, visale: visaleResult, completude }
+                        );
+                        const nom = `dossier_${(dossier.nom ?? "LOCATAIRE").toUpperCase()}_${(dossier.prenom ?? "").toUpperCase()}`;
+                        telechargerArchive(blob, nom);
+                      } catch (err) {
+                        console.error("Erreur archive ZIP :", err);
+                      } finally {
+                        setIsArchiveLoading(false);
+                      }
+                    }}
+                    disabled={isArchiveLoading}
+                    className="w-full flex items-center justify-center gap-3 p-4 rounded-2xl border-2 border-white/20 bg-white/10 text-white hover:bg-white/20 transition-all disabled:opacity-50"
+                  >
+                    <span className="text-lg">{isArchiveLoading ? "⏳" : "📦"}</span>
+                    <span className="font-bold text-sm">
+                      {isArchiveLoading ? "Génération..." : "Télécharger l'archive complète"}
+                    </span>
+                  </button>
+                )}
               </div>
             )}
           </div>

@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Users, ShieldCheck, CreditCard, User, LogOut, Menu, X, ChevronDown, LifeBuoy, Building2 } from "lucide-react";
+import { LayoutDashboard, Users, ShieldCheck, CreditCard, User, LogOut, Menu, X, ChevronDown, LifeBuoy, Building2, Layers } from "lucide-react";
 import { createPortalSession } from "@/app/dashboard/actions";
 
 export default function NavMenu() {
@@ -51,6 +51,7 @@ export default function NavMenu() {
 
   const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, show: true },
+    { href: "/dashboard/multi", label: "Multi-dossiers", icon: Layers, show: true },
     { href: "/dashboard/team", label: "Mon équipe", icon: Users, show: showTeam },
     { href: "/admin", label: "Administration", icon: ShieldCheck, show: isAdmin },
   ].filter((l) => l.show);
