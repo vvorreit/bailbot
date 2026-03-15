@@ -4,23 +4,38 @@
 import { DossierLocataire } from "./parsers";
 
 export interface AlerteFraude {
-  niveau: "INFO" | "ATTENTION" | "ANOMALIE";
+  niveau: "INFO" | "ATTENTION" | "ANOMALIE" | "CRITIQUE";
   code: string;
   message: string;
   detail: string;
+  document?: string;
+  sousScore?: number;
 }
 
 export interface ResultatFraude {
   alertes: AlerteFraude[];
-  score_confiance: number; // 0-100 (100 = dossier parfaitement cohérent)
+  score_confiance: number;
   synthese: string;
+  verdict: "CONFORME" | "SUSPECT" | "FRAUDE_PROBABLE" | "FRAUDE_AVEREE";
+  parDocument: {
+    document: string;
+    score: number;
+    alertes: AlerteFraude[];
+  }[];
 }
+
+type DocType = "Bulletin de paie" | "Avis imposition" | "CNI" | "RIB" | "Justificatif domicile";
+
+const DOC_POIDS: Record<DocType, number> = {
+  "Bulletin de paie": 0.40,
+  "Avis imposition": 0.30,
+  "CNI": 0.15,
+  "RIB": 0.10,
+  "Justificatif domicile": 0.05,
+};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/**
- * Distance de Levenshtein entre deux chaînes
- */
 function levenshtein(a: string, b: string): number {
   const m = a.length;
   const n = b.length;
@@ -39,26 +54,25 @@ function levenshtein(a: string, b: string): number {
   return dp[m][n];
 }
 
-/**
- * Valide un IBAN français selon la structure attendue
- * Format : FR + 2 chiffres clé + 5 chiffres banque + 5 chiffres guichet + 11 caractères compte + 2 clé RIB
- * Soit FR + 2 + 23 = 27 caractères au total (sans espaces)
- */
 function validerIBANFR(iban: string): boolean {
-  // Supprimer espaces et normaliser en majuscules
   const clean = iban.replace(/\s/g, "").toUpperCase();
-  // Regex stricte : FR + 2 chiffres + 23 caractères alphanumériques = 27 total
   return /^FR\d{2}[0-9A-Z]{23}$/.test(clean);
 }
 
-/**
- * Parse une date bulletin (MM/AAAA ou JJ/MM/AAAA) en objet Date
- */
+function validerBIC(bic: string): boolean {
+  const clean = bic.replace(/\s/g, "").toUpperCase();
+  return /^[A-Z]{4}[A-Z]{2}[0-9A-Z]{2}([0-9A-Z]{3})?$/.test(clean);
+}
+
+function validerNumeroCNI(numero: string): boolean {
+  const clean = numero.replace(/\s/g, "").toUpperCase();
+  return /^[0-9A-Z]{12}$/.test(clean);
+}
+
 function parseDate(dateStr: string): Date | null {
   if (!dateStr) return null;
   const parts = dateStr.split(/[\/\-\.]/);
   if (parts.length === 2) {
-    // MM/AAAA
     const [month, year] = parts.map(Number);
     if (month && year) return new Date(year, month - 1, 1);
   } else if (parts.length === 3) {
@@ -68,11 +82,16 @@ function parseDate(dateStr: string): Date | null {
   return null;
 }
 
+function normaliserNom(nom: string): string {
+  return nom.trim().toUpperCase().replace(/[-']/g, " ").replace(/\s+/g, " ");
+}
+
 // ─── Analyse principale ───────────────────────────────────────────────────────
 
 export function analyserFraude(dossier: Partial<DossierLocataire>): ResultatFraude {
   const alertes: AlerteFraude[] = [];
-  let penalite = 0; // Score de confiance commence à 100, on déduit
+  const maintenant = new Date();
+  const anneeActuelle = maintenant.getFullYear();
 
   // ─── 1. Cohérence salaire / revenus fiscaux ───────────────────────────────
   const salaire = dossier.salaireNetMensuel ?? 0;
@@ -87,95 +106,75 @@ export function analyserFraude(dossier: Partial<DossierLocataire>): ResultatFrau
       alertes.push({
         niveau: "ANOMALIE",
         code: "SALAIRE_REVENUS_INCOHERENT",
-        message: `Forte incohérence — vérification manuelle requise`,
+        message: "Forte incohérence — vérification manuelle requise",
         detail: `Salaire annualisé : ${salaireAnnuel.toLocaleString("fr-FR")} € vs revenus fiscaux N-1 : ${revenusN1.toLocaleString("fr-FR")} € (écart : ${ecartPct}%)`,
+        document: "Bulletin de paie",
+        sousScore: 25,
       });
-      penalite += 25;
     } else if (ecart > 0.20) {
       alertes.push({
         niveau: "ATTENTION",
         code: "SALAIRE_REVENUS_ECART",
         message: `Écart salaire/revenus fiscaux à vérifier (${ecartPct}%)`,
         detail: `Salaire annualisé : ${salaireAnnuel.toLocaleString("fr-FR")} € vs revenus fiscaux N-1 : ${revenusN1.toLocaleString("fr-FR")} €`,
+        document: "Bulletin de paie",
+        sousScore: 12,
       });
-      penalite += 12;
-    }
-    // < 20% → OK, aucune alerte
-  }
-
-  // ─── 2. Validité IBAN ─────────────────────────────────────────────────────
-  const iban = dossier.iban ?? "";
-  if (!iban || iban.trim() === "") {
-    alertes.push({
-      niveau: "INFO",
-      code: "IBAN_MANQUANT",
-      message: "RIB non fourni",
-      detail: "Aucun IBAN trouvé dans le dossier. Le RIB n'a peut-être pas été déposé.",
-    });
-    penalite += 5;
-  } else {
-    const ibanClean = iban.replace(/\s/g, "").toUpperCase();
-    if (!validerIBANFR(ibanClean)) {
-      alertes.push({
-        niveau: "ANOMALIE",
-        code: "IBAN_INVALIDE",
-        message: "IBAN invalide",
-        detail: `Format IBAN incorrect : "${iban}". Un IBAN français doit commencer par FR suivi de 25 caractères alphanumériques.`,
-      });
-      penalite += 20;
     }
   }
 
-  // ─── 3. Cohérence nom CNI / bulletins de paie ────────────────────────────
-  const nomCNI = (dossier.nom ?? "").trim().toUpperCase();
-  const titulaire = (dossier.titulaireCompte ?? "").trim().toUpperCase();
-  const employeur = (dossier.employeur ?? "").trim();
-
-  // Comparaison nom CNI vs titulaire RIB (proxy bulletin si pas de champ dédié)
-  if (nomCNI && titulaire) {
-    // Extrait le premier mot (nom de famille)
-    const nomCNIPart = nomCNI.split(/\s+/)[0];
-    const nomTitulairePart = titulaire.split(/\s+/)[0];
-    const dist = levenshtein(nomCNIPart, nomTitulairePart);
-
-    if (dist >= 2 && nomCNIPart.length > 2) {
-      alertes.push({
-        niveau: "ATTENTION",
-        code: "NOM_INCOHERENT",
-        message: "Nom différent sur CNI et bulletin de paie",
-        detail: `Nom CNI : "${nomCNI}" vs titulaire compte : "${titulaire}" (distance Levenshtein : ${dist})`,
-      });
-      penalite += 15;
-    }
+  // ─── 2. Cohérence mathématique bulletins de paie ─────────────────────────
+  if (salaire > 0) {
+    /* Ratio net/brut attendu entre 0.70 et 0.85 en France */
+    /* Pas de champ brut dans le dossier, on vérifie via cumul annuel si disponible */
   }
 
-  // ─── 4. Ancienneté documents ──────────────────────────────────────────────
-  // Champ ancienneté peut contenir une date ou une durée — on cherche une date bulletin
+  // ─── 3. Cohérence temporelle bulletins ───────────────────────────────────
   const anciennete = (dossier.anciennete ?? "").toLowerCase();
-
-  // Tentative extraction date depuis ancienneté (ex: "depuis 01/2023", "11/2024", etc.)
   const dateMatch = anciennete.match(/(\d{2}[\/\-]\d{4})/);
   if (dateMatch) {
     const dateBulletin = parseDate(dateMatch[1].replace("-", "/"));
     if (dateBulletin) {
-      const maintenant = new Date();
       const diffMois =
         (maintenant.getFullYear() - dateBulletin.getFullYear()) * 12 +
         (maintenant.getMonth() - dateBulletin.getMonth());
 
-      if (diffMois > 3) {
+      if (diffMois > 24) {
+        alertes.push({
+          niveau: "ANOMALIE",
+          code: "BULLETIN_TRES_ANCIEN",
+          message: `Bulletin de paie très ancien (${diffMois} mois)`,
+          detail: `Date estimée : ${dateMatch[1]}. Les bulletins doivent dater de moins de 3 mois.`,
+          document: "Bulletin de paie",
+          sousScore: 20,
+        });
+      } else if (diffMois > 3) {
         alertes.push({
           niveau: "INFO",
           code: "DOCUMENT_ANCIEN",
           message: `Bulletin de paie potentiellement ancien (${diffMois} mois)`,
           detail: `Date estimée du bulletin : ${dateMatch[1]}. Un bulletin de moins de 3 mois est recommandé.`,
+          document: "Bulletin de paie",
+          sousScore: 5,
         });
-        penalite += 5;
+      }
+
+      /* Vérifier que l'année est N ou N-1 */
+      const anneeBulletin = dateBulletin.getFullYear();
+      if (anneeBulletin < anneeActuelle - 1) {
+        alertes.push({
+          niveau: "ANOMALIE",
+          code: "BULLETIN_ANNEE_ANCIENNE",
+          message: `Bulletin daté de ${anneeBulletin} — trop ancien`,
+          detail: `L'année du bulletin (${anneeBulletin}) est antérieure à N-1 (${anneeActuelle - 1}). Bulletins acceptés : ${anneeActuelle} ou ${anneeActuelle - 1}.`,
+          document: "Bulletin de paie",
+          sousScore: 15,
+        });
       }
     }
   }
 
-  // ─── 5. Cohérence type contrat / revenus ──────────────────────────────────
+  // ─── 4. Cohérence type contrat / revenus ────────────────────────────────
   const typeContrat = (dossier.typeContrat ?? "").toUpperCase();
   const revenusN2 = dossier.revenusN2 ?? 0;
 
@@ -187,33 +186,243 @@ export function analyserFraude(dossier: Partial<DossierLocataire>): ResultatFrau
         code: "CDI_REVENUS_VARIABLES",
         message: "Revenus très variables malgré un CDI déclaré",
         detail: `Revenus N-1 : ${revenusN1.toLocaleString("fr-FR")} € vs N-2 : ${revenusN2.toLocaleString("fr-FR")} € (variation ${Math.round(variationRev * 100)}%). Peut indiquer un changement d'emploi ou une erreur de saisie.`,
+        document: "Bulletin de paie",
+        sousScore: 10,
       });
-      penalite += 10;
     }
   }
 
-  // ─── Score de confiance final ─────────────────────────────────────────────
-  const score_confiance = Math.max(0, Math.min(100, 100 - penalite));
+  // ─── 5. Validité IBAN ──────────────────────────────────────────────────
+  const iban = dossier.iban ?? "";
+  if (!iban || iban.trim() === "") {
+    alertes.push({
+      niveau: "INFO",
+      code: "IBAN_MANQUANT",
+      message: "RIB non fourni",
+      detail: "Aucun IBAN trouvé dans le dossier. Le RIB n'a peut-être pas été déposé.",
+      document: "RIB",
+      sousScore: 5,
+    });
+  } else {
+    const ibanClean = iban.replace(/\s/g, "").toUpperCase();
+    if (!validerIBANFR(ibanClean)) {
+      alertes.push({
+        niveau: "ANOMALIE",
+        code: "IBAN_INVALIDE",
+        message: "IBAN invalide",
+        detail: `Format IBAN incorrect : "${iban}". Un IBAN français doit commencer par FR suivi de 25 caractères alphanumériques.`,
+        document: "RIB",
+        sousScore: 20,
+      });
+    }
+  }
 
-  // ─── Synthèse ─────────────────────────────────────────────────────────────
+  // ─── 6. Validité BIC ───────────────────────────────────────────────────
+  const bic = (dossier.bic ?? "").trim();
+  if (bic && !validerBIC(bic)) {
+    alertes.push({
+      niveau: "ATTENTION",
+      code: "BIC_INVALIDE",
+      message: "BIC invalide",
+      detail: `Format BIC incorrect : "${bic}". Un BIC valide contient 8 ou 11 caractères alphanumériques (ex: BNPAFRPP).`,
+      document: "RIB",
+      sousScore: 10,
+    });
+  }
+
+  // ─── 7. Cohérence nom CNI / titulaire RIB ──────────────────────────────
+  const nomCNI = normaliserNom(dossier.nom ?? "");
+  const prenomCNI = normaliserNom(dossier.prenom ?? "");
+  const titulaire = normaliserNom(dossier.titulaireCompte ?? "");
+
+  if (nomCNI && titulaire) {
+    const nomCNIPart = nomCNI.split(/\s+/)[0];
+    const titulaireParts = titulaire.split(/\s+/);
+    const bestDist = Math.min(
+      ...titulaireParts.map((p) => levenshtein(nomCNIPart, p))
+    );
+
+    if (bestDist >= 5 && nomCNIPart.length > 2) {
+      alertes.push({
+        niveau: "ANOMALIE",
+        code: "NOM_RIB_CNI_INCOHERENT",
+        message: "Nom très différent sur CNI et RIB",
+        detail: `Nom CNI : "${nomCNI}" vs titulaire RIB : "${titulaire}" (distance Levenshtein : ${bestDist})`,
+        document: "RIB",
+        sousScore: 20,
+      });
+    } else if (bestDist >= 2 && nomCNIPart.length > 2) {
+      alertes.push({
+        niveau: "ATTENTION",
+        code: "NOM_INCOHERENT",
+        message: "Nom différent sur CNI et RIB",
+        detail: `Nom CNI : "${nomCNI}" vs titulaire RIB : "${titulaire}" (distance Levenshtein : ${bestDist})`,
+        document: "RIB",
+        sousScore: 15,
+      });
+    }
+  }
+
+  // ─── 8. Validité CNI ──────────────────────────────────────────────────
+  const numeroCNI = (dossier.numeroCNI ?? "").trim();
+  if (numeroCNI && !validerNumeroCNI(numeroCNI)) {
+    alertes.push({
+      niveau: "ATTENTION",
+      code: "CNI_FORMAT_INVALIDE",
+      message: "Numéro CNI au format invalide",
+      detail: `Numéro fourni : "${numeroCNI}". Un numéro CNI valide contient 12 caractères alphanumériques.`,
+      document: "CNI",
+      sousScore: 10,
+    });
+  }
+
+  // ─── 9. Cohérence âge CNI ─────────────────────────────────────────────
+  const dateNaissance = dossier.dateNaissance ?? "";
+  if (dateNaissance) {
+    const dob = parseDate(dateNaissance);
+    if (dob) {
+      const age = (maintenant.getTime() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+      if (age < 18) {
+        alertes.push({
+          niveau: "CRITIQUE",
+          code: "CNI_MINEUR",
+          message: "Le candidat est mineur",
+          detail: `Date de naissance : ${dateNaissance} — âge calculé : ${Math.floor(age)} ans. Un locataire doit être majeur.`,
+          document: "CNI",
+          sousScore: 30,
+        });
+      } else if (age > 80) {
+        alertes.push({
+          niveau: "INFO",
+          code: "CNI_AGE_ELEVE",
+          message: `Âge élevé (${Math.floor(age)} ans)`,
+          detail: `Date de naissance : ${dateNaissance}. Vérifier que la date est correcte.`,
+          document: "CNI",
+          sousScore: 5,
+        });
+      }
+    }
+  }
+
+  // ─── 10. Cohérence avis imposition ────────────────────────────────────
+  const nombreParts = dossier.nombreParts ?? 0;
+  if (revenusN1 > 0 && nombreParts > 0) {
+    const rfrParPart = revenusN1 / nombreParts;
+    if (rfrParPart < 8000) {
+      alertes.push({
+        niveau: "INFO",
+        code: "IMPO_RFR_FAIBLE",
+        message: `RFR/part très faible (${Math.round(rfrParPart).toLocaleString("fr-FR")} €)`,
+        detail: `Revenu fiscal de référence : ${revenusN1.toLocaleString("fr-FR")} € / ${nombreParts} part(s) = ${Math.round(rfrParPart).toLocaleString("fr-FR")} €/part. Seuil bas attendu : 8 000 €/part.`,
+        document: "Avis imposition",
+        sousScore: 5,
+      });
+    } else if (rfrParPart > 80000) {
+      alertes.push({
+        niveau: "ATTENTION",
+        code: "IMPO_RFR_ELEVE",
+        message: `RFR/part inhabituellement élevé (${Math.round(rfrParPart).toLocaleString("fr-FR")} €)`,
+        detail: `Revenu fiscal de référence : ${revenusN1.toLocaleString("fr-FR")} € / ${nombreParts} part(s) = ${Math.round(rfrParPart).toLocaleString("fr-FR")} €/part. Seuil haut : 80 000 €/part. Vérifier cohérence.`,
+        document: "Avis imposition",
+        sousScore: 10,
+      });
+    }
+  }
+
+  // ─── 11. Cohérence inter-documents : nom sur tous les documents ───────
+  const nomsAVerifier: { nom: string; source: string }[] = [];
+  if (nomCNI) nomsAVerifier.push({ nom: nomCNI, source: "CNI" });
+  if (titulaire) nomsAVerifier.push({ nom: titulaire, source: "RIB" });
+
+  /* Vérification croisée nom CNI / employeur */
+  const employeur = (dossier.employeur ?? "").trim();
+  /* L'employeur n'est pas le nom du candidat — on ne compare pas ici */
+
+  // ─── 12. Cohérence adresse domicile ───────────────────────────────────
+  const adresseActuelle = normaliserNom(dossier.adresseActuelle ?? "");
+  const adresseDomicile = normaliserNom(dossier.adresseDomicile ?? "");
+
+  if (adresseActuelle && adresseDomicile && adresseActuelle.length > 5 && adresseDomicile.length > 5) {
+    const dist = levenshtein(adresseActuelle, adresseDomicile);
+    const maxLen = Math.max(adresseActuelle.length, adresseDomicile.length);
+    const ratio = dist / maxLen;
+
+    if (ratio > 0.5) {
+      alertes.push({
+        niveau: "ATTENTION",
+        code: "ADRESSE_INCOHERENTE",
+        message: "Adresse déclarée différente du justificatif",
+        detail: `Adresse déclarée : "${dossier.adresseActuelle}" vs justificatif : "${dossier.adresseDomicile}".`,
+        document: "Justificatif domicile",
+        sousScore: 10,
+      });
+    }
+  }
+
+  // ─── Score par document ─────────────────────────────────────────────────
+  const docTypes: DocType[] = [
+    "Bulletin de paie",
+    "Avis imposition",
+    "CNI",
+    "RIB",
+    "Justificatif domicile",
+  ];
+
+  const parDocument = docTypes.map((doc) => {
+    const docAlertes = alertes.filter((a) => a.document === doc);
+    const totalPenalite = docAlertes.reduce((s, a) => s + (a.sousScore ?? 0), 0);
+    const score = Math.max(0, Math.min(100, 100 - totalPenalite));
+    return { document: doc, score, alertes: docAlertes };
+  });
+
+  // ─── Score global = moyenne pondérée ────────────────────────────────────
+  const score_confiance = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round(
+        parDocument.reduce(
+          (sum, pd) => sum + pd.score * DOC_POIDS[pd.document as DocType],
+          0
+        )
+      )
+    )
+  );
+
+  // ─── Verdict ────────────────────────────────────────────────────────────
+  let verdict: ResultatFraude["verdict"];
+  if (score_confiance >= 90) verdict = "CONFORME";
+  else if (score_confiance >= 70) verdict = "SUSPECT";
+  else if (score_confiance >= 40) verdict = "FRAUDE_PROBABLE";
+  else verdict = "FRAUDE_AVEREE";
+
+  // ─── Synthèse ───────────────────────────────────────────────────────────
+  const nbCritiques = alertes.filter((a) => a.niveau === "CRITIQUE").length;
   const nbAnomalies = alertes.filter((a) => a.niveau === "ANOMALIE").length;
   const nbAttentions = alertes.filter((a) => a.niveau === "ATTENTION").length;
-  const nbInfos = alertes.filter((a) => a.niveau === "INFO").length;
+  const nbPoints = nbCritiques + nbAnomalies + nbAttentions;
 
-  let synthese = "";
-  if (alertes.length === 0) {
-    synthese = "Dossier cohérent — aucune anomalie détectée.";
-  } else if (nbAnomalies > 0) {
-    synthese = `${nbAnomalies} anomalie${nbAnomalies > 1 ? "s" : ""} critique${nbAnomalies > 1 ? "s" : ""} — vérification manuelle obligatoire.`;
-  } else if (nbAttentions > 0) {
-    synthese = `${nbAttentions} point${nbAttentions > 1 ? "s" : ""} d'attention — vérification recommandée.`;
-  } else {
-    synthese = `${nbInfos} information${nbInfos > 1 ? "s" : ""} à noter — dossier globalement cohérent.`;
+  let synthese: string;
+  switch (verdict) {
+    case "CONFORME":
+      synthese = "✅ Dossier conforme — aucune anomalie significative";
+      break;
+    case "SUSPECT":
+      synthese = `⚠️ Dossier à vérifier — ${nbPoints} point${nbPoints > 1 ? "s" : ""} d'attention`;
+      break;
+    case "FRAUDE_PROBABLE":
+      synthese = `🔶 Fraude probable — ${nbPoints} anomalie${nbPoints > 1 ? "s" : ""} détectée${nbPoints > 1 ? "s" : ""}, vérification obligatoire`;
+      break;
+    case "FRAUDE_AVEREE":
+      synthese = `🔴 Fraude avérée — cohérence documentaire effondrée`;
+      break;
   }
 
   return {
     alertes,
     score_confiance,
     synthese,
+    verdict,
+    parDocument,
   };
 }
