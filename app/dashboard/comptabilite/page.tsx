@@ -12,6 +12,7 @@ import {
   TrendingDown,
   Banknote,
   AlertTriangle,
+  Table,
 } from "lucide-react";
 import { FeatureGate } from "@/components/FeatureGate";
 import RecapFiscalAnnuel from "@/components/RecapFiscalAnnuel";
@@ -28,6 +29,8 @@ import {
   type RecapFiscal,
   type ConfigFiscalBien,
 } from "@/lib/recapitulatif-fiscal";
+import { getTransactionsAnnuelles } from "@/app/actions/export-transactions";
+import { generateCSV as buildCSV } from "@/lib/export-csv";
 
 /* ─── localStorage helpers pour persister les configs fiscales ──────────── */
 
@@ -130,6 +133,36 @@ function ComptabiliteContent() {
     doc.save(`recap-fiscal-${recap.annee}.pdf`);
   }, [recap]);
 
+  /* Export transactions CSV */
+  const handleTransactionsCSV = useCallback(async () => {
+    const rows = await getTransactionsAnnuelles(biens, paiements, annee);
+    if (rows.length === 0) return;
+    const headers = ['Date', 'Bien', 'Adresse', 'Locataire', 'Type', 'Montant', 'Statut', 'Reference quittance'];
+    const csv = buildCSV(rows as unknown as Record<string, unknown>[], headers);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `transactions_${annee}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [biens, paiements, annee]);
+
+  /* Export transactions Excel */
+  const handleTransactionsExcel = useCallback(async () => {
+    const rows = await getTransactionsAnnuelles(biens, paiements, annee);
+    if (rows.length === 0) return;
+    const headers = ['Date', 'Bien', 'Adresse', 'Locataire', 'Type', 'Montant', 'Statut', 'Reference quittance'];
+    const { generateExcel } = await import("@/lib/export-csv");
+    const blob = await generateExcel(rows as unknown as Record<string, unknown>[], headers, 'Transactions');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `transactions_${annee}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [biens, paiements, annee]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
@@ -192,6 +225,26 @@ function ComptabiliteContent() {
           >
             <FileText className="w-4 h-4" />
             <span className="hidden sm:inline">PDF</span>
+          </button>
+
+          {/* Export transactions */}
+          <button
+            onClick={handleTransactionsCSV}
+            disabled={recap.biens.length === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            title="Exporter les transactions en CSV"
+          >
+            <Table className="w-4 h-4" />
+            <span className="hidden sm:inline">Transactions CSV</span>
+          </button>
+          <button
+            onClick={handleTransactionsExcel}
+            disabled={recap.biens.length === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            title="Exporter les transactions en Excel"
+          >
+            <Table className="w-4 h-4" />
+            <span className="hidden sm:inline">Transactions Excel</span>
           </button>
         </div>
       </div>
