@@ -166,10 +166,13 @@ export default function DepotPage() {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
           <CheckCircle2 className="w-14 h-14 text-emerald-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Dépôt validé ✅</h1>
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">Dépôt validé</h1>
           <p className="text-slate-500">
             Vos documents ont été transmis de manière chiffrée. L'agence va les traiter sous peu.
           </p>
+          <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-sm text-emerald-700 font-semibold">
+            Votre dossier a été envoyé avec succès. Nous vous recontactons sous 48h.
+          </div>
         </div>
       </div>
     );

@@ -57,5 +57,11 @@ export async function POST(
     },
   });
 
+  // Notifier le gestionnaire (non-bloquant)
+  try {
+    const { notifyNouveauDepot } = await import('@/app/actions/notify-gestionnaire');
+    notifyNouveauDepot(depot.id).catch(() => {});
+  } catch {}
+
   return NextResponse.json({ id: fichier.id, nomRenomme: fichier.nomRenomme });
 }
