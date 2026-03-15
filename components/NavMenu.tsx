@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Users, ShieldCheck, CreditCard, User, LogOut, Menu, X, ChevronDown, LifeBuoy, Building2, Layers, BarChart2, Mail, Upload, TrendingUp } from "lucide-react";
+import { LayoutDashboard, Users, ShieldCheck, CreditCard, User, LogOut, Menu, X, ChevronDown, LifeBuoy, Building2, Layers, BarChart2, Mail, Upload, TrendingUp, UserCheck, FileText, ClipboardList, Calculator, Home } from "lucide-react";
 import { Banknote } from "lucide-react";
 import { createPortalSession } from "@/app/dashboard/actions";
 import MessageTemplates from "@/components/MessageTemplates";
@@ -68,6 +68,11 @@ export default function NavMenu() {
   const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, show: true },
     { href: "/dashboard/multi", label: "Multi-dossiers", icon: Layers, show: hasAccess(metier, "KANBAN_CANDIDATS") },
+    { href: "/dashboard/candidats", label: "Candidats", icon: UserCheck, show: hasAccess(metier, "RELANCES_CANDIDAT") },
+    { href: "/dashboard/bails", label: "Mes baux", icon: FileText, show: hasAccess(metier, "VIE_DU_BAIL") },
+    { href: "/dashboard/etats-des-lieux", label: "États des lieux", icon: ClipboardList, show: hasAccess(metier, "ETAT_DES_LIEUX") },
+    { href: "/dashboard/comptabilite", label: "Comptabilité", icon: Calculator, show: hasAccess(metier, "COMPTABILITE_FISCALE") },
+    { href: "/dashboard/espaces-locataires", label: "Locataires", icon: Home, show: hasAccess(metier, "ESPACE_LOCATAIRE") },
     { href: "/dashboard/stats", label: "Statistiques", icon: BarChart2, show: hasAccess(metier, "STATS_DASHBOARD") },
     { href: "/dashboard/team", label: "Mon équipe", icon: Users, show: showTeam && hasAccess(metier, "MULTI_USERS") },
     { href: "/dashboard/depot", label: "Dépôt locataire", icon: Upload, show: true },
