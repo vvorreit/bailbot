@@ -13,13 +13,20 @@ import {
   Users,
   Download,
   X,
+  FileX,
+  Share2,
+  Check,
 } from 'lucide-react';
 import { genererBailPDF, type DonneesBail } from '@/lib/generateur-bail';
+import { envoyerLienProprietaire } from '@/app/actions/portail-proprietaire';
 import { useSession } from 'next-auth/react';
 import { listerBiens, type Bien } from '@/lib/db-local';
 import CreerBailActifModal from '@/components/CreerBailActifModal';
+import ClotureBailModal from '@/components/ClotureBailModal';
 import TimelineBail from '@/components/TimelineBail';
-import AlertesEcheances from '@/components/AlertesEcheances';
+import AlertesEcheances, { type AlerteDiagnosticUI } from '@/components/AlertesEcheances';
+import BiensVacantsWidget from '@/components/BiensVacantsWidget';
+import { getAlertesExpirationDiagnostics } from '@/app/actions/alertes-diagnostics';
 import type { TypeAlerte, StatutBail } from '@prisma/client';
 
 /* ─── Types API ──────────────────────────────────────────────────────────── */
@@ -49,6 +56,8 @@ interface BailAPI {
   statut: StatutBail;
   createdAt: string;
   alertes: Alerte[];
+  colocataires?: { nom: string; prenom: string; email?: string; partLoyer?: number }[];
+  garants?: { nom: string; prenom: string; email?: string; type: string; organisme?: string }[];
 }
 
 /* ─── Statut badges ──────────────────────────────────────────────────────── */
@@ -68,18 +77,21 @@ export default function BailsClient() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [expandedBail, setExpandedBail] = useState<string | null>(null);
+  const [alertesDiagnostics, setAlertesDiagnostics] = useState<AlerteDiagnosticUI[]>([]);
 
   const loadData = async () => {
     try {
-      const [res, localBiens] = await Promise.all([
+      const [res, localBiens, diagAlertes] = await Promise.all([
         fetch('/api/bails'),
         listerBiens(),
+        getAlertesExpirationDiagnostics().catch(() => []),
       ]);
       if (res.ok) {
         const data = await res.json();
         setBails(data.bails || []);
       }
       setBiens(localBiens);
+      setAlertesDiagnostics(diagAlertes);
     } catch {
       /* ignore */
     } finally {
@@ -179,13 +191,15 @@ export default function BailsClient() {
       {/* Layout : alertes + liste */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Colonne alertes */}
-        <div className="lg:col-span-1 order-2 lg:order-1">
+        <div className="lg:col-span-1 order-2 lg:order-1 space-y-6">
           <AlertesEcheances
             alertes={toutesAlertes}
             bails={bailsMinimal}
             bienLabels={bienLabels}
             onTraiter={handleTraiter}
+            alertesDiagnostics={alertesDiagnostics}
           />
+          <BiensVacantsWidget />
         </div>
 
         {/* Colonne baux */}
@@ -206,6 +220,7 @@ export default function BailsClient() {
                 bienLabel={bienLabels[bail.bienId] || bail.bienId}
                 expanded={expandedBail === bail.id}
                 onToggle={() => setExpandedBail(expandedBail === bail.id ? null : bail.id)}
+                onReload={loadData}
               />
             ))
           )}
@@ -268,15 +283,18 @@ function BailCard({
   bienLabel,
   expanded,
   onToggle,
+  onReload,
 }: {
   bail: BailAPI;
   bienLabel: string;
   expanded: boolean;
   onToggle: () => void;
+  onReload?: () => void;
 }) {
   const cfg = STATUT_CONFIG[bail.statut];
   const alertesActives = bail.alertes.filter((a) => !a.traitee).length;
   const [showPdfModal, setShowPdfModal] = useState(false);
+  const [showClotureModal, setShowClotureModal] = useState(false);
   const [pdfForm, setPdfForm] = useState({
     nomBailleur: '',
     adresseBailleur: '',
@@ -380,20 +398,62 @@ function BailCard({
             <InfoPill label="Préavis" value={`${bail.dureePreavisMois} mois`} />
             <InfoPill label="Email" value={bail.locataireEmail} />
           </div>
+          {/* Colocataires */}
+          {bail.colocataires && bail.colocataires.length > 0 && (
+            <div className="mb-4">
+              <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Colocataires</h4>
+              <div className="flex flex-wrap gap-2">
+                {bail.colocataires.map((c, i) => (
+                  <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
+                    {c.prenom} {c.nom}
+                    {c.partLoyer ? ` (${c.partLoyer}€)` : ''}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Garants */}
+          {bail.garants && bail.garants.length > 0 && (
+            <div className="mb-4">
+              <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Garants</h4>
+              <div className="flex flex-wrap gap-2">
+                {bail.garants.map((g, i) => (
+                  <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-50 text-purple-700 rounded-full text-xs font-medium">
+                    {g.prenom} {g.nom}
+                    {g.type === 'organisme' && g.organisme ? ` (${g.organisme})` : ''}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-3">
             Chronologie
           </h4>
           <TimelineBail bail={bail} />
 
-          {/* Bouton PDF */}
-          <div className="mt-4 pt-4 border-t border-slate-100">
+          {/* Actions bail */}
+          <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-3">
             <button
               onClick={() => setShowPdfModal(true)}
               className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-colors"
             >
               <Download className="w-4 h-4" />
-              Télécharger le bail PDF
+              Bail PDF
             </button>
+            {(bail.statut === 'ACTIF' || bail.statut === 'PREAVIS') && (
+              <>
+                <button
+                  onClick={() => setShowClotureModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-bold rounded-xl transition-colors border border-red-200"
+                >
+                  <FileX className="w-4 h-4" />
+                  Clôturer
+                </button>
+                <PartagerProprietaireButton bailId={bail.id} />
+              </>
+            )}
           </div>
         </div>
       )}
@@ -471,6 +531,19 @@ function BailCard({
           </div>
         </div>
       )}
+
+      {/* Modal clôture bail */}
+      {showClotureModal && (
+        <ClotureBailModal
+          bailId={bail.id}
+          locataireNom={bail.locataireNom}
+          onClose={() => setShowClotureModal(false)}
+          onClotured={() => {
+            setShowClotureModal(false);
+            onReload?.();
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -483,5 +556,85 @@ function InfoPill({ label, value }: { label: string; value: string }) {
       <p className="text-[10px] font-bold text-slate-400 uppercase">{label}</p>
       <p className="text-sm font-semibold text-slate-700 truncate">{value}</p>
     </div>
+  );
+}
+
+/* ─── Partager Propriétaire Button (US 24) ───────────────────────────────── */
+
+function PartagerProprietaireButton({ bailId }: { bailId: string }) {
+  const [showForm, setShowForm] = useState(false);
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{ lien: string; sent: boolean } | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleEnvoyer = async () => {
+    if (!email) return;
+    setLoading(true);
+    try {
+      const res = await envoyerLienProprietaire(bailId, email);
+      setResult({ lien: res.lien, sent: res.sent });
+    } catch {
+      /* ignore */
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCopy = async () => {
+    if (!result?.lien) return;
+    await navigator.clipboard.writeText(result.lien);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  if (result) {
+    return (
+      <div className="flex items-center gap-2">
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold rounded-xl hover:bg-blue-100 transition-colors"
+        >
+          {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+          {copied ? 'Copié !' : 'Copier le lien'}
+        </button>
+        {result.sent && <span className="text-[10px] text-emerald-600 font-bold">Email envoyé</span>}
+      </div>
+    );
+  }
+
+  if (showForm) {
+    return (
+      <div className="flex items-center gap-2">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="email@proprietaire.fr"
+          className="border border-slate-200 rounded-lg px-2 py-1.5 text-xs w-48 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          onKeyDown={(e) => e.key === 'Enter' && handleEnvoyer()}
+        />
+        <button
+          onClick={handleEnvoyer}
+          disabled={loading || !email}
+          className="px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+        >
+          {loading ? '...' : 'Envoyer'}
+        </button>
+        <button onClick={() => setShowForm(false)} className="text-xs text-slate-400 hover:text-slate-600">
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => setShowForm(true)}
+      className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-bold rounded-xl transition-colors border border-blue-200"
+    >
+      <Share2 className="w-4 h-4" />
+      Portail propriétaire
+    </button>
   );
 }
