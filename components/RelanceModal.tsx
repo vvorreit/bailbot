@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Copy, Mail, CheckCircle2, FileDown } from 'lucide-react';
+import { X, Copy, Mail, CheckCircle2, FileDown, Send, Loader2 } from 'lucide-react';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { type Paiement, type Bien, ajouterRelance } from '@/lib/db-local';
 import {
@@ -49,6 +49,8 @@ export default function RelanceModal({ paiement, bien, bailleur, moisImpayes, on
   const [loading, setLoading] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [methode, setMethode] = useState<'email' | 'sms' | 'courrier' | 'lrar'>('email');
+  const [emailSending, setEmailSending] = useState(false);
+  const [toast, setToast] = useState('');
 
   const infoBailleur = {
     nom: bailleur?.nom || 'Le Bailleur',
@@ -108,6 +110,67 @@ export default function RelanceModal({ paiement, bien, bailleur, moisImpayes, on
       }
     } finally {
       setPdfLoading(false);
+    }
+  };
+
+  const handleEnvoyerEmailResend = async () => {
+    if (!paiement.locataireEmail) {
+      alert('Email du locataire requis pour envoyer par email.');
+      return;
+    }
+    setEmailSending(true);
+    try {
+      let pdfBase64: string | undefined;
+      if (etapeSelectionnee.numero >= 2) {
+        let blob: Blob;
+        if (etapeSelectionnee.numero === 3) {
+          const { genererMiseEnDemeurePDF } = await import('@/lib/generateur-mise-en-demeure');
+          const moisList = (moisImpayes && moisImpayes.length > 0) ? moisImpayes : [paiement];
+          blob = await genererMiseEnDemeurePDF(
+            paiement,
+            { nom: infoBailleur.nom, adresse: infoBailleur.adresse, ville: infoBailleur.ville },
+            moisList
+          );
+        } else {
+          const { genererLettreSimplePDF } = await import('@/lib/generateur-mise-en-demeure');
+          blob = await genererLettreSimplePDF(
+            etapeSelectionnee,
+            texteObjet,
+            texteCorps,
+            { nom: infoBailleur.nom, ville: infoBailleur.ville }
+          );
+        }
+        const arrayBuffer = await blob.arrayBuffer();
+        pdfBase64 = btoa(
+          new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+        );
+      }
+
+      const res = await fetch('/api/relances/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          locataireEmail: paiement.locataireEmail,
+          locataireNom: `${paiement.locatairePrenom} ${paiement.locataireNom}`.trim(),
+          objet: texteObjet,
+          corps: texteCorps,
+          pdfBase64,
+          etapeNumero: etapeSelectionnee.numero,
+          nomBailleur: infoBailleur.nom,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Erreur lors de l\'envoi');
+      }
+
+      setToast(`Email envoyé à ${paiement.locataireEmail}`);
+      setTimeout(() => setToast(''), 4000);
+    } catch (e: any) {
+      alert(`Erreur : ${e.message}`);
+    } finally {
+      setEmailSending(false);
     }
   };
 
@@ -253,6 +316,13 @@ export default function RelanceModal({ paiement, bien, bailleur, moisImpayes, on
           </div>
         </div>
 
+        {/* Toast */}
+        {toast && (
+          <div className="mx-6 mb-3 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-sm text-emerald-700 font-semibold">
+            ✅ {toast}
+          </div>
+        )}
+
         {/* Footer actions */}
         <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50 flex-wrap">
           <div className="flex items-center gap-2 flex-wrap">
@@ -265,13 +335,23 @@ export default function RelanceModal({ paiement, bien, bailleur, moisImpayes, on
             </button>
 
             {paiement.locataireEmail && (
-              <button
-                onClick={handleOuvrirMail}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 text-blue-700 font-bold rounded-xl text-sm hover:bg-blue-100 transition-colors"
-              >
-                <Mail className="w-4 h-4" aria-hidden="true" />
-                Ouvrir Mail
-              </button>
+              <>
+                <button
+                  onClick={handleOuvrirMail}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 text-blue-700 font-bold rounded-xl text-sm hover:bg-blue-100 transition-colors"
+                >
+                  <Mail className="w-4 h-4" aria-hidden="true" />
+                  Ouvrir Mail
+                </button>
+                <button
+                  onClick={handleEnvoyerEmailResend}
+                  disabled={emailSending}
+                  className="flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold rounded-xl text-sm hover:bg-emerald-100 transition-colors disabled:opacity-50"
+                >
+                  {emailSending ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Send className="w-4 h-4" aria-hidden="true" />}
+                  {emailSending ? 'Envoi...' : 'Envoyer par email'}
+                </button>
+              </>
             )}
 
             {showPdfButton && (
