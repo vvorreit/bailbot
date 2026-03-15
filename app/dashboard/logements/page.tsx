@@ -19,6 +19,11 @@ import {
   MoreVertical,
   Pencil,
   Trash2,
+  Wrench,
+  Calculator,
+  Bell,
+  Banknote,
+  MessageSquare,
 } from "lucide-react";
 import { FeatureGate } from "@/components/FeatureGate";
 import {
@@ -32,6 +37,8 @@ import {
   type Candidature,
   type Paiement,
   type TypeBail,
+  type Annexe,
+  type TypeAnnexe,
 } from "@/lib/db-local";
 
 /* ─── Types locaux ────────────────────────────────────────────────────────── */
@@ -131,6 +138,8 @@ function LogementsContent() {
   const [filtre, setFiltre] = useState<Filtre>("tous");
   const [showAjout, setShowAjout] = useState(false);
   const [editBien, setEditBien] = useState<BienEnrichi | null>(null);
+  const [nbDemandesNouv, setNbDemandesNouv] = useState(0);
+  const [allPaiements, setAllPaiements] = useState<Paiement[]>([]);
 
   const loadBiens = useCallback(async () => {
     try {
@@ -162,6 +171,22 @@ function LogementsContent() {
 
   useEffect(() => { loadBiens(); }, [loadBiens]);
 
+  // Charger les paiements globaux et les demandes locataires
+  useEffect(() => {
+    listerPaiements().then(setAllPaiements).catch(() => {});
+    fetch("/api/espaces-locataires")
+      .then((r) => r.json())
+      .then((data) => {
+        const espaces = data.espaces ?? [];
+        const nb = espaces.reduce(
+          (sum: number, e: any) => sum + (e.demandes ?? []).filter((d: any) => d.statut === "NOUVEAU").length,
+          0
+        );
+        setNbDemandesNouv(nb);
+      })
+      .catch(() => {});
+  }, []);
+
   const biensFiltres = useMemo(() => {
     if (filtre === "tous") return biens;
     return biens.filter((b) => b.statut === filtre);
@@ -175,9 +200,44 @@ function LogementsContent() {
     const vacants = biens.filter((b) => b.statut === "vacant").length;
     const revenusMensuels = biens
       .filter((b) => b.statut === "loue")
-      .reduce((sum, b) => sum + b.loyer + b.charges, 0);
+      .reduce((sum, b) => sum + b.loyer + b.charges + (b.annexes?.reduce((s, a) => s + (a.loyer || 0), 0) ?? 0), 0);
     const tauxGlobal = total > 0 ? Math.round((loues / total) * 100) : 0;
     return { total, loues, vacants, revenusMensuels, tauxGlobal };
+  }, [biens]);
+
+  /* ─── Vue d'ensemble — Loyers du mois ────────────────────────────────── */
+  const loyersMois = useMemo(() => {
+    const now = new Date();
+    const moisCourant = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const duMois = allPaiements.filter((p) => p.mois === moisCourant);
+    const payes = duMois.filter((p) => p.statut === "paye").length;
+    const attendus = duMois.filter((p) => p.statut === "attendu").length;
+    const retard = duMois.filter((p) => p.statut === "retard" || p.statut === "impaye").length;
+    return { payes, attendus, retard, total: duMois.length };
+  }, [allPaiements]);
+
+  /* ─── Vue d'ensemble — Alertes urgentes ────────────────────────────── */
+  const alertes = useMemo(() => {
+    const now = Date.now();
+    const items: { label: string; type: "danger" | "warning" }[] = [];
+    for (const b of biens) {
+      if (b.dateFin) {
+        const joursRestants = Math.ceil((b.dateFin - now) / (1000 * 60 * 60 * 24));
+        if (joursRestants > 0 && joursRestants <= 90) {
+          items.push({ label: `Fin bail ${b.adresse.slice(0, 25)} — ${joursRestants}j`, type: joursRestants <= 30 ? "danger" : "warning" });
+        }
+      }
+      if (b.dateRevision) {
+        const joursRestants = Math.ceil((b.dateRevision - now) / (1000 * 60 * 60 * 24));
+        if (joursRestants > 0 && joursRestants <= 30) {
+          items.push({ label: `Révision IRL ${b.adresse.slice(0, 25)} — ${joursRestants}j`, type: "warning" });
+        }
+      }
+      for (const d of b.diagnosticsExpirants) {
+        items.push({ label: `${d.type} expire ${b.adresse.slice(0, 20)} — ${d.joursRestants}j`, type: d.joursRestants <= 30 ? "danger" : "warning" });
+      }
+    }
+    return items.slice(0, 3);
   }, [biens]);
 
   async function handleSupprimer(id: string) {
@@ -201,7 +261,7 @@ function LogementsContent() {
         <div>
           <h1 className="text-2xl font-black text-slate-900 flex items-center gap-3">
             <Building2 className="w-7 h-7 text-emerald-600" />
-            Mes logements
+            Tableau de bord
           </h1>
           <p className="text-slate-500 mt-1">Vue d&apos;ensemble de votre parc immobilier</p>
         </div>
@@ -236,6 +296,75 @@ function LogementsContent() {
           color={stats.vacants > 0 ? "red" : "slate"}
         />
       </div>
+
+      {/* Vue d'ensemble */}
+      {biens.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          {/* Loyers du mois */}
+          <div className="bg-white rounded-2xl border border-slate-100 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <Banknote className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Loyers du mois</span>
+            </div>
+            {loyersMois.total > 0 ? (
+              <div className="flex items-baseline gap-3">
+                <span className="text-lg font-black text-emerald-600">{loyersMois.payes} payé{loyersMois.payes > 1 ? "s" : ""}</span>
+                <span className="text-xs text-slate-400">{loyersMois.attendus} attendu{loyersMois.attendus > 1 ? "s" : ""}</span>
+                {loyersMois.retard > 0 && (
+                  <span className="text-xs font-bold text-red-500">{loyersMois.retard} en retard</span>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-400">Aucun loyer ce mois</p>
+            )}
+          </div>
+
+          {/* Alertes urgentes */}
+          <div className="bg-white rounded-2xl border border-slate-100 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <Bell className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Alertes</span>
+            </div>
+            {alertes.length > 0 ? (
+              <ul className="space-y-1.5">
+                {alertes.map((a, i) => (
+                  <li key={i} className={`text-xs font-semibold ${a.type === "danger" ? "text-red-600" : "text-amber-600"}`}>
+                    {a.type === "danger" ? "!!" : "!"} {a.label}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-slate-400">Aucune alerte</p>
+            )}
+          </div>
+
+          {/* Demandes locataires */}
+          <Link
+            href="/dashboard/espaces-locataires"
+            className="bg-white rounded-2xl border border-slate-100 p-4 hover:shadow-md transition-shadow group"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <MessageSquare className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Demandes locataires</span>
+            </div>
+            {nbDemandesNouv > 0 ? (
+              <div className="flex items-baseline gap-2">
+                <span className="text-lg font-black text-blue-600">{nbDemandesNouv}</span>
+                <span className="text-xs text-slate-400">en attente</span>
+                <ChevronRight className="w-4 h-4 text-blue-400 ml-auto group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            ) : (
+              <p className="text-sm text-slate-400">Aucune demande en attente</p>
+            )}
+          </Link>
+        </div>
+      )}
 
       {/* Filtres rapides */}
       {biens.length > 0 && (
@@ -433,7 +562,7 @@ function BienCard({
           )}
           <div className="flex items-center justify-between ml-6 text-xs">
             <span className="text-slate-500">
-              Loyer CC : <span className="font-bold text-slate-700">{(bien.loyer + bien.charges).toLocaleString("fr-FR")} €</span>
+              Loyer CC : <span className="font-bold text-slate-700">{(bien.loyer + bien.charges + (bien.annexes?.reduce((s, a) => s + (a.loyer || 0), 0) ?? 0)).toLocaleString("fr-FR")} €</span>
             </span>
             {bien.prochainPaiement && (
               <span className="text-slate-500">
@@ -496,17 +625,27 @@ function BienCard({
         <ActionButton
           icon={<Receipt className="w-3.5 h-3.5" />}
           label="Quittance"
-          href={`/dashboard/bails?bienId=${bien.id}`}
+          href={`/dashboard/impayes?bienId=${bien.id}`}
         />
         <ActionButton
           icon={<FileText className="w-3.5 h-3.5" />}
           label="Voir bail"
-          href={`/dashboard/bails/${bien.id}`}
+          href={`/dashboard/bails?bienId=${bien.id}`}
         />
         <ActionButton
           icon={<ClipboardList className="w-3.5 h-3.5" />}
           label="Nouvel EDL"
           href={`/dashboard/etats-des-lieux/nouveau?bienId=${bien.id}`}
+        />
+        <ActionButton
+          icon={<Wrench className="w-3.5 h-3.5" />}
+          label="Travaux"
+          href={`/dashboard/travaux?bienId=${bien.id}`}
+        />
+        <ActionButton
+          icon={<Calculator className="w-3.5 h-3.5" />}
+          label="Finances"
+          href={`/dashboard/comptabilite?bienId=${bien.id}`}
         />
       </div>
     </div>
@@ -567,12 +706,37 @@ function BienFormModal({
   const [form, setForm] = useState({
     adresse: bien?.adresse || "",
     typeBail: (bien?.typeBail || "HABITATION_VIDE") as TypeBail,
+    statut: (bien?.statut || "vacant") as "loue" | "vacant" | "selection",
     loyer: bien?.loyer?.toString() || "",
     charges: bien?.charges?.toString() || "",
     locataireNom: bien?.locataireNom || "",
     locatairePrenom: bien?.locatairePrenom || "",
     dateEntree: bien?.dateEntree ? new Date(bien.dateEntree).toISOString().split("T")[0] : "",
   });
+  const [annexes, setAnnexes] = useState<Annexe[]>(bien?.annexes || []);
+
+  const ANNEXE_LABELS: Record<TypeAnnexe, string> = {
+    parking: "🚗 Parking",
+    garage: "🏠 Garage",
+    box: "📦 Box",
+    cave: "🪨 Cave",
+    jardin: "🌿 Jardin",
+    terrasse: "☀️ Terrasse",
+    grenier: "🏚️ Grenier",
+    autre: "📎 Autre",
+  };
+
+  function addAnnexe() {
+    setAnnexes((prev) => [...prev, { id: crypto.randomUUID(), type: "parking", loyer: 0 }]);
+  }
+
+  function updateAnnexe(id: string, field: keyof Annexe, value: string | number) {
+    setAnnexes((prev) => prev.map((a) => a.id === id ? { ...a, [field]: value } : a));
+  }
+
+  function removeAnnexe(id: string) {
+    setAnnexes((prev) => prev.filter((a) => a.id !== id));
+  }
 
   function update(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -586,11 +750,13 @@ function BienFormModal({
       const data = {
         adresse: form.adresse.trim(),
         typeBail: form.typeBail,
+        statut: form.statut,
         loyer: parseFloat(form.loyer) || 0,
         charges: parseFloat(form.charges) || 0,
         locataireNom: form.locataireNom.trim() || undefined,
         locatairePrenom: form.locatairePrenom.trim() || undefined,
         dateEntree: form.dateEntree ? new Date(form.dateEntree).getTime() : undefined,
+        annexes: annexes.length > 0 ? annexes : undefined,
       };
       if (isEdit && bien) {
         await mettreAJourBien(bien.id, data);
@@ -641,6 +807,20 @@ function BienFormModal({
               <option value="HABITATION_VIDE">Habitation vide</option>
               <option value="HABITATION_MEUBLE">Habitation meublée</option>
               <option value="PROFESSIONNEL">Professionnel</option>
+            </select>
+          </div>
+
+          {/* Statut */}
+          <div>
+            <label className="block text-xs font-bold text-slate-600 mb-1.5">Statut du logement</label>
+            <select
+              value={form.statut}
+              onChange={(e) => update("statut", e.target.value)}
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            >
+              <option value="vacant">🔴 Vacant</option>
+              <option value="selection">🟡 En sélection</option>
+              <option value="loue">🟢 Loué</option>
             </select>
           </div>
 
@@ -708,6 +888,65 @@ function BienFormModal({
               onChange={(e) => update("dateEntree", e.target.value)}
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
             />
+          </div>
+
+          {/* Annexes */}
+          <div className="pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Annexes</p>
+              <button
+                type="button"
+                onClick={addAnnexe}
+                className="flex items-center gap-1 text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Ajouter
+              </button>
+            </div>
+            {annexes.length === 0 && (
+              <p className="text-xs text-slate-400 italic">Aucune annexe (parking, cave, garage…)</p>
+            )}
+            <div className="space-y-2">
+              {annexes.map((annexe) => (
+                <div key={annexe.id} className="flex items-center gap-2 bg-slate-50 rounded-xl p-2.5">
+                  <select
+                    value={annexe.type}
+                    onChange={(e) => updateAnnexe(annexe.id, "type", e.target.value as TypeAnnexe)}
+                    className="flex-1 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  >
+                    {(Object.keys(ANNEXE_LABELS) as TypeAnnexe[]).map((t) => (
+                      <option key={t} value={t}>{ANNEXE_LABELS[t]}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Description (optionnel)"
+                    value={annexe.description || ""}
+                    onChange={(e) => updateAnnexe(annexe.id, "description", e.target.value)}
+                    className="flex-1 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                  <div className="flex items-center gap-1 shrink-0">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0"
+                      value={annexe.loyer || ""}
+                      onChange={(e) => updateAnnexe(annexe.id, "loyer", parseFloat(e.target.value) || 0)}
+                      className="w-20 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-right focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                    <span className="text-xs text-slate-400">€</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeAnnexe(annexe.id)}
+                    className="p-1 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Submit */}
