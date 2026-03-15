@@ -2,9 +2,10 @@
 // ZÉRO donnée locataire sur le serveur — tout reste dans le navigateur.
 
 import type { DossierLocataire, Garant } from './parsers';
+import type { Piece, Compteurs, Cles, EtatElement } from './generateur-edl';
 
 const DB_NAME = 'bailbot-local';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 // ─── PAIEMENTS & RELANCES ─────────────────────────────────────────────────────
 
@@ -112,6 +113,27 @@ export function calculerCompletude(dossier: Partial<DossierLocataire>): Completu
   };
 }
 
+// ─── ÉTATS DES LIEUX ─────────────────────────────────────────────────────────
+
+export type { Piece, Compteurs, Cles, EtatElement };
+
+export interface EdlLocal {
+  id: string;
+  bienId: string;
+  adresseBien: string;
+  type: 'ENTREE' | 'SORTIE';
+  date: string;
+  nomLocataire: string;
+  nomBailleur: string;
+  pieces: Piece[];
+  compteurs: Compteurs & { eauChaude: string; photosCompteurs: string[] };
+  cles: Cles;
+  signatureLocataire?: string;
+  signatureBailleur?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
 // ─── Guard SSR ────────────────────────────────────────────────────────────────
 
 function isClient(): boolean {
@@ -138,6 +160,11 @@ async function getDB() {
         paiStore.createIndex('mois', 'mois');
         paiStore.createIndex('statut', 'statut');
         paiStore.createIndex('createdAt', 'createdAt');
+      }
+      if (!db.objectStoreNames.contains('edls')) {
+        const edlStore = db.createObjectStore('edls', { keyPath: 'id' });
+        edlStore.createIndex('bienId', 'bienId');
+        edlStore.createIndex('createdAt', 'createdAt');
       }
     },
   });
@@ -369,4 +396,50 @@ export async function purgerAnciensDossiers(joursMax: number = 90): Promise<numb
   const anciens = all.filter((c) => c.createdAt < cutoff);
   await Promise.all(anciens.map((c) => db.delete('candidatures', c.id)));
   return anciens.length;
+}
+
+// ─── ÉTATS DES LIEUX ────────────────────────────────────────────────────────
+
+export async function creerEdl(
+  edl: Omit<EdlLocal, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<EdlLocal> {
+  const db = await getDB();
+  const now = Date.now();
+  const record: EdlLocal = { ...edl, id: uuid(), createdAt: now, updatedAt: now };
+  await db.put('edls', record);
+  return record;
+}
+
+export async function listerEdls(): Promise<EdlLocal[]> {
+  const db = await getDB();
+  const all: EdlLocal[] = await db.getAll('edls');
+  return all.sort((a, b) => b.createdAt - a.createdAt);
+}
+
+export async function getEdl(id: string): Promise<EdlLocal | undefined> {
+  const db = await getDB();
+  return db.get('edls', id);
+}
+
+export async function supprimerEdl(id: string): Promise<void> {
+  const db = await getDB();
+  await db.delete('edls', id);
+}
+
+export async function dupliquerEdl(id: string): Promise<EdlLocal> {
+  const db = await getDB();
+  const existing: EdlLocal | undefined = await db.get('edls', id);
+  if (!existing) throw new Error(`EDL ${id} introuvable`);
+  const now = Date.now();
+  const copy: EdlLocal = {
+    ...existing,
+    id: uuid(),
+    date: new Date().toISOString().split('T')[0],
+    signatureLocataire: undefined,
+    signatureBailleur: undefined,
+    createdAt: now,
+    updatedAt: now,
+  };
+  await db.put('edls', copy);
+  return copy;
 }
