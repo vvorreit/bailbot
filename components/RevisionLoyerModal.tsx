@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, TrendingUp, FileText, Copy, Check, AlertCircle, Info } from 'lucide-react';
+import { X, TrendingUp, FileText, Copy, Check, AlertCircle, Info, Send, Loader2 } from 'lucide-react';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import {
   calculerRevisionLoyer,
@@ -33,6 +33,7 @@ export default function RevisionLoyerModal({ onClose }: Props) {
   // Infos bailleur
   const [nomBailleur, setNomBailleur] = useState(() => loadInfosBailleur().nomBailleur || '');
   const [nomLocataire, setNomLocataire] = useState('');
+  const [emailLocataire, setEmailLocataire] = useState('');
   const [villeSignature, setVilleSignature] = useState(() => loadInfosBailleur().villeSignature || '');
 
   // Infos bail
@@ -45,6 +46,8 @@ export default function RevisionLoyerModal({ onClose }: Props) {
   const [resultat, setResultat] = useState<ResultatRevisionLoyer | null>(null);
   const [erreur, setErreur] = useState('');
   const [copied, setCopied] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [toast, setToast] = useState('');
 
   const handleCalculer = () => {
     setErreur('');
@@ -104,6 +107,47 @@ export default function RevisionLoyerModal({ onClose }: Props) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const handleEnvoyerEmail = async () => {
+    if (!resultat || !emailLocataire) {
+      setErreur('Veuillez saisir l\'email du locataire.');
+      return;
+    }
+    setSending(true);
+    try {
+      const blob = genererPDFCourrierRevision(buildInfosCourrier());
+      const arrayBuffer = await blob.arrayBuffer();
+      const pdfBase64 = btoa(
+        new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+      );
+
+      const res = await fetch('/api/revision-loyer/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          locataireEmail: emailLocataire,
+          locataireNom: nomLocataire,
+          nomBailleur,
+          loyerActuel: parseFloat(loyerActuel),
+          nouveauLoyer: resultat.nouveauLoyer,
+          dateApplication: resultat.dateApplication,
+          pdfBase64,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Erreur lors de l\'envoi');
+      }
+
+      setToast(`Courrier envoyé à ${emailLocataire}`);
+      setTimeout(() => setToast(''), 4000);
+    } catch (e: any) {
+      setErreur(e.message);
+    } finally {
+      setSending(false);
+    }
   };
 
   const inputClass = 'w-full border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white transition-colors';
@@ -215,6 +259,16 @@ export default function RevisionLoyerModal({ onClose }: Props) {
               </div>
             </div>
             <div>
+              <label className="text-xs font-semibold text-slate-600 mb-1 block">Email du locataire</label>
+              <input
+                type="email"
+                placeholder="locataire@email.com"
+                value={emailLocataire}
+                onChange={(e) => setEmailLocataire(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div>
               <label className="text-xs font-semibold text-slate-600 mb-1 block">Ville (signature)</label>
               <input
                 type="text"
@@ -231,6 +285,13 @@ export default function RevisionLoyerModal({ onClose }: Props) {
             <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
               <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
               {erreur}
+            </div>
+          )}
+
+          {/* Toast */}
+          {toast && (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-sm text-emerald-700 font-semibold">
+              ✅ {toast}
             </div>
           )}
 
@@ -294,7 +355,7 @@ export default function RevisionLoyerModal({ onClose }: Props) {
               </div>
 
               {/* Actions courrier */}
-              <div className="flex gap-3">
+              <div className="flex gap-3 flex-wrap">
                 <button
                   onClick={handleCopier}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors"
@@ -308,6 +369,14 @@ export default function RevisionLoyerModal({ onClose }: Props) {
                 >
                   <FileText className="w-4 h-4" aria-hidden="true" />
                   PDF courrier
+                </button>
+                <button
+                  onClick={handleEnvoyerEmail}
+                  disabled={!emailLocataire || sending}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-colors disabled:opacity-50"
+                >
+                  {sending ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Send className="w-4 h-4" aria-hidden="true" />}
+                  {sending ? 'Envoi...' : 'Envoyer par email'}
                 </button>
               </div>
             </div>
