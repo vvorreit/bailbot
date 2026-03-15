@@ -266,7 +266,7 @@ export default function DossierModal({ candidature, bien, onClose, onUpdated, on
           </button>
           <ImprimerDossier
             dossier={dossier || {}}
-            bailScore={typeof bailScore === 'number' ? undefined : bailScore as any}
+            bailScore={dossier && loyer > 0 ? calculerBailScore(dossier as any, loyer) : undefined}
             visaleResult={visaleResult}
             compact
           />

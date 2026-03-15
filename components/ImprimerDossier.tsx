@@ -56,19 +56,14 @@ function buildPrintHTML(
   const docs = {
     cni: Boolean(dossier.nom && dossier.dateNaissance),
     bulletins: Boolean(dossier.salaireNetMensuel),
-    avisImpo: Boolean(dossier.revenuFiscal),
+    avisImpo: Boolean(dossier.revenusN1),
     rib: Boolean(dossier.iban),
   };
 
   // Alertes
   const alertes: string[] = [];
-  if (completude) {
-    const manquants = Object.entries(completude.champs || {})
-      .filter(([, v]) => !v)
-      .map(([k]) => k);
-    if (manquants.length > 0) {
-      alertes.push(`Champs manquants : ${manquants.join(', ')}`);
-    }
+  if (completude?.manquants?.length) {
+    alertes.push(`Documents manquants : ${completude.manquants.join(', ')}`);
   }
 
   const scoreLabel = bailScore ? getBailScoreLabel(bailScore.total) : null;
@@ -221,10 +216,10 @@ function buildPrintHTML(
         <span class="label">Date de naissance</span>
         <span class="value">${formatDate(dossier.dateNaissance)}</span>
       </div>
-      ${dossier.adresse ? `
+      ${dossier.adresseActuelle ? `
       <div class="row">
         <span class="label">Adresse actuelle</span>
-        <span class="value">${dossier.adresse}</span>
+        <span class="value">${dossier.adresseActuelle}</span>
       </div>` : ''}
       ${dossier.employeur ? `
       <div class="row">
