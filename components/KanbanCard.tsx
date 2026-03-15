@@ -3,12 +3,13 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useState } from 'react';
-import type { Candidature } from '@/lib/db-local';
+import type { Candidature, TypeBail } from '@/lib/db-local';
 
 interface Props {
   candidature: Candidature;
   onOuvrir: (id: string) => void;
   onChangerStatut: (id: string, statut: Candidature['statut']) => void;
+  typeBail?: TypeBail;
 }
 
 function getBailScoreColor(score?: number): string {
@@ -38,7 +39,7 @@ function getNomComplet(dossier: Candidature['dossier']): string {
   return 'Locataire inconnu';
 }
 
-export default function KanbanCard({ candidature, onOuvrir, onChangerStatut }: Props) {
+export default function KanbanCard({ candidature, onOuvrir, onChangerStatut, typeBail }: Props) {
   const [showTooltip, setShowTooltip] = useState(false);
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -74,11 +75,20 @@ export default function KanbanCard({ candidature, onOuvrir, onChangerStatut }: P
     >
       {/* Header */}
       <div className="flex items-center gap-2 mb-2">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-slate-700 to-slate-900 text-white flex items-center justify-center text-xs font-black shrink-0">
+        <div className={`w-8 h-8 rounded-lg text-white flex items-center justify-center text-xs font-black shrink-0 ${
+          typeBail === 'PROFESSIONNEL'
+            ? 'bg-gradient-to-tr from-indigo-600 to-indigo-800'
+            : 'bg-gradient-to-tr from-slate-700 to-slate-900'
+        }`}>
           {initiales}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-black text-slate-800 truncate">{nomComplet}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-xs font-black text-slate-800 truncate">{nomComplet}</p>
+            {typeBail === 'PROFESSIONNEL' && (
+              <span className="shrink-0 text-[9px] font-black px-1.5 py-0.5 rounded-full bg-indigo-600 text-white">PRO</span>
+            )}
+          </div>
           {typeContrat && (
             <p className="text-[10px] text-slate-400 truncate">{typeContrat}</p>
           )}

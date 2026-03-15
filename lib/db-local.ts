@@ -4,7 +4,7 @@
 import type { DossierLocataire, Garant } from './parsers';
 
 const DB_NAME = 'bailbot-local';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 // ─── PAIEMENTS & RELANCES ─────────────────────────────────────────────────────
 
@@ -34,11 +34,14 @@ export interface Paiement {
   updatedAt: number;
 }
 
+export type TypeBail = 'HABITATION_VIDE' | 'HABITATION_MEUBLE' | 'PROFESSIONNEL';
+
 export interface Bien {
   id: string;
   adresse: string;
   loyer: number;
   charges: number;
+  typeBail: TypeBail;
   createdAt: number;
 }
 
@@ -134,7 +137,7 @@ function uuid(): string {
 
 export async function creerBien(bien: Omit<Bien, 'id' | 'createdAt'>): Promise<Bien> {
   const db = await getDB();
-  const record: Bien = { ...bien, id: uuid(), createdAt: Date.now() };
+  const record: Bien = { typeBail: 'HABITATION_VIDE', ...bien, id: uuid(), createdAt: Date.now() };
   await db.put('biens', record);
   return record;
 }

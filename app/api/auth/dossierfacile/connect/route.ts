@@ -18,7 +18,7 @@ export async function GET() {
   const ssoUrl = process.env.DOSSIERFACILE_SSO_URL ?? "https://sso.dossierfacile.logement.gouv.fr";
   const redirectUri =
     process.env.DOSSIERFACILE_REDIRECT_URI ??
-    `${process.env.NEXTAUTH_URL ?? "http://localhost:3011"}/api/auth/dossierfacile/callback`;
+    `${process.env.NEXTAUTH_URL ?? "http://localhost:3011"}/api/auth/dossierfacile`;
 
   // Dégradé gracieux : si pas de CLIENT_ID configuré, renvoie vers la page d'instruction
   if (!clientId) {

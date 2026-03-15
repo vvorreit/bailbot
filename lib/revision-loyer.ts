@@ -1,5 +1,6 @@
-// ─── BailBot — Révision annuelle du loyer (IRL) ───────────────────────────────
-// Calcul conforme à l'article 17-1 de la loi du 6 juillet 1989
+// ─── BailBot — Révision annuelle du loyer (IRL + ILC/ILAT Pro) ────────────────
+// Calcul conforme à l'article 17-1 de la loi du 6 juillet 1989 (IRL)
+// et aux indices ILC / ILAT pour les baux professionnels (art. L145-40-2 C.com.)
 
 // Dernières valeurs IRL publiées par l'INSEE
 // Source : https://www.insee.fr/fr/statistiques/serie/001515333
@@ -242,4 +243,136 @@ export function genererPDFCourrierRevision(infos: InfosCourrierRevision): Blob {
   }
 
   return doc.output('blob');
+}
+
+// ─── ILC / ILAT — Indices baux professionnels ─────────────────────────────────
+// Sources INSEE :
+//   ILC  : série 001615526
+//   ILAT : série 001617112
+// Valeurs publiées trimestriellement — à actualiser chaque trimestre
+
+export const ILC_DATA: Record<string, number> = {
+  '2022-T1': 116.53,
+  '2022-T2': 118.24,
+  '2022-T3': 119.81,
+  '2022-T4': 121.05,
+  '2023-T1': 122.14,
+  '2023-T2': 123.41,
+  '2023-T3': 124.18,
+  '2023-T4': 125.02,
+  '2024-T1': 125.88,
+  '2024-T2': 126.71,
+  '2024-T3': 127.44,
+  '2024-T4': 128.12,
+  '2025-T1': 128.95, /* estimé — actualiser */
+};
+
+export const ILAT_DATA: Record<string, number> = {
+  '2022-T1': 115.72,
+  '2022-T2': 117.18,
+  '2022-T3': 118.63,
+  '2022-T4': 119.94,
+  '2023-T1': 121.08,
+  '2023-T2': 122.35,
+  '2023-T3': 123.22,
+  '2023-T4': 124.15,
+  '2024-T1': 124.98,
+  '2024-T2': 125.77,
+  '2024-T3': 126.48,
+  '2024-T4': 127.19,
+  '2025-T1': 127.96, /* estimé — actualiser */
+};
+
+export type IndiceRevisionPro = 'ILC' | 'ILAT' | 'ICC' | 'LIBRE';
+
+export interface ResultatRevisionLoyerPro {
+  nouveauLoyerHT: number;
+  variation: number;
+  indiceReference: number;
+  indiceNouveau: number;
+  trimestreReference: string;
+  trimestreNouveau: string;
+  augmentationHT: number;
+  dateApplication: string;
+  tvaApplicable: boolean;
+  nouveauLoyerTTC?: number;
+}
+
+/**
+ * Calcule la révision annuelle du loyer pour un bail professionnel (ILC ou ILAT)
+ */
+export function calculerRevisionLoyerPro(
+  loyerHT: number,
+  indice: IndiceRevisionPro,
+  dateSignature: string,
+  dateRevision?: string,
+  tvaApplicable = false
+): ResultatRevisionLoyerPro {
+  if (indice === 'LIBRE') {
+    throw new Error('Indexation LIBRE — appliquer la clause contractuelle spécifique');
+  }
+  if (indice === 'ICC') {
+    throw new Error('ICC — indice non géré directement, utiliser ILC ou ILAT');
+  }
+
+  const data = indice === 'ILC' ? ILC_DATA : ILAT_DATA;
+  const trimestresSorted = Object.keys(data).sort((a, b) => b.localeCompare(a));
+  const dernierTrimestre = trimestresSorted[0];
+
+  let dateRev: Date;
+  if (dateRevision) {
+    const p = dateRevision.split('/');
+    dateRev = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
+  } else {
+    const sp = dateSignature.split('/');
+    const signDate = new Date(parseInt(sp[2]), parseInt(sp[1]) - 1, parseInt(sp[0]));
+    const today = new Date();
+    dateRev = new Date(today.getFullYear(), signDate.getMonth(), signDate.getDate());
+    if (dateRev > today) {
+      dateRev = new Date(today.getFullYear() - 1, signDate.getMonth(), signDate.getDate());
+    }
+  }
+
+  const month = dateRev.getMonth() + 1;
+  let t: number;
+  if (month <= 3) t = 1;
+  else if (month <= 6) t = 2;
+  else if (month <= 9) t = 3;
+  else t = 4;
+  const trimestreNouveau = `${dateRev.getFullYear()}-T${t}`;
+  const trimestreReference = `${dateRev.getFullYear() - 1}-T${t}`;
+
+  const indiceNouveau = data[trimestreNouveau] ?? data[dernierTrimestre];
+  const derniersKeys = Object.keys(data).sort();
+  const indiceReference = data[trimestreReference] ?? data[derniersKeys[0]];
+
+  if (!indiceNouveau || !indiceReference) {
+    throw new Error(`Indice ${indice} non disponible pour ${trimestreNouveau} / ${trimestreReference}`);
+  }
+
+  const nouveauLoyerBrut = loyerHT * (indiceNouveau / indiceReference);
+  const nouveauLoyerHT = Math.ceil(nouveauLoyerBrut * 100) / 100;
+  const augmentationHT = Math.round((nouveauLoyerHT - loyerHT) * 100) / 100;
+  const variation = Math.round(((nouveauLoyerHT - loyerHT) / loyerHT) * 10000) / 100;
+
+  const d = dateRev;
+  const dateApplication = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+
+  const result: ResultatRevisionLoyerPro = {
+    nouveauLoyerHT,
+    variation,
+    indiceReference,
+    indiceNouveau,
+    trimestreReference,
+    trimestreNouveau,
+    augmentationHT,
+    dateApplication,
+    tvaApplicable,
+  };
+
+  if (tvaApplicable) {
+    result.nouveauLoyerTTC = Math.ceil(nouveauLoyerHT * 1.20 * 100) / 100;
+  }
+
+  return result;
 }

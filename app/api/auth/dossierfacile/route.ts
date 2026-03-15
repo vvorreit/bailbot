@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
   const ssoUrl = process.env.DOSSIERFACILE_SSO_URL ?? "https://sso.dossierfacile.logement.gouv.fr";
   const apiUrl = process.env.DOSSIERFACILE_API_URL ?? "https://api.dossierfacile.fr";
   const redirectUri =
-    process.env.DOSSIERFACILE_REDIRECT_URI ?? `${BASE_URL}/api/auth/dossierfacile/callback`;
+    process.env.DOSSIERFACILE_REDIRECT_URI ?? `${BASE_URL}/api/auth/dossierfacile`;
 
   if (!clientId || !clientSecret) {
     console.error("[DossierFacile Connect] Missing CLIENT_ID or CLIENT_SECRET");

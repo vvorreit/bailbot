@@ -299,3 +299,102 @@ export function parseDossier(text: string, forceType?: DocumentType): Partial<Do
     default: return {};
   }
 }
+
+// ─── Types Dossier Professionnel ──────────────────────────────────────────────
+
+export interface DossierKbis {
+  siret: string;
+  denomination: string;
+  formeJuridique: string;
+  dateImmat: string;
+}
+
+export interface DossierBilan {
+  exercice: string;
+  chiffreAffaires: number;
+  resultatNet: number;
+  capitauxPropres: number;
+}
+
+export interface Dossier2035 {
+  annee: string;
+  recettes: number;
+  benefice: number;
+}
+
+// ─── Parser Kbis / extrait URSSAF / SIRET ────────────────────────────────────
+
+export function parseKbis(text: string): DossierKbis {
+  const t = text;
+
+  /* SIRET — 14 chiffres (espaces autorisés) */
+  const siretMatch = t.match(/\b(\d{3}\s?\d{3}\s?\d{3}\s?\d{5})\b/)
+    || t.match(/(?:siret|siren)[^0-9]*(\d[\d\s]{13,16})/i);
+  const siret = siretMatch ? siretMatch[1].replace(/\s/g, "") : "";
+
+  /* Dénomination sociale */
+  const denomMatch = t.match(/(?:d[eé]nomination\s+sociale?|raison\s+sociale?|nom\s+de\s+l.entreprise)\s*[:\s]+([^\n]+)/i)
+    || t.match(/(?:soci[eé]t[eé])\s+([A-ZÀÂÄÉÈÊËÎÏÔÙÛÜÇ][A-ZÀÂÄÉÈÊËÎÏÔÙÛÜÇa-zàâäéèêëîïôùûüç0-9\s&\-\.]+)/i);
+  const denomination = denomMatch ? clean(denomMatch[1]) : "";
+
+  /* Forme juridique */
+  const formeMatch = t.match(/\b(SARL|SAS|SASU|SA|EURL|SCI|SNC|SELARL|SELAS|SELAR|EIRL|EI|micro[- ]?entreprise|auto[- ]?entrepreneur)\b/i);
+  const formeJuridique = formeMatch ? formeMatch[1].toUpperCase() : "";
+
+  /* Date d'immatriculation */
+  const dateMatch = t.match(/(?:immatricul[eé][e]?\s+le|date\s+d.immatriculation)\s*[:\s]*(\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4})/i)
+    || t.match(/(\d{2}[\/\.]\d{2}[\/\.]\d{4})/);
+  const dateImmat = dateMatch ? dateMatch[1].replace(/[\-\.]/g, "/") : "";
+
+  return { siret, denomination, formeJuridique, dateImmat };
+}
+
+// ─── Parser Bilan comptable ───────────────────────────────────────────────────
+
+export function parseBilan(text: string): DossierBilan {
+  const t = text;
+
+  /* Exercice — "exercice 2024" ou "au 31/12/2024" */
+  const exerciceMatch = t.match(/(?:exercice|bilan|ann[eé]e\s+fiscale)[^0-9]*(\d{4})/i)
+    || t.match(/au\s+31[\/\.]12[\/\.](\d{4})/i)
+    || t.match(/(\d{4})/);
+  const exercice = exerciceMatch ? exerciceMatch[1] : "";
+
+  /* Chiffre d'affaires */
+  const caMatch = t.match(/(?:chiffre\s+d.affaires|produits\s+d.exploitation|CA\s+net)[^\d]*(\d[\d\s]*[,\.]\d{2})/i)
+    || t.match(/(?:chiffre\s+d.affaires)[^\d]*(\d[\d\s]{4,})/i);
+  const chiffreAffaires = caMatch ? parseAmount(caMatch[1]) : 0;
+
+  /* Résultat net */
+  const resultMatch = t.match(/(?:r[eé]sultat\s+net|b[eé]n[eé]fice\s+net|perte\s+nette)[^\d\-]*(-?\s*\d[\d\s]*[,\.]\d{2})/i);
+  const resultatNet = resultMatch ? parseAmount(resultMatch[1]) : 0;
+
+  /* Capitaux propres */
+  const capitauxMatch = t.match(/(?:capitaux\s+propres|fonds\s+propres)[^\d]*(\d[\d\s]*[,\.]\d{2})/i);
+  const capitauxPropres = capitauxMatch ? parseAmount(capitauxMatch[1]) : 0;
+
+  return { exercice, chiffreAffaires, resultatNet, capitauxPropres };
+}
+
+// ─── Parser Déclaration 2035 (BNC — professions libérales) ───────────────────
+
+export function parse2035(text: string): Dossier2035 {
+  const t = text;
+
+  /* Année */
+  const anneeMatch = t.match(/(?:2035|d[eé]claration)[^0-9]*(\d{4})/i)
+    || t.match(/ann[eé]e[^\d]*(\d{4})/i)
+    || t.match(/(\d{4})/);
+  const annee = anneeMatch ? anneeMatch[1] : "";
+
+  /* Recettes totales — ligne "Recettes" ou "Total des recettes" */
+  const recettesMatch = t.match(/(?:recettes\s+totales?|total\s+des\s+recettes|recettes\s+professionnelles?)[^\d]*(\d[\d\s]*[,\.]\d{2})/i)
+    || t.match(/(?:recettes)[^\d]*(\d[\d\s]{4,})/i);
+  const recettes = recettesMatch ? parseAmount(recettesMatch[1]) : 0;
+
+  /* Bénéfice / déficit */
+  const beneficeMatch = t.match(/(?:b[eé]n[eé]fice\s+imposable|b[eé]n[eé]fice\s+net|r[eé]sultat)[^\d\-]*(-?\s*\d[\d\s]*[,\.]\d{2})/i);
+  const benefice = beneficeMatch ? parseAmount(beneficeMatch[1]) : 0;
+
+  return { annee, recettes, benefice };
+}
