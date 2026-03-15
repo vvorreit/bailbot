@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { X, Plus, Trash2, ExternalLink } from 'lucide-react';
 import { listerBiens, creerBien, supprimerBien, type Bien, type TypeBail } from '@/lib/db-local';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
+import Link from 'next/link';
 
 interface Props {
   onClose: () => void;
@@ -89,33 +90,43 @@ export default function GererBiensModal({ onClose, onChanged }: Props) {
                       <strong>{(b.loyer + b.charges).toLocaleString('fr-FR')}€ CC</strong>
                     </p>
                   </div>
-                  {confirmDelete === b.id ? (
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-red-600 font-semibold">Confirmer ?</span>
-                      <button
-                        onClick={() => handleSupprimer(b.id)}
-                        disabled={loading}
-                        className="px-2 py-1 bg-red-600 text-white text-xs font-bold rounded-lg"
-                      >
-                        Oui
-                      </button>
-                      <button
-                        onClick={() => setConfirmDelete(null)}
-                        className="px-2 py-1 bg-slate-200 text-slate-700 text-xs font-bold rounded-lg"
-                      >
-                        Non
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setConfirmDelete(b.id)}
-                      className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Supprimer ce bien"
-                      aria-label="Supprimer ce bien"
+                  <div className="flex items-center gap-1.5">
+                    <Link
+                      href={`/dashboard/biens/${b.id}`}
+                      className="p-1.5 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors"
+                      title="Voir la fiche"
+                      aria-label="Voir la fiche du bien"
                     >
-                      <Trash2 className="w-4 h-4" aria-hidden="true" />
-                    </button>
-                  )}
+                      <ExternalLink className="w-4 h-4" aria-hidden="true" />
+                    </Link>
+                    {confirmDelete === b.id ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-red-600 font-semibold">Confirmer ?</span>
+                        <button
+                          onClick={() => handleSupprimer(b.id)}
+                          disabled={loading}
+                          className="px-2 py-1 bg-red-600 text-white text-xs font-bold rounded-lg"
+                        >
+                          Oui
+                        </button>
+                        <button
+                          onClick={() => setConfirmDelete(null)}
+                          className="px-2 py-1 bg-slate-200 text-slate-700 text-xs font-bold rounded-lg"
+                        >
+                          Non
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDelete(b.id)}
+                        className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Supprimer ce bien"
+                        aria-label="Supprimer ce bien"
+                      >
+                        <Trash2 className="w-4 h-4" aria-hidden="true" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
