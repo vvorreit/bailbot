@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, FileText, Mail } from 'lucide-react';
+import { X, FileText, Mail, Send, Loader2 } from 'lucide-react';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { genererQuittancePDF, type DonneesQuittance } from '@/lib/generateur-quittance';
 
@@ -12,6 +12,7 @@ interface Props {
   adresseBien?: string;
   loyerHC?: number;
   charges?: number;
+  locataireEmail?: string;
   onClose: () => void;
 }
 
@@ -94,6 +95,7 @@ export default function QuittanceModal({
   adresseBien = '',
   loyerHC = 0,
   charges = 0,
+  locataireEmail: emailProp = '',
   onClose,
 }: Props) {
   const [infos, setInfos] = useState<InfosBailleur>({ nomBailleur: '', adresseBailleur: '' });
@@ -106,6 +108,9 @@ export default function QuittanceModal({
   const [dateReglement, setDateReglement] = useState(getDateAujourdhui());
   const [modePaiement, setModePaiement] = useState('virement bancaire');
   const [generating, setGenerating] = useState(false);
+  const [emailLocataire, setEmailLocataire] = useState(emailProp);
+  const [sending, setSending] = useState(false);
+  const [toast, setToast] = useState('');
 
   const trapRef = useFocusTrap(true);
   const moisDisponibles = getMoisDisponibles();
@@ -167,24 +172,44 @@ export default function QuittanceModal({
     }
   };
 
-  const handleEnvoyerEmail = () => {
-    saveInfosBailleur(infos);
+  const handleEnvoyerEmail = async () => {
+    if (!emailLocataire) {
+      alert('Veuillez saisir l\'email du locataire.');
+      return;
+    }
+    setSending(true);
     try {
+      saveInfosBailleur(infos);
       const blob = genererQuittancePDF(buildDonnees());
-      const reader = new FileReader();
-      reader.onload = () => {
-        const dataUri = reader.result as string;
-        const sujet = encodeURIComponent(`Quittance de loyer — ${moisSelectionne}`);
-        const corps = encodeURIComponent(
-          `Bonjour,\n\nVeuillez trouver ci-joint votre quittance de loyer pour ${moisSelectionne}.\n\nCordialement,\n${infos.nomBailleur}`
-        );
-        // mailto avec data URI en pièce jointe (support limité selon client mail)
-        window.location.href = `mailto:?subject=${sujet}&body=${corps}&attachment=${dataUri}`;
-      };
-      reader.readAsDataURL(blob);
-    } catch (e) {
-      console.error(e);
-      alert('Erreur lors de la préparation de l\'email.');
+      const arrayBuffer = await blob.arrayBuffer();
+      const pdfBase64 = btoa(
+        new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+      );
+
+      const res = await fetch('/api/quittances/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          locataireEmail: emailLocataire,
+          locataireNom: `${locPrenom} ${locNom}`.trim(),
+          mois: moisSelectionne,
+          montant: loyerHCVal + chargesVal,
+          pdfBase64,
+          nomBailleur: infos.nomBailleur,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Erreur lors de l\'envoi');
+      }
+
+      setToast(`Quittance envoyée à ${emailLocataire}`);
+      setTimeout(() => setToast(''), 4000);
+    } catch (e: any) {
+      alert(`Erreur : ${e.message}`);
+    } finally {
+      setSending(false);
     }
   };
 
@@ -251,6 +276,16 @@ export default function QuittanceModal({
                   className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1">Email du locataire</label>
+              <input
+                type="email"
+                value={emailLocataire}
+                onChange={(e) => setEmailLocataire(e.target.value)}
+                placeholder="locataire@email.com"
+                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-600 mb-1">Adresse du bien *</label>
@@ -341,6 +376,13 @@ export default function QuittanceModal({
           )}
         </div>
 
+        {/* Toast */}
+        {toast && (
+          <div className="mx-6 mb-3 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-sm text-emerald-700 font-semibold">
+            ✅ {toast}
+          </div>
+        )}
+
         {/* Footer */}
         <div className="sticky bottom-0 bg-white border-t border-slate-100 px-6 py-4 flex items-center gap-3 rounded-b-2xl flex-wrap">
           <button
@@ -349,15 +391,15 @@ export default function QuittanceModal({
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50"
           >
             <FileText aria-hidden="true" className="w-4 h-4" />
-            {generating ? '⏳ Génération...' : '📄 Télécharger la quittance'}
+            {generating ? 'Génération...' : 'Télécharger PDF'}
           </button>
           <button
             onClick={handleEnvoyerEmail}
-            disabled={!isValid}
+            disabled={!isValid || !emailLocataire || sending}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors disabled:opacity-50"
           >
-            <Mail aria-hidden="true" className="w-4 h-4" />
-            📧 Envoyer par email
+            {sending ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Send className="w-4 h-4" aria-hidden="true" />}
+            {sending ? 'Envoi...' : 'Envoyer par email'}
           </button>
         </div>
       </div>
