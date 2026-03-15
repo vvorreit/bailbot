@@ -3,10 +3,16 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ArrowRight, Mail } from "lucide-react";
 import { registerUser } from "@/app/actions/auth";
 
+const SIGNUP_METIER_KEY = "bailbot_signup_metier";
+
 export default function SignUpPage() {
+  const searchParams = useSearchParams();
+  const metierParam = searchParams.get("metier");
+
   const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -27,6 +33,10 @@ export default function SignUpPage() {
       setError(result.error);
       setLoading(false);
       return;
+    }
+
+    if (metierParam) {
+      localStorage.setItem(SIGNUP_METIER_KEY, metierParam);
     }
 
     setRegistered(true);
@@ -160,7 +170,10 @@ export default function SignUpPage() {
           </div>
 
           <button
-            onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+            onClick={() => {
+              if (metierParam) localStorage.setItem(SIGNUP_METIER_KEY, metierParam);
+              signIn("google", { callbackUrl: "/dashboard" });
+            }}
             className="w-full flex items-center justify-center gap-4 py-4 px-6 bg-white border-2 border-slate-100 rounded-2xl text-slate-900 font-bold hover:bg-slate-50 hover:border-emerald-100 transition-all shadow-sm active:scale-95"
           >
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />

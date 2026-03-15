@@ -7,6 +7,7 @@ import { setMetier } from "@/app/dashboard/actions";
 import type { Metier } from "@prisma/client";
 
 const ONBOARDING_KEY = "bailbot_onboarding_done";
+const SIGNUP_METIER_KEY = "bailbot_signup_metier";
 
 interface Step {
   target: string;
@@ -116,7 +117,12 @@ export default function Onboarding() {
   /* Phase 0 : sélection métier (bloquante) */
   const [metierPhase, setMetierPhase] = useState(false);
   const [metierSaving, setMetierSaving] = useState(false);
-  const [selectedMetier, setSelectedMetier] = useState<Metier | null>(null);
+  const [selectedMetier, setSelectedMetier] = useState<Metier | null>(() => {
+    if (typeof window === "undefined") return null;
+    const stored = localStorage.getItem(SIGNUP_METIER_KEY) as Metier | null;
+    const valid: Metier[] = ["PROPRIETAIRE", "AGENCE", "GESTIONNAIRE"];
+    return stored && valid.includes(stored) ? stored : null;
+  });
 
   /* Phase 1 : tour guidé */
   const [active, setActive] = useState(false);
@@ -146,6 +152,7 @@ export default function Onboarding() {
     try {
       await setMetier(selectedMetier);
       await updateSession({ metier: selectedMetier });
+      localStorage.removeItem(SIGNUP_METIER_KEY);
       setMetierPhase(false);
       /* Lancer le tour guidé juste après */
       const done = typeof window !== "undefined" && localStorage.getItem(ONBOARDING_KEY);

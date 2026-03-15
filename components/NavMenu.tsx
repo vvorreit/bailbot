@@ -287,14 +287,14 @@ export default function NavMenu() {
         </div>
       )}
 
-      {/* B2C Particulier link — small footer hint */}
-      <div className="hidden md:block border-t border-slate-50 py-2 px-4 text-center">
-        <p className="text-[10px] text-slate-400 font-medium">
-          Vous êtes propriétaire bailleur particulier ?{" "}
-          <Link href="/particulier" className="text-emerald-600 hover:underline font-bold">
-            Voir nos offres →
-          </Link>
-        </p>
+      {/* Public landing links */}
+      <div className="hidden md:block border-t border-slate-50 py-2 px-4">
+        <div className="flex items-center justify-center gap-6 text-[10px] font-bold text-slate-400">
+          <span>Vous cherchez une offre ?</span>
+          <Link href="/particulier" className="text-emerald-600 hover:underline">Particulier</Link>
+          <Link href="/agence" className="text-indigo-600 hover:underline">Agence</Link>
+          <Link href="/pro" className="text-violet-600 hover:underline">Pro (ADB)</Link>
+        </div>
       </div>
 
       {/* Message Templates Modal */}
