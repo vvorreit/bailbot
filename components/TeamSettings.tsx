@@ -1,8 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createTeam, inviteMember, removeMember } from "@/app/actions/team";
+import { assignBienToCollaborateur, getBiensParMembre } from "@/app/actions/team-access";
 import { useRouter } from "next/navigation";
+
+interface BienAssignment {
+  id: string;
+  adresse: string;
+  assigneA: string | null;
+}
 
 interface TeamData {
   id: string;
@@ -30,9 +37,17 @@ export default function TeamSettings({ initialTeam }: { initialTeam: TeamData | 
   const [inviteEmail, setInviteEmail] = useState("");
   const [teamName, setTeamName] = useState("");
   const [msg, setMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [biens, setBiens] = useState<BienAssignment[]>([]);
+  const [assignDropdown, setAssignDropdown] = useState<string | null>(null);
 
   const isOwner = team?.currentUserRole === "OWNER";
   const isAdmin = team?.currentUserRole === "ADMIN" || isOwner;
+
+  useEffect(() => {
+    if (team && isAdmin) {
+      getBiensParMembre().then(setBiens).catch(() => {});
+    }
+  }, [team, isAdmin]);
   const seatsUsed = team ? team.users.length + team.invitations.length : 0;
   const seatsLimit = team?.seatsLimit ?? 1;
   const isFull = seatsUsed >= seatsLimit;
@@ -150,36 +165,97 @@ export default function TeamSettings({ initialTeam }: { initialTeam: TeamData | 
                 <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Nom</th>
                 <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Email</th>
                 <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Rôle</th>
+                {isAdmin && (
+                  <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Biens assignés</th>
+                )}
                 <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {team.users.map((user) => (
-                <tr key={user.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-8 py-5 font-black text-slate-900">{user.name || "—"}</td>
-                  <td className="px-8 py-5 text-slate-500 font-medium text-sm">{user.email}</td>
-                  <td className="px-8 py-5">
-                    <span className={`px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-tighter ${
-                      user.teamRole === "OWNER"
-                        ? "bg-indigo-100 text-indigo-700"
-                        : "bg-slate-100 text-slate-500"
-                    }`}>
-                      {user.teamRole}
-                    </span>
-                  </td>
-                  <td className="px-8 py-5 text-right">
-                    {isOwner && user.teamRole !== "OWNER" && (
-                      <button
-                        onClick={() => handleRemove(user.id)}
-                        disabled={loading}
-                        className="text-xs font-bold text-red-500 hover:text-red-700 transition-colors disabled:opacity-50"
-                      >
-                        Retirer
-                      </button>
+              {team.users.map((user) => {
+                const biensAssignes = biens.filter((b) => b.assigneA === user.id);
+                return (
+                  <tr key={user.id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="px-8 py-5 font-black text-slate-900">{user.name || "—"}</td>
+                    <td className="px-8 py-5 text-slate-500 font-medium text-sm">{user.email}</td>
+                    <td className="px-8 py-5">
+                      <span className={`px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-tighter ${
+                        user.teamRole === "OWNER"
+                          ? "bg-indigo-100 text-indigo-700"
+                          : "bg-slate-100 text-slate-500"
+                      }`}>
+                        {user.teamRole}
+                      </span>
+                    </td>
+                    {isAdmin && (
+                      <td className="px-8 py-5">
+                        <div className="relative">
+                          <button
+                            onClick={() => setAssignDropdown(assignDropdown === user.id ? null : user.id)}
+                            className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+                          >
+                            {biensAssignes.length > 0
+                              ? `${biensAssignes.length} bien${biensAssignes.length > 1 ? "s" : ""}`
+                              : "Assigner"}
+                          </button>
+                          {biensAssignes.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {biensAssignes.map((b) => (
+                                <span key={b.id} className="text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded-full font-medium truncate max-w-[120px]" title={b.adresse}>
+                                  {b.adresse.length > 20 ? b.adresse.slice(0, 20) + "…" : b.adresse}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          {assignDropdown === user.id && (
+                            <div className="absolute z-10 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg p-2 min-w-[200px] max-h-[200px] overflow-y-auto">
+                              {biens.length === 0 ? (
+                                <p className="text-xs text-slate-400 p-2">Aucun bien</p>
+                              ) : (
+                                biens.map((b) => {
+                                  const isAssigned = b.assigneA === user.id;
+                                  return (
+                                    <button
+                                      key={b.id}
+                                      onClick={async () => {
+                                        try {
+                                          await assignBienToCollaborateur(b.id, isAssigned ? null : user.id);
+                                          const updated = await getBiensParMembre();
+                                          setBiens(updated);
+                                        } catch (e: any) {
+                                          setMsg({ type: "error", text: e.message });
+                                        }
+                                      }}
+                                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                                        isAssigned
+                                          ? "bg-blue-50 text-blue-700"
+                                          : "text-slate-600 hover:bg-slate-50"
+                                      }`}
+                                    >
+                                      {isAssigned ? "✓ " : ""}{b.adresse.length > 30 ? b.adresse.slice(0, 30) + "…" : b.adresse}
+                                    </button>
+                                  );
+                                })
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </td>
                     )}
-                  </td>
-                </tr>
-              ))}
+                    <td className="px-8 py-5 text-right">
+                      {isOwner && user.teamRole !== "OWNER" && (
+                        <button
+                          onClick={() => handleRemove(user.id)}
+                          disabled={loading}
+                          className="text-xs font-bold text-red-500 hover:text-red-700 transition-colors disabled:opacity-50"
+                        >
+                          Retirer
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
