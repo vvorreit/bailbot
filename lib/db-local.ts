@@ -165,6 +165,13 @@ export async function listerBiens(): Promise<Bien[]> {
   return all.sort((a, b) => b.createdAt - a.createdAt);
 }
 
+export async function mettreAJourBien(id: string, patch: Partial<Omit<Bien, 'id' | 'createdAt'>>): Promise<void> {
+  const db = await getDB();
+  const existing = await db.get('biens', id);
+  if (!existing) throw new Error(`Bien ${id} introuvable`);
+  await db.put('biens', { ...existing, ...patch });
+}
+
 export async function supprimerBien(id: string): Promise<void> {
   const db = await getDB();
   await db.delete('biens', id);
