@@ -245,13 +245,15 @@ model QuittanceAuto {
 }
 
 model AlerteBail {
-  id           String     @id @default(cuid())
-  bailId       String
-  type         TypeAlerte
-  dateEcheance DateTime
-  traitee      Boolean    @default(false)
-  createdAt    DateTime   @default(now())
-  bail         BailActif  @relation(fields: [bailId], references: [id], onDelete: Cascade)
+  id              String     @id @default(cuid())
+  bailId          String
+  type            TypeAlerte
+  dateEcheance    DateTime
+  traitee         Boolean    @default(false)
+  notifJ30Envoyee Boolean    @default(false)
+  notifJ7Envoyee  Boolean    @default(false)
+  createdAt       DateTime   @default(now())
+  bail            BailActif  @relation(fields: [bailId], references: [id], onDelete: Cascade)
 
   @@index([bailId])
   @@index([dateEcheance])
