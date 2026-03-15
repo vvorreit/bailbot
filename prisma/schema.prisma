@@ -337,3 +337,92 @@ model ContratPro {
 
   @@index([bienId])
 }
+
+// ─── Gestion Travaux ────────────────────────────────────────────────────────
+
+enum StatutTravaux {
+  A_FAIRE
+  EN_COURS
+  TERMINE
+  ANNULE
+}
+
+enum CategorieTravaux {
+  PLOMBERIE
+  ELECTRICITE
+  CHAUFFAGE
+  ISOLATION
+  TOITURE
+  MENUISERIE
+  PEINTURE
+  CARRELAGE
+  SALLE_DE_BAIN
+  CUISINE
+  EXTERIEUR
+  AUTRE
+}
+
+model Travaux {
+  id           String            @id @default(cuid())
+  userId       String
+  bienId       String
+  titre        String
+  description  String?
+  statut       StatutTravaux     @default(A_FAIRE)
+  categorie    CategorieTravaux
+  montantDevis Float?
+  montantReel  Float?
+  dateDebut    DateTime?
+  dateFin      DateTime?
+  artisanNom   String?
+  artisanTel   String?
+  artisanEmail String?
+  deductible   Boolean           @default(true)
+  notes        String?
+  documents    TravauxDocument[]
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@index([userId])
+  @@index([bienId])
+}
+
+model TravauxDocument {
+  id        String   @id @default(cuid())
+  travauxId String
+  nom       String
+  type      String
+  url       String
+  taille    Int?
+  createdAt DateTime @default(now())
+  travaux   Travaux  @relation(fields: [travauxId], references: [id], onDelete: Cascade)
+
+  @@index([travauxId])
+}
+
+// ─── Copropriété ────────────────────────────────────────────────────────────
+
+enum TypeDocCopro {
+  APPEL_CHARGES
+  RELEVE_DEPENSES
+  PV_ASSEMBLEE
+  BUDGET_PREVISIONNEL
+  AUTRE
+}
+
+model DocumentCopro {
+  id          String       @id @default(cuid())
+  userId      String
+  bienId      String
+  nom         String
+  type        TypeDocCopro
+  annee       Int
+  trimestre   Int?
+  contenu     String
+  taille      Int?
+  analyseJson String?
+  createdAt   DateTime     @default(now())
+
+  @@index([userId])
+  @@index([bienId])
+}
