@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { X, TrendingUp, FileText, Copy, Check, AlertCircle, Info } from 'lucide-react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import {
   calculerRevisionLoyer,
   genererTexteCourrierRevision,
@@ -27,6 +28,8 @@ interface Props {
 }
 
 export default function RevisionLoyerModal({ onClose }: Props) {
+  const trapRef = useFocusTrap(true);
+
   // Infos bailleur
   const [nomBailleur, setNomBailleur] = useState(() => loadInfosBailleur().nomBailleur || '');
   const [nomLocataire, setNomLocataire] = useState('');
@@ -107,19 +110,19 @@ export default function RevisionLoyerModal({ onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div ref={trapRef} role="dialog" aria-modal="true" className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center text-white">
-              <TrendingUp className="w-5 h-5" />
+              <TrendingUp className="w-5 h-5" aria-hidden="true" />
             </div>
             <div>
               <h2 className="text-lg font-black text-slate-900">Révision IRL</h2>
               <p className="text-xs text-slate-500">Calcul de révision annuelle du loyer</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 transition-colors">
+          <button onClick={onClose} aria-label="Fermer" className="p-2 rounded-xl hover:bg-slate-100 transition-colors">
             <X className="w-5 h-5 text-slate-500" />
           </button>
         </div>
@@ -127,7 +130,7 @@ export default function RevisionLoyerModal({ onClose }: Props) {
         <div className="p-6 space-y-5">
           {/* Info IRL */}
           <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700">
-            <Info className="w-4 h-4 mt-0.5 shrink-0" />
+            <Info className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
             <span>Données IRL INSEE à jour jusqu'au <strong>{IRL_DERNIERE_MAJ}</strong>. Actualiser si nécessaire.</span>
           </div>
 
@@ -226,7 +229,7 @@ export default function RevisionLoyerModal({ onClose }: Props) {
           {/* Erreur */}
           {erreur && (
             <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+              <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
               {erreur}
             </div>
           )}
@@ -236,7 +239,7 @@ export default function RevisionLoyerModal({ onClose }: Props) {
             <UpgradePrompt feature="REVISION_ILC_ILAT" className="py-3" />
           }>
             <div className="flex items-start gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600">
-              <Info className="w-4 h-4 mt-0.5 shrink-0" />
+              <Info className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
               <span>
                 <strong>Indices ILC / ILAT disponibles</strong> — pour les baux commerciaux et professionnels.
                 Sélectionnez l&apos;indice adapté dans les paramètres du bail.
@@ -296,14 +299,14 @@ export default function RevisionLoyerModal({ onClose }: Props) {
                   onClick={handleCopier}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors"
                 >
-                  {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                  {copied ? <Check className="w-4 h-4 text-emerald-500" aria-hidden="true" /> : <Copy className="w-4 h-4" aria-hidden="true" />}
                   {copied ? 'Copié !' : 'Copier le courrier'}
                 </button>
                 <button
                   onClick={handlePDF}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-bold transition-colors"
                 >
-                  <FileText className="w-4 h-4" />
+                  <FileText className="w-4 h-4" aria-hidden="true" />
                   PDF courrier
                 </button>
               </div>

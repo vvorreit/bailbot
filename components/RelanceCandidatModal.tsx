@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { X, Send, Eye, Loader2, Mail } from 'lucide-react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { getTemplate, type ParamsTemplate } from '@/lib/templates-relance-candidat';
 
 interface DepotInfo {
@@ -35,6 +36,8 @@ export default function RelanceCandidatModal({
   onClose,
   onSent,
 }: Props) {
+  const trapRef = useFocusTrap(true);
+
   const nextSeq = relance
     ? Math.min((relance.sequence || 0) + 1, 3) as 1 | 2 | 3
     : 1 as 1 | 2 | 3;
@@ -92,14 +95,14 @@ export default function RelanceCandidatModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+      <div ref={trapRef} role="dialog" aria-modal="true" className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
-              <Mail className="w-5 h-5 text-emerald-600" />
+              <Mail className="w-5 h-5 text-emerald-600" aria-hidden="true" />
               Relancer le candidat
             </h2>
-            <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-lg transition-colors">
+            <button onClick={onClose} aria-label="Fermer" className="p-1 hover:bg-slate-100 rounded-lg transition-colors">
               <X className="w-5 h-5 text-slate-400" />
             </button>
           </div>
@@ -155,7 +158,7 @@ export default function RelanceCandidatModal({
                   onClick={() => setShowPreview(!showPreview)}
                   className="text-xs text-emerald-600 font-semibold flex items-center gap-1 hover:underline"
                 >
-                  <Eye className="w-3 h-3" />
+                  <Eye className="w-3 h-3" aria-hidden="true" />
                   {showPreview ? 'Masquer' : 'Prévisualiser'}
                 </button>
               </div>
@@ -191,7 +194,7 @@ export default function RelanceCandidatModal({
               disabled={sending}
               className="flex items-center gap-2 px-5 py-2 bg-emerald-600 text-white font-bold rounded-xl text-sm hover:bg-emerald-700 transition-colors disabled:opacity-40"
             >
-              {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              {sending ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Send className="w-4 h-4" aria-hidden="true" />}
               Envoyer la relance
             </button>
           </div>

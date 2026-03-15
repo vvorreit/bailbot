@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 import { listerBiens, creerBien, supprimerBien, type Bien, type TypeBail } from '@/lib/db-local';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface Props {
   onClose: () => void;
@@ -17,6 +18,7 @@ export default function GererBiensModal({ onClose, onChanged }: Props) {
   const [typeBail, setTypeBail] = useState<TypeBail>('HABITATION_VIDE');
   const [loading, setLoading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const trapRef = useFocusTrap(true);
 
   const charger = async () => setBiens(await listerBiens());
 
@@ -57,11 +59,11 @@ export default function GererBiensModal({ onClose, onChanged }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+      <div ref={trapRef} role="dialog" aria-modal="true" className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <h2 className="text-lg font-black text-slate-900">🏠 Gérer les biens</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
-            <X className="w-5 h-5 text-slate-500" />
+          <button onClick={onClose} aria-label="Fermer" className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+            <X className="w-5 h-5 text-slate-500" aria-hidden="true" />
           </button>
         </div>
 
@@ -109,8 +111,9 @@ export default function GererBiensModal({ onClose, onChanged }: Props) {
                       onClick={() => setConfirmDelete(b.id)}
                       className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                       title="Supprimer ce bien"
+                      aria-label="Supprimer ce bien"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4" aria-hidden="true" />
                     </button>
                   )}
                 </div>
@@ -169,7 +172,7 @@ export default function GererBiensModal({ onClose, onChanged }: Props) {
                 disabled={loading || !adresse.trim() || !loyer}
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-sm hover:bg-emerald-700 transition-colors disabled:opacity-40"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4" aria-hidden="true" />
                 {loading ? 'Enregistrement…' : 'Ajouter le bien'}
               </button>
             </div>

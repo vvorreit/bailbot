@@ -110,6 +110,7 @@ export default function FraudeCard({ resultat }: Props) {
             </p>
             <span
               className={`inline-block px-2.5 py-1 rounded-full text-xs font-bold ${vCfg.bg} ${vCfg.text}`}
+              role="status"
             >
               {vCfg.badge}
             </span>
@@ -117,12 +118,15 @@ export default function FraudeCard({ resultat }: Props) {
           <div className="text-right">
             <p className={`text-3xl font-black ${sc.text}`}>
               {score_confiance}%
+              <span className="sr-only">
+                {score_confiance >= 90 ? ' - niveau excellent' : score_confiance >= 70 ? ' - niveau correct' : score_confiance >= 40 ? ' - niveau faible' : ' - niveau critique'}
+              </span>
             </p>
             <p className="text-[10px] text-slate-400 font-medium">conformité</p>
           </div>
         </div>
 
-        <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+        <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden" role="progressbar" aria-valuenow={score_confiance} aria-valuemin={0} aria-valuemax={100} aria-label={`Score de conformité : ${score_confiance}%`}>
           <div
             className={`h-full ${sc.bar} rounded-full transition-all duration-700`}
             style={{ width: `${score_confiance}%` }}
@@ -171,10 +175,13 @@ export default function FraudeCard({ resultat }: Props) {
                             className={`text-xs font-bold ${dsc.text}`}
                           >
                             {pd.score}%
+                            <span className="sr-only">
+                              {pd.score >= 90 ? ' - conforme' : pd.score >= 70 ? ' - attention' : pd.score >= 40 ? ' - suspect' : ' - critique'}
+                            </span>
                           </span>
                         </div>
                       </div>
-                      <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden" role="progressbar" aria-valuenow={pd.score} aria-valuemin={0} aria-valuemax={100} aria-label={`Conformité ${pd.document} : ${pd.score}%`}>
                         <div
                           className={`h-full ${dsc.bar} rounded-full transition-all duration-500`}
                           style={{ width: `${pd.score}%` }}

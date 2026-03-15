@@ -55,7 +55,7 @@ export default function DossierForm({ data, onChange }: Props) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-8">
       <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-        <span className="text-2xl">🏠</span> Dossier Locataire
+        <span className="text-2xl" aria-hidden="true">🏠</span> Dossier Locataire
       </h2>
 
       {/* Identité — CNI */}
@@ -118,6 +118,9 @@ export default function DossierForm({ data, onChange }: Props) {
           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Garant extérieur</p>
           <button
             type="button"
+            role="switch"
+            aria-checked={showGarant}
+            aria-label="Activer le garant extérieur"
             onClick={() => {
               const next = !showGarant;
               setShowGarant(next);

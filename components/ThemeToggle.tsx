@@ -36,9 +36,10 @@ export default function ThemeToggle() {
     <button
       onClick={toggle}
       title={dark ? 'Passer en mode clair' : 'Passer en mode sombre'}
+      aria-label={dark ? 'Passer en mode clair' : 'Passer en mode sombre'}
       className="p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-800 transition-colors"
     >
-      {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+      {dark ? <Sun className="w-4 h-4" aria-hidden="true" /> : <Moon className="w-4 h-4" aria-hidden="true" />}
     </button>
   );
 }

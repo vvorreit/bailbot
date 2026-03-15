@@ -201,7 +201,7 @@ export default function Onboarding() {
   /* ─── Rendu sélection métier ───────────────────────────────────────────── */
   if (metierPhase) {
     return (
-      <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Sélection de votre profil métier">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
           <h2 className="text-xl font-black text-slate-900 mb-1">Quel est votre profil ?</h2>
           <p className="text-sm text-slate-500 mb-5">
@@ -219,7 +219,7 @@ export default function Onboarding() {
                     : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                 }`}
               >
-                <span className="text-2xl leading-none mt-0.5">{opt.icon}</span>
+                <span className="text-2xl leading-none mt-0.5" aria-hidden="true">{opt.icon}</span>
                 <div>
                   <p className="text-sm font-black text-slate-900">{opt.label}</p>
                   <p className="text-xs text-slate-500 mt-0.5">{opt.description}</p>
@@ -231,6 +231,7 @@ export default function Onboarding() {
           <button
             onClick={handleConfirmMetier}
             disabled={!selectedMetier || metierSaving}
+            aria-label={metierSaving ? "Enregistrement en cours" : "Confirmer le profil et continuer"}
             className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 text-white text-sm font-black hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {metierSaving ? "Enregistrement..." : "Continuer →"}
@@ -251,7 +252,7 @@ export default function Onboarding() {
   return (
     <>
       {/* Overlay avec trou (spotlight) */}
-      <div className="fixed inset-0 z-[9998] pointer-events-none">
+      <div className="fixed inset-0 z-[9998] pointer-events-none" role="dialog" aria-modal="true" aria-label="Tour guidé de BailBot">
         <div className="absolute inset-0 bg-black/50 pointer-events-auto" onClick={finish} />
         {spotlightRect && (
           <div
@@ -274,10 +275,18 @@ export default function Onboarding() {
         style={tooltipStyle}
       >
         {/* Progress dots */}
-        <div className="flex gap-1.5 mb-3">
+        <div
+          className="flex gap-1.5 mb-3"
+          role="progressbar"
+          aria-valuenow={step + 1}
+          aria-valuemin={1}
+          aria-valuemax={STEPS.length}
+          aria-label={`Étape ${step + 1} sur ${STEPS.length}`}
+        >
           {STEPS.map((_, i) => (
             <div
               key={i}
+              aria-hidden="true"
               className={`h-1.5 rounded-full transition-all ${
                 i === step ? "w-6 bg-emerald-600" : i < step ? "w-3 bg-emerald-200" : "w-3 bg-slate-100"
               }`}
@@ -291,17 +300,19 @@ export default function Onboarding() {
         <div className="flex items-center justify-between gap-2">
           <button
             onClick={finish}
+            aria-label="Passer le tour guidé"
             className="text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors"
           >
             Passer le tour
           </button>
           <button
             onClick={next}
+            aria-label={step < STEPS.length - 1 ? "Étape suivante" : "Terminer le tour guidé"}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-black hover:bg-emerald-700 transition-colors"
           >
             {step < STEPS.length - 1 ? (
               <>
-                Suivant <ChevronRight className="w-3.5 h-3.5" />
+                Suivant <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
               </>
             ) : (
               "Terminer 🎉"
@@ -328,8 +339,9 @@ export function OnboardingTrigger() {
       onClick={restart}
       className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors"
       title="Relancer le tutoriel"
+      aria-label="Relancer le tutoriel"
     >
-      <GraduationCap className="w-4 h-4" />
+      <GraduationCap className="w-4 h-4" aria-hidden="true" />
       Tutoriel
     </button>
   );

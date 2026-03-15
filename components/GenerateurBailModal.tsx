@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, FileText, Save, AlertCircle, CheckSquare, Briefcase } from 'lucide-react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import type { DossierLocataire } from '@/lib/parsers';
 import { genererBailPDF, calculerDateFin, type DonneesBail } from '@/lib/generateur-bail';
 import ChecklistAlur from './ChecklistAlur';
@@ -49,6 +50,7 @@ function FieldError({ msg }: { msg?: string }) {
 }
 
 export default function GenerateurBailModal({ dossier, loyerHC: loyerHCProp, charges: chargesProp, depot: depotProp, onClose }: Props) {
+  const trapRef = useFocusTrap(true);
   const [saved, setSaved] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState<'bail' | 'conformite' | 'bail_pro'>('bail');
@@ -185,20 +187,20 @@ export default function GenerateurBailModal({ dossier, loyerHC: loyerHCProp, cha
     }`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div ref={trapRef} role="dialog" aria-modal="true" aria-labelledby="generateur-bail-title" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center text-white">
-              <FileText className="w-5 h-5" />
+              <FileText aria-hidden="true" className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-slate-900">Générer le bail</h2>
+              <h2 id="generateur-bail-title" className="text-lg font-black text-slate-900">Générer le bail</h2>
               <p className="text-xs text-slate-500">Contrat conforme loi ALUR</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 transition-colors">
+          <button onClick={onClose} aria-label="Fermer" className="p-2 rounded-xl hover:bg-slate-100 transition-colors">
             <X className="w-5 h-5 text-slate-500" />
           </button>
         </div>
@@ -213,7 +215,7 @@ export default function GenerateurBailModal({ dossier, loyerHC: loyerHCProp, cha
                 : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}
           >
-            <FileText className="w-4 h-4" />
+            <FileText aria-hidden="true" className="w-4 h-4" />
             Bail
           </button>
           <button
@@ -224,7 +226,7 @@ export default function GenerateurBailModal({ dossier, loyerHC: loyerHCProp, cha
                 : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}
           >
-            <CheckSquare className="w-4 h-4" />
+            <CheckSquare aria-hidden="true" className="w-4 h-4" />
             Conformité ALUR
           </button>
           <FeatureGate feature="GENERATEUR_BAIL_PRO">
@@ -236,7 +238,7 @@ export default function GenerateurBailModal({ dossier, loyerHC: loyerHCProp, cha
                   : 'border-transparent text-slate-500 hover:text-slate-700'
               }`}
             >
-              <Briefcase className="w-4 h-4" />
+              <Briefcase aria-hidden="true" className="w-4 h-4" />
               Bail professionnel
             </button>
           </FeatureGate>
@@ -277,7 +279,7 @@ export default function GenerateurBailModal({ dossier, loyerHC: loyerHCProp, cha
                   saved ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                <Save className="w-3 h-3" />
+                <Save aria-hidden="true" className="w-3 h-3" />
                 {saved ? '✓ Sauvegardé !' : 'Sauvegarder infos bailleur'}
               </button>
             </div>
@@ -527,7 +529,7 @@ export default function GenerateurBailModal({ dossier, loyerHC: loyerHCProp, cha
             disabled={generating}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-black hover:bg-emerald-700 transition-colors disabled:opacity-60 shadow-sm"
           >
-            <FileText className="w-4 h-4" />
+            <FileText aria-hidden="true" className="w-4 h-4" />
             {generating ? '⏳ Génération...' : '📄 Générer le PDF'}
           </button>
           <button
@@ -536,7 +538,7 @@ export default function GenerateurBailModal({ dossier, loyerHC: loyerHCProp, cha
               saved ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
-            <Save className="w-4 h-4" />
+            <Save aria-hidden="true" className="w-4 h-4" />
             {saved ? '✓ Sauvegardé' : '💾 Sauvegarder infos bailleur'}
           </button>
           <button

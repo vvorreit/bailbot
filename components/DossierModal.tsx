@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { X, Download, Trash2, ChevronDown, Package, FileText, Receipt, Banknote } from 'lucide-react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import Link from 'next/link';
 import GenerateurBailModal from './GenerateurBailModal';
 import QuittanceModal from './QuittanceModal';
@@ -48,6 +49,7 @@ function Row({ label, value }: { label: string; value?: string | number }) {
 }
 
 export default function DossierModal({ candidature, bien, onClose, onUpdated, onDeleted }: Props) {
+  const trapRef = useFocusTrap(true);
   const [statut, setStatut] = useState<Candidature['statut']>(candidature.statut);
   const [loading, setLoading] = useState(false);
   const [archiveLoading, setArchiveLoading] = useState(false);
@@ -117,12 +119,12 @@ export default function DossierModal({ candidature, bien, onClose, onUpdated, on
   const currentStatut = STATUTS.find((s) => s.value === statut);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div ref={trapRef} role="dialog" aria-modal="true" aria-labelledby="dossier-modal-title" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between rounded-t-2xl">
           <div>
-            <h2 className="text-lg font-black text-slate-900">👤 {nomComplet}</h2>
+            <h2 id="dossier-modal-title" className="text-lg font-black text-slate-900">👤 {nomComplet}</h2>
             <div className="flex items-center gap-2 mt-1">
               <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${currentStatut?.color}`}>
                 {currentStatut?.label}
@@ -132,7 +134,7 @@ export default function DossierModal({ candidature, bien, onClose, onUpdated, on
               )}
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 transition-colors">
+          <button onClick={onClose} aria-label="Fermer" className="p-2 rounded-xl hover:bg-slate-100 transition-colors">
             <X className="w-5 h-5 text-slate-500" />
           </button>
         </div>
@@ -262,7 +264,7 @@ export default function DossierModal({ candidature, bien, onClose, onUpdated, on
             disabled={archiveLoading}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-slate-700 transition-colors disabled:opacity-60"
           >
-            <Package className="w-4 h-4" />
+            <Package aria-hidden="true" className="w-4 h-4" />
             {archiveLoading ? '⏳ Génération...' : '📦 Télécharger ZIP'}
           </button>
           <ImprimerDossier
@@ -276,7 +278,7 @@ export default function DossierModal({ candidature, bien, onClose, onUpdated, on
               onClick={() => setShowBailModal(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 transition-colors"
             >
-              <FileText className="w-4 h-4" />
+              <FileText aria-hidden="true" className="w-4 h-4" />
               📄 Générer le bail
             </button>
           )}
@@ -284,7 +286,7 @@ export default function DossierModal({ candidature, bien, onClose, onUpdated, on
             onClick={() => setShowQuittanceModal(true)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-bold hover:bg-amber-600 transition-colors"
           >
-            <Receipt className="w-4 h-4" />
+            <Receipt aria-hidden="true" className="w-4 h-4" />
             🧾 Quittance
           </button>
           {statut === 'selectionne' && (
@@ -293,7 +295,7 @@ export default function DossierModal({ candidature, bien, onClose, onUpdated, on
               onClick={onClose}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-50 text-blue-700 text-sm font-bold hover:bg-blue-100 transition-colors"
             >
-              <Banknote className="w-4 h-4" />
+              <Banknote aria-hidden="true" className="w-4 h-4" />
               💸 Suivi des loyers
             </Link>
           )}
@@ -307,7 +309,7 @@ export default function DossierModal({ candidature, bien, onClose, onUpdated, on
                 : 'bg-red-50 text-red-600 hover:bg-red-100'
             }`}
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 aria-hidden="true" className="w-4 h-4" />
             {confirmDelete ? 'Confirmer la suppression' : 'Supprimer'}
           </button>
         </div>

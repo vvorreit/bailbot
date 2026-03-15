@@ -4,6 +4,10 @@ import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import { ToastContainer } from "@/components/ui/ToastContainer";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { CookieBanner } from "@/components/CookieBanner";
+import { HelpCenter } from "@/components/HelpCenter";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,8 +49,18 @@ export default async function RootLayout({
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-emerald-600 focus:text-white focus:rounded-xl focus:text-sm focus:font-semibold">
+          Aller au contenu
+        </a>
         <Providers>
-          {children}
+          <ErrorBoundary>
+            <main id="main-content">
+              {children}
+            </main>
+          </ErrorBoundary>
+          <ToastContainer />
+          <HelpCenter />
+          <CookieBanner />
         </Providers>
         <ServiceWorkerRegister />
       </body>

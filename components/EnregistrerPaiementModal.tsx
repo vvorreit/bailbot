@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { X, Zap } from 'lucide-react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { creerPaiement, listerPaiements, type Bien } from '@/lib/db-local';
 
 interface Props {
@@ -20,6 +21,8 @@ function getMoisLabel(mois: string): string {
 }
 
 export default function EnregistrerPaiementModal({ biens, moisDefaut, onClose, onSaved }: Props) {
+  const trapRef = useFocusTrap(true);
+
   const [bienId, setBienId] = useState(biens[0]?.id ?? '');
   const [mois, setMois] = useState(moisDefaut);
   const [locataireNom, setLocataireNom] = useState('');
@@ -109,11 +112,11 @@ export default function EnregistrerPaiementModal({ biens, moisDefaut, onClose, o
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+      <div ref={trapRef} role="dialog" aria-modal="true" className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <h2 className="text-lg font-black text-slate-900">Enregistrer un paiement</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+          <button onClick={onClose} aria-label="Fermer" className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
             <X className="w-5 h-5 text-slate-500" />
           </button>
         </div>
@@ -122,7 +125,7 @@ export default function EnregistrerPaiementModal({ biens, moisDefaut, onClose, o
           {/* Génération automatique */}
           <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
             <p className="text-sm font-bold text-emerald-800 mb-2 flex items-center gap-2">
-              <Zap className="w-4 h-4" />
+              <Zap className="w-4 h-4" aria-hidden="true" />
               Génération automatique du mois
             </p>
             <p className="text-xs text-emerald-700 mb-3">

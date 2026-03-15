@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X, Copy, Mail, Check, Edit3, RotateCcw } from "lucide-react";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -206,6 +207,7 @@ interface Props {
 }
 
 export default function MessageTemplates({ onClose }: Props) {
+  const focusTrapRef = useFocusTrap(true);
   const [templates, setTemplates] = useState<Template[]>(TEMPLATES_DEFAUT);
   const [selected, setSelected] = useState<Template | null>(null);
   const [dossier, setDossier] = useState<DossierActif>({});
@@ -258,19 +260,26 @@ export default function MessageTemplates({ onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+    <div
+      ref={focusTrapRef}
+      className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Templates de messages"
+    >
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-100">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <div className="flex items-center gap-2">
-            <Mail className="w-5 h-5 text-emerald-600" />
+            <Mail className="w-5 h-5 text-emerald-600" aria-hidden="true" />
             <h2 className="text-lg font-black text-slate-900">Templates de messages</h2>
           </div>
           <button
             onClick={onClose}
+            aria-label="Fermer les templates de messages"
             className="p-2 rounded-xl hover:bg-slate-50 text-slate-400 hover:text-slate-700 transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
@@ -343,9 +352,10 @@ export default function MessageTemplates({ onClose }: Props) {
                     <>
                       <button
                         onClick={handleSaveEdit}
+                        aria-label="Sauvegarder les modifications du template"
                         className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition-colors"
                       >
-                        <Check className="w-4 h-4" />
+                        <Check className="w-4 h-4" aria-hidden="true" />
                         Sauvegarder
                       </button>
                       <button
@@ -356,9 +366,10 @@ export default function MessageTemplates({ onClose }: Props) {
                       </button>
                       <button
                         onClick={handleReset}
+                        aria-label="Réinitialiser le template par défaut"
                         className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-amber-600 hover:bg-amber-50 rounded-xl transition-colors ml-auto"
                       >
-                        <RotateCcw className="w-3.5 h-3.5" />
+                        <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
                         Réinitialiser
                       </button>
                     </>
@@ -366,16 +377,18 @@ export default function MessageTemplates({ onClose }: Props) {
                     <>
                       <button
                         onClick={handleCopy}
+                        aria-label="Copier le message dans le presse-papier"
                         className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-700 transition-colors"
                       >
-                        {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                        {copied ? <Check className="w-4 h-4 text-emerald-400" aria-hidden="true" /> : <Copy className="w-4 h-4" aria-hidden="true" />}
                         {copied ? "Copié !" : "📋 Copier"}
                       </button>
                       <button
                         onClick={handleMailto}
+                        aria-label="Ouvrir le message dans le client mail"
                         className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-colors"
                       >
-                        <Mail className="w-4 h-4" />
+                        <Mail className="w-4 h-4" aria-hidden="true" />
                         📧 Ouvrir dans Mail
                       </button>
                       <button
@@ -383,9 +396,10 @@ export default function MessageTemplates({ onClose }: Props) {
                           setEditDraft(selected.corps);
                           setEditing(true);
                         }}
+                        aria-label="Modifier le template"
                         className="flex items-center gap-2 px-4 py-2 border border-slate-200 text-sm font-semibold text-slate-600 rounded-xl hover:bg-slate-50 transition-colors ml-auto"
                       >
-                        <Edit3 className="w-4 h-4" />
+                        <Edit3 className="w-4 h-4" aria-hidden="true" />
                         Modifier
                       </button>
                     </>

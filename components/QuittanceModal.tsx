@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, FileText, Mail } from 'lucide-react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { genererQuittancePDF, type DonneesQuittance } from '@/lib/generateur-quittance';
 
 interface Props {
@@ -106,6 +107,7 @@ export default function QuittanceModal({
   const [modePaiement, setModePaiement] = useState('virement bancaire');
   const [generating, setGenerating] = useState(false);
 
+  const trapRef = useFocusTrap(true);
   const moisDisponibles = getMoisDisponibles();
 
   useEffect(() => {
@@ -189,12 +191,12 @@ export default function QuittanceModal({
   const isValid = infos.nomBailleur && locNom && adresse && loyerHCVal > 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div ref={trapRef} role="dialog" aria-modal="true" aria-labelledby="quittance-modal-title" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-          <h2 className="text-lg font-black text-slate-900">🧾 Quittance de loyer</h2>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 transition-colors">
+          <h2 id="quittance-modal-title" className="text-lg font-black text-slate-900">🧾 Quittance de loyer</h2>
+          <button onClick={onClose} aria-label="Fermer" className="p-2 rounded-xl hover:bg-slate-100 transition-colors">
             <X className="w-5 h-5 text-slate-500" />
           </button>
         </div>
@@ -346,7 +348,7 @@ export default function QuittanceModal({
             disabled={!isValid || generating}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50"
           >
-            <FileText className="w-4 h-4" />
+            <FileText aria-hidden="true" className="w-4 h-4" />
             {generating ? '⏳ Génération...' : '📄 Télécharger la quittance'}
           </button>
           <button
@@ -354,7 +356,7 @@ export default function QuittanceModal({
             disabled={!isValid}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors disabled:opacity-50"
           >
-            <Mail className="w-4 h-4" />
+            <Mail aria-hidden="true" className="w-4 h-4" />
             📧 Envoyer par email
           </button>
         </div>

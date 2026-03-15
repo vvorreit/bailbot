@@ -30,6 +30,7 @@ export default function DropZone({ label, icon, onFile, isLoading, progress, fil
   return (
     <div
       {...getRootProps()}
+      aria-label={`Zone de dépôt : ${label}`}
       className={`
         relative flex flex-col items-center justify-center gap-3 p-8 rounded-2xl border-2 border-dashed
         cursor-pointer transition-all duration-200 min-h-[180px] select-none
@@ -52,7 +53,7 @@ export default function DropZone({ label, icon, onFile, isLoading, progress, fil
         </>
       ) : (
         <>
-          <span className="text-5xl">{icon}</span>
+          <span className="text-5xl" aria-hidden="true">{icon}</span>
           <p className="text-base font-semibold text-gray-700 text-center">{label}</p>
           {fileName ? (
             <p className="text-xs text-green-600 font-medium bg-green-100 px-3 py-1 rounded-full">

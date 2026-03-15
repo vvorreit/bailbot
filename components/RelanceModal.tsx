@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Copy, Mail, CheckCircle2, FileDown } from 'lucide-react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { type Paiement, type Bien, ajouterRelance } from '@/lib/db-local';
 import {
   ETAPES_RELANCE,
@@ -36,6 +37,8 @@ function downloadBlob(blob: Blob, filename: string) {
 }
 
 export default function RelanceModal({ paiement, bien, bailleur, moisImpayes, onClose, onSaved }: Props) {
+  const trapRef = useFocusTrap(true);
+
   const prochainEtape = getProchainEtape(paiement);
   const [etapeSelectionnee, setEtapeSelectionnee] = useState<EtapeRelance>(
     prochainEtape ?? ETAPES_RELANCE[0]
@@ -127,11 +130,11 @@ export default function RelanceModal({ paiement, bien, bailleur, moisImpayes, on
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden flex flex-col max-h-[90vh]">
+      <div ref={trapRef} role="dialog" aria-modal="true" className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <h2 className="text-lg font-black text-slate-900">📧 Envoyer une relance</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+          <button onClick={onClose} aria-label="Fermer" className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
             <X className="w-5 h-5 text-slate-500" />
           </button>
         </div>
@@ -257,7 +260,7 @@ export default function RelanceModal({ paiement, bien, bailleur, moisImpayes, on
               onClick={handleCopier}
               className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl text-sm hover:bg-slate-100 transition-colors"
             >
-              {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+              {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-500" aria-hidden="true" /> : <Copy className="w-4 h-4" aria-hidden="true" />}
               {copied ? 'Copié !' : 'Copier'}
             </button>
 
@@ -266,7 +269,7 @@ export default function RelanceModal({ paiement, bien, bailleur, moisImpayes, on
                 onClick={handleOuvrirMail}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 text-blue-700 font-bold rounded-xl text-sm hover:bg-blue-100 transition-colors"
               >
-                <Mail className="w-4 h-4" />
+                <Mail className="w-4 h-4" aria-hidden="true" />
                 Ouvrir Mail
               </button>
             )}
@@ -281,7 +284,7 @@ export default function RelanceModal({ paiement, bien, bailleur, moisImpayes, on
                     : 'bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100'
                 }`}
               >
-                <FileDown className="w-4 h-4" />
+                <FileDown className="w-4 h-4" aria-hidden="true" />
                 {pdfLoading
                   ? 'Génération…'
                   : etapeSelectionnee.numero === 3
@@ -303,7 +306,7 @@ export default function RelanceModal({ paiement, bien, bailleur, moisImpayes, on
               disabled={loading}
               className="flex items-center gap-2 px-5 py-2 bg-emerald-600 text-white font-bold rounded-xl text-sm hover:bg-emerald-700 transition-colors disabled:opacity-50"
             >
-              <CheckCircle2 className="w-4 h-4" />
+              <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
               {loading ? 'Enregistrement…' : 'Marquer comme envoyée'}
             </button>
           </div>

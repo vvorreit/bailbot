@@ -84,19 +84,19 @@ export default function NavMenu() {
   ].filter((l) => l.show);
 
   return (
-    <nav className="bg-white border-b border-slate-100 sticky top-0 z-50">
+    <nav className="bg-white border-b border-slate-100 sticky top-0 z-50" aria-label="Navigation principale">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
 
         {/* Logo */}
-        <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0 group">
+        <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0 group" aria-label="BailBot — Accueil">
           <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-emerald-200 group-hover:scale-105 transition-transform">
-            <Building2 className="w-5 h-5" />
+            <Building2 className="w-5 h-5" aria-hidden="true" />
           </div>
           <span className="text-lg font-black tracking-tight text-slate-900">BailBot</span>
         </Link>
 
         {/* Nav links — desktop */}
-        <div className="hidden md:flex items-center gap-1 flex-1 ml-4">
+        <div className="hidden md:flex items-center gap-1 flex-1 ml-4" role="menubar">
           {navLinks.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
             return (
@@ -104,16 +104,18 @@ export default function NavMenu() {
                 key={href}
                 href={href}
                 id={href === "/dashboard/multi" ? "nav-multi" : undefined}
+                aria-current={active ? "page" : undefined}
+                role="menuitem"
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-colors ${
                   active
                     ? "bg-emerald-50 text-emerald-600"
                     : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                 }`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-4 h-4" aria-hidden="true" />
                 {label}
                 {href === "/dashboard/impayes" && nbImpayes > 0 && (
-                  <span className="bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 leading-none">
+                  <span className="bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 leading-none" aria-label={`${nbImpayes} impayés`}>
                     {nbImpayes}
                   </span>
                 )}
@@ -128,19 +130,20 @@ export default function NavMenu() {
         {/* Révision IRL button */}
         <button
           onClick={() => setRevisionOpen(true)}
-          className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
-          title="Révision IRL"
+          aria-label="Révision IRL"
+          className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
         >
-          <TrendingUp className="w-4 h-4" />
+          <TrendingUp className="w-4 h-4" aria-hidden="true" />
           <span className="hidden lg:inline">Révision IRL</span>
         </button>
 
         {/* Messages button */}
         <button
           onClick={() => setMessagesOpen(true)}
-          className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+          aria-label="Messages"
+          className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
         >
-          <Mail className="w-4 h-4" />
+          <Mail className="w-4 h-4" aria-hidden="true" />
           <span className="hidden lg:inline">Messages</span>
         </button>
 
@@ -170,16 +173,19 @@ export default function NavMenu() {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen((v) => !v)}
-              className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-slate-50 transition-colors"
+              aria-expanded={dropdownOpen}
+              aria-haspopup="true"
+              aria-label="Menu utilisateur"
+              className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-slate-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
             >
               <div className="w-8 h-8 bg-gradient-to-tr from-slate-700 to-slate-900 rounded-xl flex items-center justify-center text-white text-xs font-black">
                 {user?.image ? (
-                  <img src={user.image} alt="" className="w-8 h-8 rounded-xl object-cover" />
+                  <img src={user.image} alt={`Photo de ${user.name || "profil"}`} className="w-8 h-8 rounded-xl object-cover" loading="lazy" />
                 ) : (
                   initials
                 )}
               </div>
-              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} aria-hidden="true" />
             </button>
 
             {dropdownOpen && (
@@ -244,16 +250,18 @@ export default function NavMenu() {
           {/* Hamburger — mobile */}
           <button
             onClick={() => setMobileOpen((v) => !v)}
-            className="md:hidden p-2 rounded-xl hover:bg-slate-50 transition-colors"
+            aria-expanded={mobileOpen}
+            aria-label={mobileOpen ? "Fermer le menu" : "Ouvrir le menu"}
+            className="md:hidden p-2 rounded-xl hover:bg-slate-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
           >
-            {mobileOpen ? <X className="w-5 h-5 text-slate-700" /> : <Menu className="w-5 h-5 text-slate-700" />}
+            {mobileOpen ? <X className="w-5 h-5 text-slate-700" aria-hidden="true" /> : <Menu className="w-5 h-5 text-slate-700" aria-hidden="true" />}
           </button>
         </div>
       </div>
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-slate-100 bg-white px-4 py-3 space-y-1">
+        <div className="md:hidden border-t border-slate-100 bg-white px-4 py-3 space-y-1" role="menu" aria-label="Menu mobile">
           {navLinks.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
             return (
@@ -261,11 +269,13 @@ export default function NavMenu() {
                 key={href}
                 href={href}
                 onClick={() => setMobileOpen(false)}
+                role="menuitem"
+                aria-current={active ? "page" : undefined}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${
                   active ? "bg-emerald-50 text-emerald-600" : "text-slate-600 hover:bg-slate-50"
                 }`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-4 h-4" aria-hidden="true" />
                 {label}
                 {href === "/dashboard/impayes" && nbImpayes > 0 && (
                   <span className="ml-auto bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 leading-none">

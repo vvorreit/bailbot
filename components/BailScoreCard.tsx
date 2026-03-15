@@ -28,7 +28,7 @@ function CircularScore({ total, stroke }: { total: number; stroke: string }) {
   const offset = C - (total / 100) * C;
 
   return (
-    <svg width="140" height="140" viewBox="0 0 140 140" className="rotate-[-90deg]">
+    <svg width="140" height="140" viewBox="0 0 140 140" className="rotate-[-90deg]" role="img" aria-label={`BailScore : ${total} sur 100`}>
       {/* Track */}
       <circle cx="70" cy="70" r={R} fill="none" stroke="#e5e7eb" strokeWidth="12" />
       {/* Progress */}
@@ -64,10 +64,10 @@ function DimBar({ label, emoji, score, max }: { label: string; emoji: string; sc
   return (
     <div className="space-y-1">
       <div className="flex justify-between items-center">
-        <span className="text-xs font-semibold text-slate-600">{emoji} {label}</span>
+        <span className="text-xs font-semibold text-slate-600"><span aria-hidden="true">{emoji} </span>{label}</span>
         <span className="text-xs font-bold text-slate-800">{score}/{max}</span>
       </div>
-      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+      <div className="h-2 bg-slate-100 rounded-full overflow-hidden" role="progressbar" aria-valuenow={score} aria-valuemin={0} aria-valuemax={max} aria-label={`${label} : ${score} sur ${max}`}>
         <div
           className={`h-full ${barColor} rounded-full transition-all duration-700`}
           style={{ width: `${pct}%` }}
@@ -104,7 +104,7 @@ export default function BailScoreCard({ score, onExportPDF }: Props) {
           onClick={handlePrint}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-slate-600 text-[11px] font-bold hover:bg-slate-50 border border-slate-200 transition-colors shadow-sm"
         >
-          📄 Exporter PDF
+          <span aria-hidden="true">📄 </span>Exporter PDF
         </button>
       </div>
 
@@ -139,7 +139,7 @@ export default function BailScoreCard({ score, onExportPDF }: Props) {
             <ul className="space-y-1">
               {score.pointsForts.map((p, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs text-slate-700">
-                  <span className="text-emerald-500 shrink-0">✅</span>
+                  <span className="text-emerald-500 shrink-0" aria-hidden="true">✅</span>
                   <span>{p}</span>
                 </li>
               ))}
@@ -154,7 +154,7 @@ export default function BailScoreCard({ score, onExportPDF }: Props) {
             <ul className="space-y-1">
               {score.pointsAttention.map((p, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs text-slate-700">
-                  <span className="text-amber-500 shrink-0">⚠️</span>
+                  <span className="text-amber-500 shrink-0" aria-hidden="true">⚠️</span>
                   <span>{p}</span>
                 </li>
               ))}

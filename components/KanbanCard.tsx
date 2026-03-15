@@ -109,13 +109,13 @@ export default function KanbanCard({ candidature, onOuvrir, onChangerStatut, typ
       >
         <div className="flex items-center gap-1.5">
           {complet ? (
-            <span className="text-[11px] text-emerald-600 font-semibold">✅ Dossier complet ({docsOk}/{totalDocs} docs)</span>
+            <span className="text-[11px] text-emerald-600 font-semibold"><span aria-hidden="true">✅ </span>Dossier complet ({docsOk}/{totalDocs} docs)</span>
           ) : (
-            <span className="text-[11px] text-amber-600 font-semibold">⚠️ Incomplet ({docsOk}/{totalDocs} docs)</span>
+            <span className="text-[11px] text-amber-600 font-semibold"><span aria-hidden="true">⚠️ </span>Incomplet ({docsOk}/{totalDocs} docs)</span>
           )}
         </div>
         {/* Barre de progression */}
-        <div className="mt-1 h-1 bg-slate-100 rounded-full overflow-hidden">
+        <div className="mt-1 h-1 bg-slate-100 rounded-full overflow-hidden" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`Complétude du dossier : ${pct}%`}>
           <div
             className={`h-full rounded-full transition-all ${complet ? 'bg-emerald-500' : 'bg-amber-400'}`}
             style={{ width: `${pct}%` }}
@@ -136,21 +136,21 @@ export default function KanbanCard({ candidature, onOuvrir, onChangerStatut, typ
       <div className="flex items-center gap-2 flex-wrap mb-3">
         {eligibleVisale !== undefined ? (
           <span className="text-xs">
-            {eligibleVisale ? '✅ Visale' : '❌ Visale'}
+            {eligibleVisale ? <><span aria-hidden="true">✅ </span>Visale</> : <><span aria-hidden="true">❌ </span>Visale</>}
           </span>
         ) : (
           <span className="text-xs text-slate-400">? Visale</span>
         )}
         {alertesFraude !== undefined && (
           <span className={`text-xs font-semibold ${alertesFraude > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-            ⚠️ {alertesFraude} alerte{alertesFraude > 1 ? 's' : ''}
+            <span aria-hidden="true">⚠️ </span>{alertesFraude} alerte{alertesFraude > 1 ? 's' : ''}
           </span>
         )}
         {aGarant && (
-          <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-semibold">🛡 Garant</span>
+          <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-semibold"><span aria-hidden="true">🛡 </span>Garant</span>
         )}
         {statut === 'en_analyse' && (
-          <span className="text-xs text-blue-500">🔄 analyse</span>
+          <span className="text-xs text-blue-500"><span aria-hidden="true">🔄 </span>analyse</span>
         )}
       </div>
 
@@ -174,6 +174,7 @@ export default function KanbanCard({ candidature, onOuvrir, onChangerStatut, typ
           <button
             onClick={() => onChangerStatut(candidature.id, 'refuse')}
             className="text-[11px] font-bold px-2 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-colors"
+            aria-label="Refuser la candidature"
           >
             ✕
           </button>

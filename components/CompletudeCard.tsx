@@ -43,7 +43,7 @@ export default function CompletudeCard({ completude }: Props) {
               </span>
               <span className={`text-xs font-black ${labelColor}`}>{pourcentage}%</span>
             </div>
-            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-2 bg-slate-100 rounded-full overflow-hidden" role="progressbar" aria-valuenow={pourcentage} aria-valuemin={0} aria-valuemax={100} aria-label={`Complétude du dossier : ${pourcentage}%`}>
               <div
                 className={`h-full ${barColor} rounded-full transition-all duration-700`}
                 style={{ width: `${pourcentage}%` }}

@@ -5,6 +5,7 @@ import { X, Copy, Check, QrCode, Loader2 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { genererCle, exporterCle } from '@/lib/crypto-client';
 import AdresseSearch from '@/components/AdresseSearch';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface Props {
   onClose: () => void;
@@ -19,6 +20,7 @@ export default function CreerLienDepotModal({ onClose, onCreated }: Props) {
   const [result, setResult] = useState<{ lien: string; token: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [showQr, setShowQr] = useState(false);
+  const trapRef = useFocusTrap(true);
 
   const handleCreer = async () => {
     if (!bienAdresse) { alert('Adresse du bien requise'); return; }
@@ -62,11 +64,11 @@ export default function CreerLienDepotModal({ onClose, onCreated }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+      <div ref={trapRef} role="dialog" aria-modal="true" className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <h2 className="font-bold text-slate-900 text-lg">📤 Créer un lien de dépôt</h2>
-          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
-            <X className="w-5 h-5 text-slate-500" />
+          <button onClick={onClose} aria-label="Fermer" className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+            <X className="w-5 h-5 text-slate-500" aria-hidden="true" />
           </button>
         </div>
 
@@ -113,7 +115,7 @@ export default function CreerLienDepotModal({ onClose, onCreated }: Props) {
                 disabled={loading || !bienAdresse}
                 className="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
               >
-                {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Création…</> : '✨ Créer le lien'}
+                {loading ? <><Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> Création…</> : '✨ Créer le lien'}
               </button>
             </>
           ) : (
@@ -132,14 +134,14 @@ export default function CreerLienDepotModal({ onClose, onCreated }: Props) {
                   onClick={handleCopy}
                   className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-slate-900 text-white font-semibold rounded-xl hover:bg-slate-800 transition-colors text-sm"
                 >
-                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  {copied ? <Check className="w-4 h-4" aria-hidden="true" /> : <Copy className="w-4 h-4" aria-hidden="true" />}
                   {copied ? 'Copié !' : 'Copier le lien'}
                 </button>
                 <button
                   onClick={() => setShowQr(!showQr)}
                   className="flex items-center gap-2 px-4 py-2.5 border border-slate-200 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 transition-colors text-sm"
                 >
-                  <QrCode className="w-4 h-4" />
+                  <QrCode className="w-4 h-4" aria-hidden="true" />
                   QR Code
                 </button>
               </div>

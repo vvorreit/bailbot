@@ -101,11 +101,11 @@ export default function SearchDossiers() {
 
   return (
     <>
-      <div ref={containerRef} className="relative hidden md:block">
+      <div ref={containerRef} className="relative hidden md:block" role="search">
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-slate-300 transition-colors w-56 cursor-text"
           onClick={() => inputRef.current?.focus()}
         >
-          <Search className="w-4 h-4 text-slate-400 shrink-0" />
+          <Search className="w-4 h-4 text-slate-400 shrink-0" aria-hidden="true" />
           <input
             ref={inputRef}
             type="text"
@@ -116,15 +116,15 @@ export default function SearchDossiers() {
             className="flex-1 bg-transparent text-sm text-slate-700 placeholder-slate-400 outline-none min-w-0"
           />
           {query && (
-            <button onClick={() => { setQuery(''); setResults([]); setOpen(false); }} className="text-slate-400 hover:text-slate-600">
-              <X className="w-3.5 h-3.5" />
+            <button onClick={() => { setQuery(''); setResults([]); setOpen(false); }} className="text-slate-400 hover:text-slate-600" aria-label="Effacer la recherche">
+              <X className="w-3.5 h-3.5" aria-hidden="true" />
             </button>
           )}
         </div>
 
         {/* Dropdown résultats */}
         {open && (
-          <div className="absolute top-full mt-2 left-0 w-80 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 overflow-hidden z-50">
+          <div className="absolute top-full mt-2 left-0 w-80 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 overflow-hidden z-50" role="listbox" aria-label="Résultats de recherche">
             {loading && (
               <div className="px-4 py-3 text-sm text-slate-400">Recherche...</div>
             )}
@@ -141,6 +141,7 @@ export default function SearchDossiers() {
               return (
                 <button
                   key={c.id}
+                  role="option"
                   onClick={() => handleSelect(c)}
                   className="w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors flex items-center justify-between gap-3 border-b border-slate-50 last:border-0"
                 >
