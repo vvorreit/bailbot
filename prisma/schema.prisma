@@ -58,6 +58,7 @@ model User {
   invitationsSent Invitation[]
 
   syncToken     String?   @unique @default(cuid())
+  depotTokens   DepotToken[]
 
   passwordChangedAt DateTime?
 
@@ -117,4 +118,29 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model DepotToken {
+  id          String   @id @default(cuid())
+  token       String   @unique
+  userId      String
+  bienAdresse String
+  message     String?
+  expiresAt   DateTime
+  used        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fichiers    FichierChiffre[]
+}
+
+model FichierChiffre {
+  id          String   @id @default(cuid())
+  tokenId     String
+  nomOriginal String
+  nomRenomme  String
+  contenu     Bytes
+  iv          String
+  taille      Int
+  uploadedAt  DateTime @default(now())
+  token       DepotToken @relation(fields: [tokenId], references: [id], onDelete: Cascade)
 }
