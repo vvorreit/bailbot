@@ -9,6 +9,8 @@ import {
   IRL_DERNIERE_MAJ,
   type ResultatRevisionLoyer,
 } from '@/lib/revision-loyer';
+import { FeatureGate } from './FeatureGate';
+import { UpgradePrompt } from './UpgradePrompt';
 
 const STORAGE_KEY = 'bailbot_infos_bailleur';
 
@@ -228,6 +230,19 @@ export default function RevisionLoyerModal({ onClose }: Props) {
               {erreur}
             </div>
           )}
+
+          {/* ILC / ILAT — indices pro */}
+          <FeatureGate feature="REVISION_ILC_ILAT" fallback={
+            <UpgradePrompt feature="REVISION_ILC_ILAT" className="py-3" />
+          }>
+            <div className="flex items-start gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600">
+              <Info className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>
+                <strong>Indices ILC / ILAT disponibles</strong> — pour les baux commerciaux et professionnels.
+                Sélectionnez l&apos;indice adapté dans les paramètres du bail.
+              </span>
+            </div>
+          </FeatureGate>
 
           {/* Bouton calculer */}
           <button

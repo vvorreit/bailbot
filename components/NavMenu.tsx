@@ -12,6 +12,7 @@ import SearchDossiers from "@/components/SearchDossiers";
 import ThemeToggle from "@/components/ThemeToggle";
 import RevisionLoyerModal from "@/components/RevisionLoyerModal";
 import { listerImpayes } from "@/lib/db-local";
+import { hasAccess, METIER_LABELS } from "@/lib/features";
 
 export default function NavMenu() {
   const { data: session } = useSession();
@@ -29,6 +30,7 @@ export default function NavMenu() {
   const isAdmin = user?.role === "ADMIN";
   const showTeam = Boolean(session);
   const isPro = user?.isPro;
+  const metier = user?.metier ?? null;
 
   // Charger le nombre d'impayés
   useEffect(() => {
@@ -65,11 +67,11 @@ export default function NavMenu() {
 
   const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, show: true },
-    { href: "/dashboard/multi", label: "Multi-dossiers", icon: Layers, show: true },
-    { href: "/dashboard/stats", label: "Statistiques", icon: BarChart2, show: true },
-    { href: "/dashboard/team", label: "Mon équipe", icon: Users, show: showTeam },
+    { href: "/dashboard/multi", label: "Multi-dossiers", icon: Layers, show: hasAccess(metier, "KANBAN_CANDIDATS") },
+    { href: "/dashboard/stats", label: "Statistiques", icon: BarChart2, show: hasAccess(metier, "STATS_DASHBOARD") },
+    { href: "/dashboard/team", label: "Mon équipe", icon: Users, show: showTeam && hasAccess(metier, "MULTI_USERS") },
     { href: "/dashboard/depot", label: "Dépôt locataire", icon: Upload, show: true },
-    { href: "/dashboard/impayes", label: "Loyers", icon: Banknote, show: true },
+    { href: "/dashboard/impayes", label: "Loyers", icon: Banknote, show: hasAccess(metier, "DASHBOARD_IMPAYES") },
     { href: "/admin", label: "Administration", icon: ShieldCheck, show: isAdmin },
   ].filter((l) => l.show);
 
@@ -139,6 +141,11 @@ export default function NavMenu() {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
+          {metier && (
+            <span className="hidden sm:inline-flex px-2.5 py-1 bg-slate-100 text-slate-600 text-[10px] font-black rounded-full uppercase tracking-wider">
+              {METIER_LABELS[metier as keyof typeof METIER_LABELS]}
+            </span>
+          )}
           {isPro && (
             <span className="hidden sm:inline-flex px-2.5 py-1 bg-emerald-600 text-white text-[10px] font-black rounded-full uppercase tracking-wider">
               PRO

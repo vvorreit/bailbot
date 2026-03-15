@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, FileText, Save, AlertCircle, CheckSquare } from 'lucide-react';
+import { X, FileText, Save, AlertCircle, CheckSquare, Briefcase } from 'lucide-react';
 import type { DossierLocataire } from '@/lib/parsers';
 import { genererBailPDF, calculerDateFin, type DonneesBail } from '@/lib/generateur-bail';
 import ChecklistAlur from './ChecklistAlur';
+import { FeatureGate } from './FeatureGate';
+import { UpgradePrompt } from './UpgradePrompt';
 
 interface Props {
   dossier: Partial<DossierLocataire>;
@@ -49,7 +51,7 @@ function FieldError({ msg }: { msg?: string }) {
 export default function GenerateurBailModal({ dossier, loyerHC: loyerHCProp, charges: chargesProp, depot: depotProp, onClose }: Props) {
   const [saved, setSaved] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [activeTab, setActiveTab] = useState<'bail' | 'conformite'>('bail');
+  const [activeTab, setActiveTab] = useState<'bail' | 'conformite' | 'bail_pro'>('bail');
   const [errors, setErrors] = useState<Partial<Record<keyof DonneesBail, string>>>({});
 
   // ─── Infos bailleur (localStorage) ────────────────────────────────────────
@@ -225,11 +227,30 @@ export default function GenerateurBailModal({ dossier, loyerHC: loyerHCProp, cha
             <CheckSquare className="w-4 h-4" />
             Conformité ALUR
           </button>
+          <FeatureGate feature="GENERATEUR_BAIL_PRO">
+            <button
+              onClick={() => setActiveTab('bail_pro')}
+              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-t-xl border-b-2 transition-colors ${
+                activeTab === 'bail_pro'
+                  ? 'border-emerald-500 text-emerald-700 bg-emerald-50'
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              <Briefcase className="w-4 h-4" />
+              Bail professionnel
+            </button>
+          </FeatureGate>
         </div>
 
         {activeTab === 'conformite' && (
           <div className="p-6">
             <ChecklistAlur />
+          </div>
+        )}
+
+        {activeTab === 'bail_pro' && (
+          <div className="p-6">
+            <UpgradePrompt feature="GENERATEUR_BAIL_PRO" />
           </div>
         )}
 

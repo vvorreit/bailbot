@@ -13,6 +13,8 @@ import { calculerEtapesDues, getProchainEtape, calculerJoursRetard } from '@/lib
 import EnregistrerPaiementModal from '@/components/EnregistrerPaiementModal';
 import RelanceModal from '@/components/RelanceModal';
 import GererBiensModal from '@/components/GererBiensModal';
+import { FeatureGate } from '@/components/FeatureGate';
+import { UpgradePrompt } from '@/components/UpgradePrompt';
 import {
   CheckCircle2,
   AlertTriangle,
@@ -423,6 +425,7 @@ export default function ImpayesPage() {
   const biensList = Object.values(biens);
 
   return (
+    <FeatureGate feature="DASHBOARD_IMPAYES" fallback={<div className="max-w-2xl mx-auto px-4 py-16"><UpgradePrompt feature="DASHBOARD_IMPAYES" /></div>}>
     <div className="max-w-6xl mx-auto px-4 py-8">
       {/* Bannière si profil bailleur non configuré */}
       {!bailleurProfil.nom && (
@@ -837,5 +840,6 @@ export default function ImpayesPage() {
         />
       )}
     </div>
+    </FeatureGate>
   );
 }

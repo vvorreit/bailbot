@@ -1,0 +1,58 @@
+import type { Metier } from '@prisma/client'
+
+export { type Metier }
+
+export const FEATURES = {
+  // ACQUISITION
+  DEPOT_DOSSIER:          ['PROPRIETAIRE', 'AGENCE', 'GESTIONNAIRE'],
+  OCR_AUTO:               ['PROPRIETAIRE', 'AGENCE', 'GESTIONNAIRE'],
+  BAIL_SCORE:             ['PROPRIETAIRE', 'AGENCE', 'GESTIONNAIRE'],
+  FRAUDE_DETECTION:       ['AGENCE', 'GESTIONNAIRE'],
+  ELIGIBILITE_VISALE:     ['PROPRIETAIRE', 'AGENCE', 'GESTIONNAIRE'],
+  DOSSIERFACILE_CONNECT:  ['AGENCE', 'GESTIONNAIRE'],
+  KANBAN_CANDIDATS:       ['AGENCE', 'GESTIONNAIRE'],
+  EXPORT_ZIP:             ['PROPRIETAIRE', 'AGENCE', 'GESTIONNAIRE'],
+
+  // CONTRATS
+  GENERATEUR_BAIL_ALUR:   ['PROPRIETAIRE', 'AGENCE', 'GESTIONNAIRE'],
+  GENERATEUR_BAIL_PRO:    ['AGENCE', 'GESTIONNAIRE'],
+  CHECKLIST_ALUR:         ['PROPRIETAIRE', 'AGENCE', 'GESTIONNAIRE'],
+  CLAUSES_SPECIALES:      ['AGENCE', 'GESTIONNAIRE'],
+
+  // GESTION COURANTE
+  QUITTANCES:             ['PROPRIETAIRE', 'AGENCE', 'GESTIONNAIRE'],
+  QUITTANCES_TVA:         ['AGENCE', 'GESTIONNAIRE'],
+  REVISION_IRL:           ['PROPRIETAIRE', 'AGENCE', 'GESTIONNAIRE'],
+  REVISION_ILC_ILAT:      ['AGENCE', 'GESTIONNAIRE'],
+  SUIVI_PAIEMENTS:        ['PROPRIETAIRE', 'AGENCE', 'GESTIONNAIRE'],
+
+  // IMPAYES
+  DASHBOARD_IMPAYES:      ['AGENCE', 'GESTIONNAIRE'],
+  RELANCES_AUTO:          ['AGENCE', 'GESTIONNAIRE'],
+  MISE_EN_DEMEURE:        ['AGENCE', 'GESTIONNAIRE'],
+
+  // OUTILS AVANCÉS
+  EXTENSION_CHROME:       ['AGENCE', 'GESTIONNAIRE'],
+  EXTENSION_PAPPERS:      ['AGENCE', 'GESTIONNAIRE'],
+  COMPARATEUR_GLI:        ['AGENCE'],
+  BAIL_SCORE_PRO:         ['AGENCE', 'GESTIONNAIRE'],
+
+  // MULTI / ÉQUIPE
+  MULTI_BIENS_ILLIMITE:   ['AGENCE', 'GESTIONNAIRE'],
+  MULTI_USERS:            ['AGENCE', 'GESTIONNAIRE'],
+  STATS_DASHBOARD:        ['AGENCE', 'GESTIONNAIRE'],
+  EXPORT_CSV:             ['AGENCE', 'GESTIONNAIRE'],
+} as const
+
+export type Feature = keyof typeof FEATURES
+
+export function hasAccess(metier: Metier | null | undefined, feature: Feature): boolean {
+  if (!metier) return false
+  return (FEATURES[feature] as readonly string[]).includes(metier)
+}
+
+export const METIER_LABELS: Record<Metier, string> = {
+  PROPRIETAIRE: 'Propriétaire',
+  AGENCE: 'Agence',
+  GESTIONNAIRE: 'Gestionnaire',
+}

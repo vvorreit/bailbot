@@ -16,7 +16,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { Plus, Search, Trash2, X, AlertTriangle, Download } from 'lucide-react';
-import type { Bien, Candidature } from '@/lib/db-local';
+import type { Bien, Candidature, TypeBail } from '@/lib/db-local';
 import {
   listerBiens,
   creerBien,
@@ -33,6 +33,8 @@ import {
   exporterCandidaturesXLSX,
   nomFichierExport,
 } from '@/lib/export-candidatures';
+import { FeatureGate } from '@/components/FeatureGate';
+import { UpgradePrompt } from '@/components/UpgradePrompt';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -52,6 +54,7 @@ function ModalCreerBien({ onClose, onCreated }: { onClose: () => void; onCreated
   const [adresse, setAdresse] = useState('');
   const [loyer, setLoyer] = useState('');
   const [charges, setCharges] = useState('');
+  const [typeBailLocal, setTypeBailLocal] = useState<TypeBail>('HABITATION_VIDE');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,7 +62,7 @@ function ModalCreerBien({ onClose, onCreated }: { onClose: () => void; onCreated
     if (!adresse || !loyer) return;
     setLoading(true);
     try {
-      await creerBien({ adresse, loyer: parseFloat(loyer), charges: parseFloat(charges || '0') });
+      await creerBien({ adresse, loyer: parseFloat(loyer), charges: parseFloat(charges || '0'), typeBail: typeBailLocal });
       onCreated();
       onClose();
     } finally {
@@ -173,11 +176,13 @@ function KanbanColonne({
   candidatures,
   onOuvrir,
   onChangerStatut,
+  typeBail,
 }: {
   colonne: (typeof COLONNES)[0];
   candidatures: Candidature[];
   onOuvrir: (id: string) => void;
   onChangerStatut: (id: string, statut: StatutColonne) => void;
+  typeBail?: TypeBail;
 }) {
   return (
     <div className="flex-1 min-w-[220px] max-w-[280px]">
@@ -195,6 +200,7 @@ function KanbanColonne({
               candidature={c}
               onOuvrir={onOuvrir}
               onChangerStatut={onChangerStatut}
+              typeBail={typeBail}
             />
           ))}
           {candidatures.length === 0 && (
@@ -215,6 +221,7 @@ export default function MultiDossierPage() {
   const [candidatures, setCandidatures] = useState<Record<string, Candidature[]>>({});
   const [selectedBienId, setSelectedBienId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [filtreTypeBail, setFiltreTypeBail] = useState<TypeBail | 'TOUS'>('TOUS');
   const [showCreerBien, setShowCreerBien] = useState(false);
   const [showPurge, setShowPurge] = useState(false);
   const [dossierOuvert, setDossierOuvert] = useState<string | null>(null);
@@ -338,9 +345,11 @@ export default function MultiDossierPage() {
     }
   };
 
-  const biensFiltres = biens.filter((b) =>
-    b.adresse.toLowerCase().includes(search.toLowerCase())
-  );
+  const biensFiltres = biens.filter((b) => {
+    const matchSearch = b.adresse.toLowerCase().includes(search.toLowerCase());
+    const matchType = filtreTypeBail === 'TOUS' || (b.typeBail ?? 'HABITATION_VIDE') === filtreTypeBail;
+    return matchSearch && matchType;
+  });
 
   const selectedBien = biens.find((b) => b.id === selectedBienId);
   const candidaturesDuBien = selectedBienId ? (candidatures[selectedBienId] ?? []) : [];
@@ -362,6 +371,7 @@ export default function MultiDossierPage() {
   }
 
   return (
+    <FeatureGate feature="KANBAN_CANDIDATS" fallback={<div className="max-w-2xl mx-auto px-4 py-16"><UpgradePrompt feature="KANBAN_CANDIDATS" /></div>}>
     <div className="max-w-full mx-auto px-4 py-6">
       {/* Toast */}
       {toast && (
@@ -391,29 +401,53 @@ export default function MultiDossierPage() {
       </div>
 
       {/* Sélection de bien */}
-      <div className="flex items-center gap-3 mb-6 flex-wrap">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher un bien..."
-            className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 w-64"
-          />
+      <div className="space-y-3 mb-6">
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher un bien..."
+              className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 w-64"
+            />
+          </div>
+          {/* Filtre type de bail */}
+          <div className="flex items-center gap-1.5">
+            {(['TOUS', 'HABITATION_VIDE', 'HABITATION_MEUBLE', 'PROFESSIONNEL'] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setFiltreTypeBail(t)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors ${
+                  filtreTypeBail === t
+                    ? t === 'PROFESSIONNEL' ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-white'
+                    : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-400'
+                }`}
+              >
+                {t === 'TOUS' ? 'Tous' : t === 'HABITATION_VIDE' ? '🏠 Vide' : t === 'HABITATION_MEUBLE' ? '🛋️ Meublé' : '💼 Pro'}
+              </button>
+            ))}
+          </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {biensFiltres.map((bien) => (
             <div key={bien.id} className="flex items-center gap-1">
               <button
                 onClick={() => setSelectedBienId(bien.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
                   selectedBienId === bien.id
                     ? 'bg-emerald-600 text-white'
                     : 'bg-white border border-slate-200 text-slate-600 hover:border-emerald-400'
                 }`}
               >
                 📍 {bien.adresse} — {(bien.loyer + bien.charges).toLocaleString('fr-FR')}€ CC
+                {(bien.typeBail ?? 'HABITATION_VIDE') === 'PROFESSIONNEL' && (
+                  <span className="ml-1 text-[10px] font-black px-1.5 py-0.5 rounded-full bg-indigo-600 text-white">PRO</span>
+                )}
+                {(bien.typeBail ?? 'HABITATION_VIDE') === 'HABITATION_MEUBLE' && (
+                  <span className="ml-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">Meublé</span>
+                )}
               </button>
               <button
                 onClick={() => handleSupprimerBien(bien.id)}
@@ -478,6 +512,7 @@ export default function MultiDossierPage() {
                   candidatures={candidaturesDuBien.filter((c) => c.statut === colonne.id)}
                   onOuvrir={(id) => setDossierOuvert(id)}
                   onChangerStatut={handleChangerStatut}
+                  typeBail={selectedBien?.typeBail}
                 />
               ))}
             </div>
@@ -546,5 +581,6 @@ export default function MultiDossierPage() {
         />
       )}
     </div>
+    </FeatureGate>
   );
 }

@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
 import { generatePayloadString, type AutofillPayload } from "@/lib/autofill";
 import { randomBytes } from "crypto";
+import type { Metier } from "@prisma/client";
 
 async function getSession() {
   return await getServerSession(authOptions);
@@ -226,4 +227,14 @@ export async function createPortalSession() {
   });
 
   return { url: portalSession.url };
+}
+
+export async function setMetier(metier: Metier) {
+  const session = await getSession();
+  if (!session?.user?.email) throw new Error("Non autorisé");
+
+  await prisma.user.update({
+    where: { email: session.user.email },
+    data: { metier },
+  });
 }

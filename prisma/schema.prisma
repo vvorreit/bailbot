@@ -69,6 +69,8 @@ model User {
   stripeCustomerId       String?   @unique
   stripeSubscriptionId   String?   @unique
 
+  metier        Metier?   // null = onboarding incomplet
+
   createdAt     DateTime  @default(now())
   lastActiveAt  DateTime  @default(now())
 
@@ -143,4 +145,46 @@ model FichierChiffre {
   taille      Int
   uploadedAt  DateTime @default(now())
   token       DepotToken @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+}
+
+// ─── Métier Utilisateur ───────────────────────────────────────────────────────
+
+enum Metier {
+  PROPRIETAIRE
+  AGENCE
+  GESTIONNAIRE
+}
+
+// ─── Bail Professionnel ───────────────────────────────────────────────────────
+
+enum TypeBail {
+  HABITATION_VIDE
+  HABITATION_MEUBLE
+  PROFESSIONNEL
+}
+
+enum IndiceProRevision {
+  ILC
+  ILAT
+  ICC
+  LIBRE
+}
+
+model ContratPro {
+  id                String            @id @default(cuid())
+  bienId            String
+  locataireId       String
+  dateDebut         DateTime
+  dureeAns          Int               @default(6)
+  loyerHT           Float
+  chargesHT         Float             @default(0)
+  tvaApplicable     Boolean           @default(false)
+  indiceRevision    IndiceProRevision @default(ILAT)
+  depotGarantie     Float             @default(0)
+  preavisLocataire  Int               @default(6)
+  clausesSpeciales  String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([bienId])
 }

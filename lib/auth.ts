@@ -65,6 +65,7 @@ export const authOptions: NextAuthOptions = {
         token.clientCount = dbUser?.clientCount ?? 0;
         token.teamId = dbUser?.teamId;
         token.teamRole = dbUser?.teamRole;
+        token.metier = dbUser?.metier ?? null;
 
         const isTeamPro = dbUser?.team?.plan === "PRO" || dbUser?.team?.plan === "ENTERPRISE";
         token.isPro = dbUser?.isPro || isTeamPro || false;
@@ -96,6 +97,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).clientCount = token.clientCount;
         (session.user as any).teamId = token.teamId;
         (session.user as any).teamRole = token.teamRole;
+        (session.user as any).metier = token.metier ?? null;
         (session as any).error = token.error;
       }
       return session;
