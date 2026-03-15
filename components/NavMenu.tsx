@@ -4,12 +4,13 @@ import { useState, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Users, ShieldCheck, CreditCard, User, LogOut, Menu, X, ChevronDown, LifeBuoy, Building2, Layers, BarChart2, Mail, Upload, TrendingUp } from "lucide-react";
+import { LayoutDashboard, Users, ShieldCheck, CreditCard, User, LogOut, Menu, X, ChevronDown, LifeBuoy, Building2, Layers, BarChart2, Mail, Upload, TrendingUp, Banknote } from "lucide-react";
 import { createPortalSession } from "@/app/dashboard/actions";
 import MessageTemplates from "@/components/MessageTemplates";
 import SearchDossiers from "@/components/SearchDossiers";
 import ThemeToggle from "@/components/ThemeToggle";
 import RevisionLoyerModal from "@/components/RevisionLoyerModal";
+import { listerImpayes } from "@/lib/db-local";
 
 export default function NavMenu() {
   const { data: session } = useSession();
@@ -20,12 +21,18 @@ export default function NavMenu() {
   const [portalLoading, setPortalLoading] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
   const [revisionOpen, setRevisionOpen] = useState(false);
+  const [nbImpayes, setNbImpayes] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const user = session?.user as any;
   const isAdmin = user?.role === "ADMIN";
   const showTeam = Boolean(session);
   const isPro = user?.isPro;
+
+  // Charger le nombre d'impayés
+  useEffect(() => {
+    listerImpayes().then((list) => setNbImpayes(list.length)).catch(() => {});
+  }, []);
 
   // Fermer le dropdown en cliquant ailleurs
   useEffect(() => {
@@ -61,6 +68,7 @@ export default function NavMenu() {
     { href: "/dashboard/stats", label: "Statistiques", icon: BarChart2, show: true },
     { href: "/dashboard/team", label: "Mon équipe", icon: Users, show: showTeam },
     { href: "/dashboard/depot", label: "Dépôt locataire", icon: Upload, show: true },
+    { href: "/dashboard/impayes", label: "Loyers", icon: Banknote, show: true },
     { href: "/admin", label: "Administration", icon: ShieldCheck, show: isAdmin },
   ].filter((l) => l.show);
 
@@ -93,6 +101,11 @@ export default function NavMenu() {
               >
                 <Icon className="w-4 h-4" />
                 {label}
+                {href === "/dashboard/impayes" && nbImpayes > 0 && (
+                  <span className="bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 leading-none">
+                    {nbImpayes}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -232,6 +245,11 @@ export default function NavMenu() {
               >
                 <Icon className="w-4 h-4" />
                 {label}
+                {href === "/dashboard/impayes" && nbImpayes > 0 && (
+                  <span className="ml-auto bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 leading-none">
+                    {nbImpayes}
+                  </span>
+                )}
               </Link>
             );
           })}

@@ -4,7 +4,35 @@
 import type { DossierLocataire, Garant } from './parsers';
 
 const DB_NAME = 'bailbot-local';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
+
+// ─── PAIEMENTS & RELANCES ─────────────────────────────────────────────────────
+
+export interface Relance {
+  id: string;
+  etape: 1 | 2 | 3 | 4;
+  envoyeeAt: number;
+  methode: 'email' | 'sms' | 'courrier' | 'lrar';
+  statut: 'envoyee' | 'confirmee';
+}
+
+export interface Paiement {
+  id: string;
+  bienId: string;
+  locataireNom: string;
+  locatairePrenom: string;
+  locataireEmail?: string;
+  loyerCC: number;
+  dateAttendue: number;
+  dateReelle?: number;
+  statut: 'attendu' | 'paye' | 'retard' | 'impaye' | 'partiel';
+  montantRecu?: number;
+  mois: string; // "2026-03"
+  notes?: string;
+  relances: Relance[];
+  createdAt: number;
+  updatedAt: number;
+}
 
 export interface Bien {
   id: string;
@@ -83,6 +111,13 @@ async function getDB() {
         const candStore = db.createObjectStore('candidatures', { keyPath: 'id' });
         candStore.createIndex('bienId', 'bienId');
         candStore.createIndex('createdAt', 'createdAt');
+      }
+      if (!db.objectStoreNames.contains('paiements')) {
+        const paiStore = db.createObjectStore('paiements', { keyPath: 'id' });
+        paiStore.createIndex('bienId', 'bienId');
+        paiStore.createIndex('mois', 'mois');
+        paiStore.createIndex('statut', 'statut');
+        paiStore.createIndex('createdAt', 'createdAt');
       }
     },
   });
@@ -212,6 +247,85 @@ export async function rechercherCandidatures(query: string): Promise<Candidature
 async function listerBiensMap(): Promise<Record<string, Bien>> {
   const biens = await listerBiens();
   return Object.fromEntries(biens.map((b) => [b.id, b]));
+}
+
+// ─── PAIEMENTS ────────────────────────────────────────────────────────────────
+
+export async function creerPaiement(
+  p: Omit<Paiement, 'id' | 'createdAt' | 'updatedAt' | 'relances'>
+): Promise<Paiement> {
+  const db = await getDB();
+  const now = Date.now();
+  const record: Paiement = { ...p, id: uuid(), relances: [], createdAt: now, updatedAt: now };
+  await db.put('paiements', record);
+  return record;
+}
+
+export async function listerPaiements(bienId?: string, mois?: string): Promise<Paiement[]> {
+  const db = await getDB();
+  let all: Paiement[];
+  if (bienId) {
+    const index = db.transaction('paiements').store.index('bienId');
+    all = await index.getAll(bienId);
+  } else {
+    all = await db.getAll('paiements');
+  }
+  if (mois) {
+    all = all.filter((p) => p.mois === mois);
+  }
+  return all.sort((a, b) => b.dateAttendue - a.dateAttendue);
+}
+
+export async function mettreAJourPaiement(id: string, patch: Partial<Paiement>): Promise<void> {
+  const db = await getDB();
+  const existing = await db.get('paiements', id);
+  if (!existing) throw new Error(`Paiement ${id} introuvable`);
+  await db.put('paiements', { ...existing, ...patch, updatedAt: Date.now() });
+}
+
+export async function ajouterRelance(
+  paiementId: string,
+  relance: Omit<Relance, 'id'>
+): Promise<void> {
+  const db = await getDB();
+  const existing = await db.get('paiements', paiementId);
+  if (!existing) throw new Error(`Paiement ${paiementId} introuvable`);
+  const newRelance: Relance = { ...relance, id: uuid() };
+  await db.put('paiements', {
+    ...existing,
+    relances: [...(existing.relances || []), newRelance],
+    updatedAt: Date.now(),
+  });
+}
+
+export async function listerImpayes(): Promise<Paiement[]> {
+  const db = await getDB();
+  const all = await db.getAll('paiements');
+  return all
+    .filter((p) => p.statut === 'retard' || p.statut === 'impaye')
+    .sort((a, b) => a.dateAttendue - b.dateAttendue);
+}
+
+export async function mettreAJourStatutsRetard(): Promise<void> {
+  const db = await getDB();
+  const all = await db.getAll('paiements');
+  const now = Date.now();
+  const updates: Promise<void>[] = [];
+  for (const p of all) {
+    if (p.statut === 'attendu' && p.dateAttendue < now) {
+      const joursRetard = Math.floor((now - p.dateAttendue) / (1000 * 60 * 60 * 24));
+      const newStatut = joursRetard >= 15 ? 'impaye' : 'retard';
+      updates.push(
+        db.put('paiements', { ...p, statut: newStatut, updatedAt: now }).then(() => {})
+      );
+    }
+  }
+  await Promise.all(updates);
+}
+
+export async function supprimerPaiement(id: string): Promise<void> {
+  const db = await getDB();
+  await db.delete('paiements', id);
 }
 
 export async function purgerAnciensDossiers(joursMax: number = 90): Promise<number> {

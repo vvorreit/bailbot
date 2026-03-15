@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Download, Trash2, ChevronDown, Package, FileText, Receipt } from 'lucide-react';
+import { X, Download, Trash2, ChevronDown, Package, FileText, Receipt, Banknote } from 'lucide-react';
+import Link from 'next/link';
 import GenerateurBailModal from './GenerateurBailModal';
 import QuittanceModal from './QuittanceModal';
 import ImprimerDossier from './ImprimerDossier';
@@ -286,6 +287,16 @@ export default function DossierModal({ candidature, bien, onClose, onUpdated, on
             <Receipt className="w-4 h-4" />
             🧾 Quittance
           </button>
+          {statut === 'selectionne' && (
+            <Link
+              href="/dashboard/impayes"
+              onClick={onClose}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-50 text-blue-700 text-sm font-bold hover:bg-blue-100 transition-colors"
+            >
+              <Banknote className="w-4 h-4" />
+              💸 Suivi des loyers
+            </Link>
+          )}
           <div className="flex-1" />
           <button
             onClick={handleDelete}
