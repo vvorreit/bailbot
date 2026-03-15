@@ -493,6 +493,37 @@ export default function MultiDossierPage() {
                     <Download className="w-3.5 h-3.5" />
                     CSV
                   </button>
+                  <button
+                    onClick={async () => {
+                      if (!selectedBien) return;
+                      setExportLoading(true);
+                      try {
+                        const { getCandidaturesParBien } = await import('@/app/actions/export-candidatures');
+                        const rows = await getCandidaturesParBien(selectedBien, candidaturesDuBien);
+                        const res = await fetch('/api/export/candidatures', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ rows, format: 'pdf', bienAdresse: selectedBien.adresse }),
+                        });
+                        if (!res.ok) throw new Error('Erreur export PDF');
+                        const blob = await res.blob();
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `candidatures_${new Date().toISOString().slice(0, 10)}.pdf`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        showToast('Export PDF téléchargé');
+                      } catch { showToast('Erreur export PDF'); }
+                      finally { setExportLoading(false); }
+                    }}
+                    disabled={exportLoading}
+                    title="Exporter le comparatif PDF"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors disabled:opacity-50"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    PDF
+                  </button>
                 </div>
               )}
             </div>
