@@ -155,6 +155,153 @@ enum Metier {
   GESTIONNAIRE
 }
 
+// ─── Relances Candidat ────────────────────────────────────────────────────────
+
+enum StatutRelance {
+  EN_ATTENTE
+  RELANCE_1
+  RELANCE_2
+  RELANCE_3
+  COMPLET
+  ABANDONNE
+}
+
+model RelanceCandidat {
+  id              String        @id @default(cuid())
+  depotToken      String        // référence au token de dépôt
+  userId          String        // gestionnaire propriétaire
+  email           String
+  telephone       String?
+  sequence        Int           @default(0)
+  statut          StatutRelance @default(EN_ATTENTE)
+  derniereRelance DateTime?
+  createdAt       DateTime      @default(now())
+
+  @@index([userId])
+  @@index([depotToken])
+}
+
+// ─── Vie du Bail ─────────────────────────────────────────────────────────────
+
+enum StatutBail {
+  ACTIF
+  PREAVIS
+  TERMINE
+  RENOUVELE
+}
+
+enum TypeAlerte {
+  REVISION_LOYER
+  RENOUVELLEMENT
+  CONGE_BAILLEUR
+  DIAGNOSTIC_DPE
+  DIAGNOSTIC_ELEC
+  ASSURANCE_PNO
+}
+
+model BailActif {
+  id                  String      @id @default(cuid())
+  userId              String
+  bienId              String
+  locataireNom        String
+  locataireEmail      String
+  dateSignature       DateTime
+  dateDebut           DateTime
+  dateFin             DateTime?
+  dureePreavisMois    Int         @default(3)
+  loyerMensuel        Float
+  chargesMensuelles   Float       @default(0)
+  indiceRevision      String      @default("IRL")
+  dateProchRevision   DateTime
+  dateFinDiagnostics  DateTime?
+  statut              StatutBail  @default(ACTIF)
+  createdAt           DateTime    @default(now())
+  alertes             AlerteBail[]
+
+  @@index([userId])
+  @@index([bienId])
+}
+
+model AlerteBail {
+  id           String     @id @default(cuid())
+  bailId       String
+  type         TypeAlerte
+  dateEcheance DateTime
+  traitee      Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  bail         BailActif  @relation(fields: [bailId], references: [id], onDelete: Cascade)
+
+  @@index([bailId])
+  @@index([dateEcheance])
+}
+
+// ─── État des Lieux ──────────────────────────────────────────────────────────
+
+enum TypeEDL {
+  ENTREE
+  SORTIE
+}
+
+model EtatDesLieux {
+  id                   String   @id @default(cuid())
+  userId               String
+  bienId               String
+  bailId               String?
+  type                 TypeEDL
+  date                 DateTime
+  pieces               Json
+  compteurs            Json
+  cles                 Json
+  signatureLocataire   String?
+  signatureBailleur    String?
+  pdfUrl               String?
+  createdAt            DateTime @default(now())
+
+  @@index([userId])
+  @@index([bienId])
+}
+
+// ─── Espace Locataire ────────────────────────────────────────────────────────
+
+enum TypeDemande {
+  DOCUMENT
+  TRAVAUX
+  QUESTION
+  CONGE
+}
+
+enum StatutDemande {
+  NOUVEAU
+  EN_COURS
+  RESOLU
+}
+
+model EspaceLocataire {
+  id        String   @id @default(cuid())
+  userId    String
+  bailId    String   @unique
+  token     String   @unique @default(cuid())
+  actif     Boolean  @default(true)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  demandes  DemandeLocataire[]
+
+  @@index([userId])
+}
+
+model DemandeLocataire {
+  id        String        @id @default(cuid())
+  espaceId  String
+  type      TypeDemande
+  message   String
+  statut    StatutDemande @default(NOUVEAU)
+  reponse   String?
+  createdAt DateTime      @default(now())
+  espace    EspaceLocataire @relation(fields: [espaceId], references: [id], onDelete: Cascade)
+
+  @@index([espaceId])
+}
+
 // ─── Bail Professionnel ───────────────────────────────────────────────────────
 
 enum TypeBail {

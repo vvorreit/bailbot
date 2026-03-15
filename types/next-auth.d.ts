@@ -29,5 +29,8 @@ declare module 'next-auth/jwt' {
     teamRole?: string
     metier?: Metier | null
     error?: string
+    accessToken?: string
+    refreshToken?: string
+    accessTokenExpires?: number
   }
 }

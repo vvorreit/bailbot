@@ -12,6 +12,13 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          access_type: "offline",
+          prompt: "consent",
+          scope: "openid email profile",
+        },
+      },
     }),
     CredentialsProvider({
       name: "credentials",
@@ -52,7 +59,16 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user, trigger, session }) {
+    async jwt({ token, user, account, trigger, session }) {
+      // Premier login Google : stocker les tokens
+      if (account && account.provider === "google") {
+        token.accessToken = account.access_token;
+        token.refreshToken = account.refresh_token;
+        token.accessTokenExpires = account.expires_at
+          ? account.expires_at * 1000
+          : Date.now() + 3600 * 1000;
+      }
+
       if (user) {
         token.id = user.id;
 
@@ -73,6 +89,35 @@ export const authOptions: NextAuthOptions = {
 
       if (trigger === "update" && session) {
         return { ...token, ...session };
+      }
+
+      // Refresh automatique du token Google si expiré
+      if (
+        token.refreshToken &&
+        token.accessTokenExpires &&
+        Date.now() >= (token.accessTokenExpires as number)
+      ) {
+        try {
+          const response = await fetch("https://oauth2.googleapis.com/token", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+              client_id: process.env.GOOGLE_CLIENT_ID!,
+              client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+              grant_type: "refresh_token",
+              refresh_token: token.refreshToken as string,
+            }),
+          });
+          const refreshed = await response.json();
+          if (!response.ok) throw refreshed;
+          token.accessToken = refreshed.access_token;
+          token.accessTokenExpires = Date.now() + refreshed.expires_in * 1000;
+          if (refreshed.refresh_token) {
+            token.refreshToken = refreshed.refresh_token;
+          }
+        } catch {
+          token.error = "RefreshAccessTokenError";
+        }
       }
 
       // Invalider le token si le mot de passe a été changé après l'émission du token

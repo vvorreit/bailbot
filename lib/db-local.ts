@@ -36,6 +36,11 @@ export interface Paiement {
 
 export type TypeBail = 'HABITATION_VIDE' | 'HABITATION_MEUBLE' | 'PROFESSIONNEL';
 
+export interface Diagnostic {
+  type: 'DPE' | 'electricite' | 'gaz' | 'plomb' | 'amiante';
+  dateExpiration?: number;
+}
+
 export interface Bien {
   id: string;
   adresse: string;
@@ -43,6 +48,18 @@ export interface Bien {
   charges: number;
   typeBail: TypeBail;
   createdAt: number;
+  // Bail actif
+  locataireNom?: string;
+  locatairePrenom?: string;
+  dateEntree?: number;
+  dateFin?: number;
+  preavisMois?: number;
+  dateRevision?: number;
+  indiceReference?: string;
+  // Diagnostics
+  diagnostics?: Diagnostic[];
+  // Statut
+  statut?: 'loue' | 'selection' | 'vacant';
 }
 
 export interface Completude {

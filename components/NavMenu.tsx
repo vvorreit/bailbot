@@ -67,6 +67,7 @@ export default function NavMenu() {
 
   const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, show: true },
+    { href: "/dashboard/logements", label: "Mes logements", icon: Home, show: hasAccess(metier, "MES_LOGEMENTS") },
     { href: "/dashboard/multi", label: "Multi-dossiers", icon: Layers, show: hasAccess(metier, "KANBAN_CANDIDATS") },
     { href: "/dashboard/candidats", label: "Candidats", icon: UserCheck, show: hasAccess(metier, "RELANCES_CANDIDAT") },
     { href: "/dashboard/bails", label: "Mes baux", icon: FileText, show: hasAccess(metier, "VIE_DU_BAIL") },
@@ -119,8 +120,8 @@ export default function NavMenu() {
           })}
         </div>
 
-        {/* Search — desktop */}
-        <SearchDossiers />
+        {/* Search — desktop (masqué pour particuliers) */}
+        {metier !== "PROPRIETAIRE" && <SearchDossiers />}
 
         {/* Révision IRL button */}
         <button
