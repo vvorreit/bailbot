@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, FileText, Save, AlertCircle } from 'lucide-react';
+import { X, FileText, Save, AlertCircle, CheckSquare } from 'lucide-react';
 import type { DossierLocataire } from '@/lib/parsers';
 import { genererBailPDF, calculerDateFin, type DonneesBail } from '@/lib/generateur-bail';
+import ChecklistAlur from './ChecklistAlur';
 
 interface Props {
   dossier: Partial<DossierLocataire>;
@@ -48,6 +49,7 @@ function FieldError({ msg }: { msg?: string }) {
 export default function GenerateurBailModal({ dossier, loyerHC: loyerHCProp, charges: chargesProp, depot: depotProp, onClose }: Props) {
   const [saved, setSaved] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [activeTab, setActiveTab] = useState<'bail' | 'conformite'>('bail');
   const [errors, setErrors] = useState<Partial<Record<keyof DonneesBail, string>>>({});
 
   // ─── Infos bailleur (localStorage) ────────────────────────────────────────
@@ -199,7 +201,39 @@ export default function GenerateurBailModal({ dossier, loyerHC: loyerHCProp, cha
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        {/* Tabs */}
+        <div className="px-6 pt-4 flex gap-2 border-b border-slate-100">
+          <button
+            onClick={() => setActiveTab('bail')}
+            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-t-xl border-b-2 transition-colors ${
+              activeTab === 'bail'
+                ? 'border-emerald-500 text-emerald-700 bg-emerald-50'
+                : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            Bail
+          </button>
+          <button
+            onClick={() => setActiveTab('conformite')}
+            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-t-xl border-b-2 transition-colors ${
+              activeTab === 'conformite'
+                ? 'border-emerald-500 text-emerald-700 bg-emerald-50'
+                : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <CheckSquare className="w-4 h-4" />
+            Conformité ALUR
+          </button>
+        </div>
+
+        {activeTab === 'conformite' && (
+          <div className="p-6">
+            <ChecklistAlur />
+          </div>
+        )}
+
+        {activeTab === 'bail' && <div className="p-6 space-y-6">
           {/* Récap locataire */}
           {nomCompletLocataire && (
             <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
@@ -463,7 +497,7 @@ export default function GenerateurBailModal({ dossier, loyerHC: loyerHCProp, cha
               <p className="text-xs text-blue-600 mt-1">Le garant sera inclus dans le contrat.</p>
             </div>
           )}
-        </div>
+        </div>}
 
         {/* Footer */}
         <div className="sticky bottom-0 bg-white border-t border-slate-100 px-6 py-4 flex items-center gap-3 rounded-b-2xl">

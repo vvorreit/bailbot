@@ -3,6 +3,23 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --bg-primary: #f8fafc;
+  --bg-card: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --border: #e2e8f0;
+  --emerald: #059669;
+}
+
+.dark {
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  --bg-primary: #0f172a;
+  --bg-card: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --border: #334155;
+  --emerald: #10b981;
 }
 
 @theme inline {
@@ -12,15 +29,149 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Dark mode — pages principales et cards */
+.dark .bg-white {
+  background-color: #1e293b !important;
+}
+
+.dark .bg-slate-50 {
+  background-color: #0f172a !important;
+}
+
+.dark .bg-slate-100 {
+  background-color: #1e293b !important;
+}
+
+.dark .text-slate-900 {
+  color: #f1f5f9 !important;
+}
+
+.dark .text-slate-800 {
+  color: #e2e8f0 !important;
+}
+
+.dark .text-slate-700 {
+  color: #cbd5e1 !important;
+}
+
+.dark .text-slate-600 {
+  color: #94a3b8 !important;
+}
+
+.dark .text-slate-500 {
+  color: #64748b !important;
+}
+
+.dark .border-slate-100 {
+  border-color: #334155 !important;
+}
+
+.dark .border-slate-200 {
+  border-color: #334155 !important;
+}
+
+.dark nav {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+.dark .shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5), 0 10px 10px -5px rgba(0,0,0,0.3) !important;
+}
+
+/* Dashboard page */
+.dark [class*="bg-white rounded"] {
+  background-color: #1e293b;
+}
+
+/* Input fields dark mode */
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #0f172a !important;
+  color: #f1f5f9 !important;
+  border-color: #334155 !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #475569 !important;
+}
+
+/* ── Impression dossier A4 ─────────────────────────────────────────────── */
+@media print {
+  /* Cache navigation, sidebar, boutons, éléments interactifs */
+  nav,
+  .no-print,
+  button,
+  [data-print="hidden"],
+  .sidebar,
+  header,
+  footer,
+  .quick-links,
+  [role="navigation"] {
+    display: none !important;
+  }
+
+  /* Layout A4 */
+  body {
+    margin: 0;
+    padding: 20mm;
+    font-size: 12pt;
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Saut de page propre */
+  .page-break {
+    page-break-before: always;
+  }
+
+  /* Évite les coupures dans les sections */
+  .print-section {
+    page-break-inside: avoid;
+  }
+
+  /* Couleurs impression — remplace les couleurs de fond par des bordures */
+  .bailscore-badge {
+    border: 2px solid currentColor;
+    background: transparent !important;
+  }
+
+  /* En-tête imprimé (caché à l'écran, visible à l'impression) */
+  .print-header {
+    display: block !important;
+    border-bottom: 2px solid #000;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+
+  /* Assure que les liens ne montrent pas l'URL */
+  a[href]::after {
+    content: none !important;
+  }
+
+  /* Couleurs de fond ignorées en impression — forcer le blanc */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* Caché à l'écran, visible uniquement à l'impression */
+.print-only {
+  display: none;
+}
+
+@media print {
+  .print-only {
+    display: block;
+  }
 }

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { X, Download, Trash2, ChevronDown, Package, FileText, Receipt } from 'lucide-react';
 import GenerateurBailModal from './GenerateurBailModal';
 import QuittanceModal from './QuittanceModal';
+import ImprimerDossier from './ImprimerDossier';
 import type { Candidature, Bien } from '@/lib/db-local';
 import { mettreAJourCandidature, supprimerCandidature } from '@/lib/db-local';
 import { calculerBailScore } from '@/lib/bailscore';
@@ -257,6 +258,12 @@ export default function DossierModal({ candidature, bien, onClose, onUpdated, on
             <Package className="w-4 h-4" />
             {archiveLoading ? '⏳ Génération...' : '📦 Télécharger ZIP'}
           </button>
+          <ImprimerDossier
+            dossier={dossier || {}}
+            bailScore={typeof bailScore === 'number' ? undefined : bailScore as any}
+            visaleResult={visaleResult}
+            compact
+          />
           {dossier?.nom && (
             <button
               onClick={() => setShowBailModal(true)}

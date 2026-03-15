@@ -47,6 +47,16 @@
         "garantme.js"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.visale.fr/*",
+        "https://visale.fr/*"
+      ],
+      "js": [
+        "visale.js"
+      ],
+      "run_at": "document_idle"
     }
   ]
 }

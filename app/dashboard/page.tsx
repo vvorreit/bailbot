@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import DropZone from "@/components/DropZone";
 import UniversalDropZone from "@/components/UniversalDropZone";
 import DossierForm from "@/components/DossierForm";
@@ -9,6 +9,10 @@ import EligibiliteVisaleCard from "@/components/EligibiliteVisaleCard";
 import BailScoreCard from "@/components/BailScoreCard";
 import FraudeCard from "@/components/FraudeCard";
 import CompletudeCard from "@/components/CompletudeCard";
+import ComparateurGLI from "@/components/ComparateurGLI";
+import Onboarding from "@/components/Onboarding";
+import ShortcutsModal from "@/components/ShortcutsModal";
+import { useShortcuts } from "@/hooks/useShortcuts";
 import { processDocument } from "@/lib/ocr";
 import {
   parseDossier,
@@ -33,6 +37,7 @@ import {
 } from "./actions";
 import { Copy, FileText, ShieldCheck, Building2 } from "lucide-react";
 import GenerateurBailModal from "@/components/GenerateurBailModal";
+import ImprimerDossier from "@/components/ImprimerDossier";
 import Link from "next/link";
 
 const EMPTY_DOSSIER: Partial<DossierLocataire> = {};
@@ -94,6 +99,8 @@ export default function Dashboard() {
   const [isArchiveLoading, setIsArchiveLoading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<FichierDossier[]>([]);
   const [showBailModal, setShowBailModal] = useState(false);
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  const searchRef = useRef<HTMLInputElement | null>(null);
 
   // ─── DossierFacile Connect ─────────────────────────────────────────────────
   // dossierFacileEnabled : true si les env vars sont configurées côté serveur
@@ -184,6 +191,35 @@ export default function Dashboard() {
     const newCount = await incrementClientCountInDB();
     setUserData((prev) => (prev ? { ...prev, clientCount: newCount } : null));
   };
+
+  // ─── Raccourcis clavier ───────────────────────────────────────────────────
+  const clearDossier = useCallback(() => {
+    setDossier(EMPTY_DOSSIER);
+    setUploadedFiles([]);
+    setRawText({});
+    setBailScore(null);
+    setVisaleResult(null);
+    setFraudeResult(null);
+    setCompletude(null);
+    setLoyerMensuel("");
+  }, []);
+
+  useShortcuts({
+    "mod+k": () => {
+      const input = document.querySelector<HTMLInputElement>('[data-search-input]') ?? searchRef.current;
+      input?.focus();
+    },
+    "mod+g": () => setShowBailModal(true),
+    "mod+q": () => {/* QuittanceModal — à brancher si existant */},
+    "mod+e": () => {
+      if (uploadedFiles.length > 0) {
+        // Déclenche l'export ZIP (simulate click sur le bouton archive)
+        document.getElementById("export-archive-btn")?.click();
+      }
+    },
+    "mod+n": clearDossier,
+    "?": () => setShowShortcutsModal(true),
+  });
 
   const hasDossier = Object.values(dossier).some((v) => v !== "" && v !== 0 && v !== undefined);
 
@@ -322,6 +358,7 @@ export default function Dashboard() {
               </div>
               {(dossier.nom || dossier.dateNaissance) && (parseFloat(loyerMensuel) > 0) && (
                 <button
+                  id="generate-bail-btn"
                   onClick={() => setShowBailModal(true)}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-black hover:bg-emerald-700 transition-colors shadow-sm shrink-0"
                 >
@@ -460,11 +497,13 @@ export default function Dashboard() {
             )}
 
             {/* ─── Zone de drop universelle ─────────────────────────────── */}
-            <UniversalDropZone
-              disabled={isLimitReached}
-              onDossierUpdate={(patch) => setDossier((prev) => ({ ...prev, ...patch }))}
-              onFilesUpdate={(files) => setUploadedFiles(files)}
-            />
+            <div id="drop-zone">
+              <UniversalDropZone
+                disabled={isLimitReached}
+                onDossierUpdate={(patch) => setDossier((prev) => ({ ...prev, ...patch }))}
+                onFilesUpdate={(files) => setUploadedFiles(files)}
+              />
+            </div>
 
             {/* Drop Zones individuelles — pour déposer directement dans une section */}
             <details className="group">
@@ -562,14 +601,18 @@ export default function Dashboard() {
               </div>
             )}
 
-            <EligibiliteVisaleCard
-              result={loyerMensuel && parseFloat(loyerMensuel) > 0 ? visaleResult : null}
-              hasData={hasVisaleData && Boolean(loyerMensuel) && parseFloat(loyerMensuel) > 0}
-            />
+            <div id="visale-card">
+              <EligibiliteVisaleCard
+                result={loyerMensuel && parseFloat(loyerMensuel) > 0 ? visaleResult : null}
+                hasData={hasVisaleData && Boolean(loyerMensuel) && parseFloat(loyerMensuel) > 0}
+              />
+            </div>
 
             {/* ─── BailScore ────────────────────────────────────────── */}
             {bailScore && (
-              <BailScoreCard score={bailScore} />
+              <div id="bailscore-card">
+                <BailScoreCard score={bailScore} />
+              </div>
             )}
 
             {/* ─── Fraude ───────────────────────────────────────────── */}
@@ -580,6 +623,15 @@ export default function Dashboard() {
             {/* ─── Complétude ───────────────────────────────────────── */}
             {completude && (
               <CompletudeCard completude={completude} />
+            )}
+
+            {/* ─── Comparateur GLI ──────────────────────────────────── */}
+            {hasDossier && loyerMensuel && parseFloat(loyerMensuel) > 0 && (
+              <ComparateurGLI
+                dossier={dossier}
+                loyerCC={parseFloat(loyerMensuel)}
+                villeEstParis={villeEstParis}
+              />
             )}
 
             {hasDossier && (
@@ -627,6 +679,7 @@ export default function Dashboard() {
                         setIsArchiveLoading(false);
                       }
                     }}
+                    id="export-archive-btn"
                     disabled={isArchiveLoading}
                     className="w-full flex items-center justify-center gap-3 p-4 rounded-2xl border-2 border-white/20 bg-white/10 text-white hover:bg-white/20 transition-all disabled:opacity-50"
                   >
@@ -636,6 +689,15 @@ export default function Dashboard() {
                     </span>
                   </button>
                 )}
+
+                {/* ─── Impression dossier ──────────────────────────── */}
+                <ImprimerDossier
+                  dossier={dossier}
+                  bailScore={bailScore}
+                  visaleResult={visaleResult}
+                  completude={completude}
+                  loyerMensuel={loyerMensuel}
+                />
               </div>
             )}
           </div>
@@ -649,6 +711,14 @@ export default function Dashboard() {
           onClose={() => setShowBailModal(false)}
         />
       )}
+
+      {/* Modal Raccourcis */}
+      {showShortcutsModal && (
+        <ShortcutsModal onClose={() => setShowShortcutsModal(false)} />
+      )}
+
+      {/* Onboarding guidé */}
+      <Onboarding />
     </main>
   );
 }

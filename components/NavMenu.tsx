@@ -4,10 +4,12 @@ import { useState, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Users, ShieldCheck, CreditCard, User, LogOut, Menu, X, ChevronDown, LifeBuoy, Building2, Layers, BarChart2, Mail, Upload, Receipt } from "lucide-react";
+import { LayoutDashboard, Users, ShieldCheck, CreditCard, User, LogOut, Menu, X, ChevronDown, LifeBuoy, Building2, Layers, BarChart2, Mail, Upload, TrendingUp } from "lucide-react";
 import { createPortalSession } from "@/app/dashboard/actions";
 import MessageTemplates from "@/components/MessageTemplates";
-import QuittanceModal from "@/components/QuittanceModal";
+import SearchDossiers from "@/components/SearchDossiers";
+import ThemeToggle from "@/components/ThemeToggle";
+import RevisionLoyerModal from "@/components/RevisionLoyerModal";
 
 export default function NavMenu() {
   const { data: session } = useSession();
@@ -17,12 +19,12 @@ export default function NavMenu() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
-  const [quittanceOpen, setQuittanceOpen] = useState(false);
+  const [revisionOpen, setRevisionOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const user = session?.user as any;
   const isAdmin = user?.role === "ADMIN";
-  const showTeam = Boolean(session); // visible pour tout utilisateur connecté
+  const showTeam = Boolean(session);
   const isPro = user?.isPro;
 
   // Fermer le dropdown en cliquant ailleurs
@@ -82,6 +84,7 @@ export default function NavMenu() {
               <Link
                 key={href}
                 href={href}
+                id={href === "/dashboard/multi" ? "nav-multi" : undefined}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-colors ${
                   active
                     ? "bg-emerald-50 text-emerald-600"
@@ -95,23 +98,30 @@ export default function NavMenu() {
           })}
         </div>
 
-        {/* Quittance button */}
+        {/* Search — desktop */}
+        <SearchDossiers />
+
+        {/* Révision IRL button */}
         <button
-          onClick={() => setQuittanceOpen(true)}
-          className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+          onClick={() => setRevisionOpen(true)}
+          className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
+          title="Révision IRL"
         >
-          <Receipt className="w-4 h-4" />
-          Quittance
+          <TrendingUp className="w-4 h-4" />
+          <span className="hidden lg:inline">Révision IRL</span>
         </button>
 
         {/* Messages button */}
         <button
           onClick={() => setMessagesOpen(true)}
-          className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+          className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors"
         >
           <Mail className="w-4 h-4" />
-          Messages
+          <span className="hidden lg:inline">Messages</span>
         </button>
+
+        {/* Theme Toggle */}
+        <ThemeToggle />
 
         {/* Right side */}
         <div className="flex items-center gap-3">
@@ -226,11 +236,11 @@ export default function NavMenu() {
             );
           })}
           <button
-            onClick={() => { setMobileOpen(false); setQuittanceOpen(true); }}
+            onClick={() => { setMobileOpen(false); setRevisionOpen(true); }}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"
           >
-            <Receipt className="w-4 h-4" />
-            🧾 Quittance
+            <TrendingUp className="w-4 h-4" />
+            📈 Révision IRL
           </button>
           <button
             onClick={() => { setMobileOpen(false); setMessagesOpen(true); }}
@@ -254,8 +264,8 @@ export default function NavMenu() {
       {/* Message Templates Modal */}
       {messagesOpen && <MessageTemplates onClose={() => setMessagesOpen(false)} />}
 
-      {/* Quittance Modal */}
-      {quittanceOpen && <QuittanceModal onClose={() => setQuittanceOpen(false)} />}
+      {/* Révision IRL Modal */}
+      {revisionOpen && <RevisionLoyerModal onClose={() => setRevisionOpen(false)} />}
     </nav>
   );
 }
