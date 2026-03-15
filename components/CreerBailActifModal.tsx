@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, FileSignature, Loader2, Info, Calculator } from 'lucide-react';
+import { X, FileSignature, Loader2, Info, Calculator, Plus, Trash2 } from 'lucide-react';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import type { Bien, TypeBail } from '@/lib/db-local';
 import {
@@ -85,6 +85,14 @@ export default function CreerBailActifModal({ biens, onClose, onCreated }: Props
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  // ─── Colocataires & Garants
+  interface Colocataire { nom: string; prenom: string; email: string; telephone: string; partLoyer: string; }
+  interface Garant { nom: string; prenom: string; email: string; telephone: string; type: 'physique' | 'organisme'; organisme: string; }
+  const emptyColoc: Colocataire = { nom: '', prenom: '', email: '', telephone: '', partLoyer: '' };
+  const emptyGarant: Garant = { nom: '', prenom: '', email: '', telephone: '', type: 'physique', organisme: '' };
+  const [colocataires, setColocataires] = useState<Colocataire[]>([]);
+  const [garants, setGarants] = useState<Garant[]>([]);
 
   // ─── Encadrement loyers ───────────────────────────────────────────────────
   const [showEncadrement, setShowEncadrement] = useState(false);
@@ -183,6 +191,8 @@ export default function CreerBailActifModal({ biens, onClose, onCreated }: Props
           indiceRevision: form.indiceRevision,
           dateProchRevision: form.dateProchRevision,
           dateFinDiagnostics: form.dateFinDiagnostics || null,
+          colocataires: colocataires.filter((c) => c.nom.trim()).map((c) => ({ ...c, partLoyer: parseFloat(c.partLoyer) || 0 })),
+          garants: garants.filter((g) => g.nom.trim()),
         }),
       });
       if (!res.ok) {
@@ -377,6 +387,73 @@ export default function CreerBailActifModal({ biens, onClose, onCreated }: Props
               onChange={(e) => handleChange('dateFinDiagnostics', e.target.value)}
               className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
             />
+          </div>
+
+          {/* Colocataires */}
+          <div className="border border-slate-200 rounded-xl p-3">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-bold text-slate-500">Colocataires</label>
+              <button
+                type="button"
+                onClick={() => setColocataires([...colocataires, { ...emptyColoc }])}
+                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-bold text-emerald-600 hover:bg-emerald-50 rounded-lg"
+              >
+                <Plus className="w-3 h-3" /> Ajouter
+              </button>
+            </div>
+            {colocataires.length === 0 && (
+              <p className="text-xs text-slate-400">Aucun colocataire</p>
+            )}
+            {colocataires.map((c, i) => (
+              <div key={i} className="grid grid-cols-5 gap-2 mb-2 items-end">
+                <input type="text" placeholder="Nom" value={c.nom} onChange={(e) => { const arr = [...colocataires]; arr[i] = { ...arr[i], nom: e.target.value }; setColocataires(arr); }} className="col-span-1 border border-slate-200 rounded-lg px-2 py-1.5 text-xs" />
+                <input type="text" placeholder="Prénom" value={c.prenom} onChange={(e) => { const arr = [...colocataires]; arr[i] = { ...arr[i], prenom: e.target.value }; setColocataires(arr); }} className="col-span-1 border border-slate-200 rounded-lg px-2 py-1.5 text-xs" />
+                <input type="email" placeholder="Email" value={c.email} onChange={(e) => { const arr = [...colocataires]; arr[i] = { ...arr[i], email: e.target.value }; setColocataires(arr); }} className="col-span-1 border border-slate-200 rounded-lg px-2 py-1.5 text-xs" />
+                <input type="text" placeholder="Part loyer €" value={c.partLoyer} onChange={(e) => { const arr = [...colocataires]; arr[i] = { ...arr[i], partLoyer: e.target.value }; setColocataires(arr); }} className="col-span-1 border border-slate-200 rounded-lg px-2 py-1.5 text-xs" />
+                <button type="button" onClick={() => setColocataires(colocataires.filter((_, j) => j !== i))} className="p-1.5 text-red-400 hover:text-red-600 rounded-lg">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Garants */}
+          <div className="border border-slate-200 rounded-xl p-3">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-bold text-slate-500">Garants</label>
+              <button
+                type="button"
+                onClick={() => setGarants([...garants, { ...emptyGarant }])}
+                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-bold text-emerald-600 hover:bg-emerald-50 rounded-lg"
+              >
+                <Plus className="w-3 h-3" /> Ajouter
+              </button>
+            </div>
+            {garants.length === 0 && (
+              <p className="text-xs text-slate-400">Aucun garant</p>
+            )}
+            {garants.map((g, i) => (
+              <div key={i} className="space-y-2 mb-3 p-2 bg-slate-50 rounded-lg">
+                <div className="grid grid-cols-4 gap-2">
+                  <input type="text" placeholder="Nom" value={g.nom} onChange={(e) => { const arr = [...garants]; arr[i] = { ...arr[i], nom: e.target.value }; setGarants(arr); }} className="border border-slate-200 rounded-lg px-2 py-1.5 text-xs" />
+                  <input type="text" placeholder="Prénom" value={g.prenom} onChange={(e) => { const arr = [...garants]; arr[i] = { ...arr[i], prenom: e.target.value }; setGarants(arr); }} className="border border-slate-200 rounded-lg px-2 py-1.5 text-xs" />
+                  <input type="email" placeholder="Email" value={g.email} onChange={(e) => { const arr = [...garants]; arr[i] = { ...arr[i], email: e.target.value }; setGarants(arr); }} className="border border-slate-200 rounded-lg px-2 py-1.5 text-xs" />
+                  <input type="tel" placeholder="Téléphone" value={g.telephone} onChange={(e) => { const arr = [...garants]; arr[i] = { ...arr[i], telephone: e.target.value }; setGarants(arr); }} className="border border-slate-200 rounded-lg px-2 py-1.5 text-xs" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <select value={g.type} onChange={(e) => { const arr = [...garants]; arr[i] = { ...arr[i], type: e.target.value as 'physique' | 'organisme' }; setGarants(arr); }} className="border border-slate-200 rounded-lg px-2 py-1.5 text-xs bg-white">
+                    <option value="physique">Personne physique</option>
+                    <option value="organisme">Organisme</option>
+                  </select>
+                  {g.type === 'organisme' && (
+                    <input type="text" placeholder="Nom organisme" value={g.organisme} onChange={(e) => { const arr = [...garants]; arr[i] = { ...arr[i], organisme: e.target.value }; setGarants(arr); }} className="flex-1 border border-slate-200 rounded-lg px-2 py-1.5 text-xs" />
+                  )}
+                  <button type="button" onClick={() => setGarants(garants.filter((_, j) => j !== i))} className="p-1 text-red-400 hover:text-red-600">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Calculateur loyer plafonné */}

@@ -45,6 +45,8 @@ export async function POST(req: NextRequest) {
     indiceRevision,
     dateProchRevision,
     dateFinDiagnostics,
+    colocataires,
+    garants,
   } = body;
 
   if (!bienId || !locataireNom || !locataireEmail || !dateDebut || !loyerMensuel || !dateProchRevision) {
@@ -66,6 +68,8 @@ export async function POST(req: NextRequest) {
       indiceRevision: indiceRevision || 'IRL',
       dateProchRevision: new Date(dateProchRevision),
       dateFinDiagnostics: dateFinDiagnostics ? new Date(dateFinDiagnostics) : null,
+      colocataires: Array.isArray(colocataires) ? colocataires : [],
+      garants: Array.isArray(garants) ? garants : [],
     },
   });
 
