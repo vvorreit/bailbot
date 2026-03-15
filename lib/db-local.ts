@@ -148,11 +148,18 @@ export async function listerBiens(): Promise<Bien[]> {
 export async function supprimerBien(id: string): Promise<void> {
   const db = await getDB();
   await db.delete('biens', id);
-  const tx = db.transaction('candidatures', 'readwrite');
-  const index = tx.store.index('bienId');
-  const keys = await index.getAllKeys(id);
-  await Promise.all(keys.map((k) => tx.store.delete(k)));
-  await tx.done;
+
+  // Cascade → candidatures
+  const txCand = db.transaction('candidatures', 'readwrite');
+  const candKeys = await txCand.store.index('bienId').getAllKeys(id);
+  await Promise.all(candKeys.map((k) => txCand.store.delete(k)));
+  await txCand.done;
+
+  // Cascade → paiements
+  const txPai = db.transaction('paiements', 'readwrite');
+  const paiKeys = await txPai.store.index('bienId').getAllKeys(id);
+  await Promise.all(paiKeys.map((k) => txPai.store.delete(k)));
+  await txPai.done;
 }
 
 // ─── CANDIDATURES ────────────────────────────────────────────────────────────

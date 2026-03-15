@@ -1,4 +1,4 @@
-// ─── BailBot — Générateur PDF Mise en Demeure ────────────────────────────────
+// ─── BailBot — Générateur PDF Mise en Demeure & Courriers ────────────────────
 // Utilise jsPDF (client-side uniquement)
 
 import type { Paiement } from './db-local';
@@ -175,6 +175,79 @@ export async function genererMiseEnDemeurePDF(
   doc.text(
     `Document généré par BailBot • ${new Date().toLocaleDateString('fr-FR')}`,
     pageW / 2,
+    285,
+    { align: 'center' }
+  );
+
+  return doc.output('blob');
+}
+
+// ─── Générateur courrier simple (étapes 1 & 2) ────────────────────────────────
+
+export async function genererLettreSimplePDF(
+  etape: { numero: number; nom: string },
+  objet: string,
+  corps: string,
+  bailleur: { nom: string; ville: string }
+): Promise<Blob> {
+  const { jsPDF } = await import('jspdf');
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  const marginL = 25;
+  const marginR = 185;
+  let y = 30;
+
+  const today = new Date().toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  // Date + lieu
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(60, 60, 60);
+  doc.text(`${bailleur.ville}, le ${today}`, marginR, y, { align: 'right' });
+  y += 14;
+
+  // Titre étape
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.setTextColor(20, 20, 20);
+  doc.text(`Étape ${etape.numero} — ${etape.nom}`, marginL, y);
+  y += 5;
+  doc.setDrawColor(180, 180, 180);
+  doc.setLineWidth(0.3);
+  doc.line(marginL, y, marginR, y);
+  y += 10;
+
+  // Objet
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.text('Objet : ', marginL, y);
+  doc.setFont('helvetica', 'normal');
+  const objetLines = doc.splitTextToSize(objet, marginR - marginL - 18);
+  doc.text(objetLines, marginL + 18, y);
+  y += objetLines.length * 5 + 10;
+
+  // Corps
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  const corpsLines = doc.splitTextToSize(corps, marginR - marginL);
+  doc.text(corpsLines, marginL, y);
+  y += corpsLines.length * 5 + 16;
+
+  // Signature
+  doc.setFont('helvetica', 'bold');
+  doc.text(bailleur.nom, marginL, y);
+
+  // Footer
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(160, 160, 160);
+  doc.text(
+    `Document généré par BailBot • ${new Date().toLocaleDateString('fr-FR')}`,
+    210 / 2,
     285,
     { align: 'center' }
   );

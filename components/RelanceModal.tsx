@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Copy, Mail, CheckCircle2 } from 'lucide-react';
+import { X, Copy, Mail, CheckCircle2, FileDown } from 'lucide-react';
 import { type Paiement, type Bien, ajouterRelance } from '@/lib/db-local';
 import {
   ETAPES_RELANCE,
@@ -13,6 +13,8 @@ import {
 interface Props {
   paiement: Paiement;
   bien?: Bien;
+  bailleur?: { nom: string; ville: string; iban: string };
+  moisImpayes?: Paiement[];
   onClose: () => void;
   onSaved: () => void;
 }
@@ -24,7 +26,16 @@ const ETAPE_COLORS = {
   4: 'bg-red-50 text-red-700 border-red-200',
 };
 
-export default function RelanceModal({ paiement, bien, onClose, onSaved }: Props) {
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export default function RelanceModal({ paiement, bien, bailleur, moisImpayes, onClose, onSaved }: Props) {
   const prochainEtape = getProchainEtape(paiement);
   const [etapeSelectionnee, setEtapeSelectionnee] = useState<EtapeRelance>(
     prochainEtape ?? ETAPES_RELANCE[0]
@@ -33,20 +44,26 @@ export default function RelanceModal({ paiement, bien, onClose, onSaved }: Props
   const [texteCorps, setTexteCorps] = useState('');
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const [methode, setMethode] = useState<'email' | 'sms' | 'courrier' | 'lrar'>('email');
 
-  // Infos bailleur (stub — à relier à un profil en prod)
   const infoBailleur = {
-    nom: 'Le Bailleur',
+    nom: bailleur?.nom || 'Le Bailleur',
     adresse: bien?.adresse ?? '',
-    iban: '',
-    ville: 'Paris',
+    iban: bailleur?.iban || '',
+    ville: bailleur?.ville || 'Paris',
   };
 
   useEffect(() => {
     const { objet, corps } = genererTextRelance(etapeSelectionnee, paiement, infoBailleur);
     setTexteObjet(objet);
     setTexteCorps(corps);
+    // Pré-sélectionner la méthode selon l'étape
+    if (etapeSelectionnee.numero === 3 || etapeSelectionnee.numero === 2) {
+      setMethode('lrar');
+    } else {
+      setMethode('email');
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [etapeSelectionnee, paiement.id]);
 
@@ -60,6 +77,35 @@ export default function RelanceModal({ paiement, bien, onClose, onSaved }: Props
   const handleOuvrirMail = () => {
     const mailto = `mailto:${paiement.locataireEmail ?? ''}?subject=${encodeURIComponent(texteObjet)}&body=${encodeURIComponent(texteCorps)}`;
     window.open(mailto, '_blank');
+  };
+
+  const handleTelechargerPDF = async () => {
+    setPdfLoading(true);
+    try {
+      if (etapeSelectionnee.numero === 3) {
+        // Mise en demeure formelle
+        const { genererMiseEnDemeurePDF } = await import('@/lib/generateur-mise-en-demeure');
+        const moisList = (moisImpayes && moisImpayes.length > 0) ? moisImpayes : [paiement];
+        const blob = await genererMiseEnDemeurePDF(
+          paiement,
+          { nom: infoBailleur.nom, adresse: infoBailleur.adresse, ville: infoBailleur.ville },
+          moisList
+        );
+        downloadBlob(blob, `mise-en-demeure-${paiement.locataireNom}-${paiement.mois}.pdf`);
+      } else {
+        // Courrier simple (étapes 1, 2, 4)
+        const { genererLettreSimplePDF } = await import('@/lib/generateur-mise-en-demeure');
+        const blob = await genererLettreSimplePDF(
+          etapeSelectionnee,
+          texteObjet,
+          texteCorps,
+          { nom: infoBailleur.nom, ville: infoBailleur.ville }
+        );
+        downloadBlob(blob, `relance-etape${etapeSelectionnee.numero}-${paiement.locataireNom}.pdf`);
+      }
+    } finally {
+      setPdfLoading(false);
+    }
   };
 
   const handleMarquerEnvoyee = async () => {
@@ -76,6 +122,8 @@ export default function RelanceModal({ paiement, bien, onClose, onSaved }: Props
       setLoading(false);
     }
   };
+
+  const showPdfButton = etapeSelectionnee.numero >= 2;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -99,6 +147,14 @@ export default function RelanceModal({ paiement, bien, onClose, onSaved }: Props
             <span className="text-slate-400 ml-3">•</span>
             <span className="text-slate-500 ml-3">Loyer : </span>
             <span className="font-bold text-slate-800">{paiement.loyerCC.toLocaleString('fr-FR')}€</span>
+            {moisImpayes && moisImpayes.length > 1 && (
+              <>
+                <span className="text-slate-400 ml-3">•</span>
+                <span className="ml-3 text-xs font-bold text-red-600">
+                  {moisImpayes.length} mois impayés
+                </span>
+              </>
+            )}
           </div>
 
           {/* Sélecteur d'étape */}
@@ -119,6 +175,7 @@ export default function RelanceModal({ paiement, bien, onClose, onSaved }: Props
                   >
                     <div className="flex items-center gap-2 w-full">
                       <span className="text-xs font-black">Étape {e.numero}</span>
+                      <span className="text-[10px] opacity-60">J+{e.declenchementJours}</span>
                       {alreadySent && <span className="ml-auto text-[10px] font-bold text-emerald-600">✓ Envoyée</span>}
                     </div>
                     <span className="text-xs font-semibold mt-0.5">{e.nom}</span>
@@ -133,6 +190,18 @@ export default function RelanceModal({ paiement, bien, onClose, onSaved }: Props
               </p>
             )}
           </div>
+
+          {/* Banner LRAR pour étape 3 */}
+          {etapeSelectionnee.numero === 3 && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-800 font-semibold">
+              📮 Mise en demeure — À envoyer par <strong>lettre recommandée avec accusé de réception (LRAR)</strong>.
+              {moisImpayes && moisImpayes.length > 1 && (
+                <span className="block mt-1">
+                  Le PDF regroupera les <strong>{moisImpayes.length} mois impayés</strong> dans le tableau des sommes dues.
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Objet */}
           <div>
@@ -183,21 +252,41 @@ export default function RelanceModal({ paiement, bien, onClose, onSaved }: Props
 
         {/* Footer actions */}
         <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50 flex-wrap">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={handleCopier}
               className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl text-sm hover:bg-slate-100 transition-colors"
             >
               {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-              {copied ? 'Copié !' : 'Copier le texte'}
+              {copied ? 'Copié !' : 'Copier'}
             </button>
+
             {paiement.locataireEmail && (
               <button
                 onClick={handleOuvrirMail}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 text-blue-700 font-bold rounded-xl text-sm hover:bg-blue-100 transition-colors"
               >
                 <Mail className="w-4 h-4" />
-                Ouvrir dans Mail
+                Ouvrir Mail
+              </button>
+            )}
+
+            {showPdfButton && (
+              <button
+                onClick={handleTelechargerPDF}
+                disabled={pdfLoading}
+                className={`flex items-center gap-2 px-4 py-2 font-bold rounded-xl text-sm transition-colors disabled:opacity-50 ${
+                  etapeSelectionnee.numero === 3
+                    ? 'bg-red-50 border border-red-200 text-red-700 hover:bg-red-100'
+                    : 'bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100'
+                }`}
+              >
+                <FileDown className="w-4 h-4" />
+                {pdfLoading
+                  ? 'Génération…'
+                  : etapeSelectionnee.numero === 3
+                  ? 'PDF Mise en Demeure LRAR'
+                  : 'Télécharger courrier PDF'}
               </button>
             )}
           </div>

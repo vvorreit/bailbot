@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { X, Zap } from 'lucide-react';
-import { creerPaiement, type Bien } from '@/lib/db-local';
+import { creerPaiement, listerPaiements, type Bien } from '@/lib/db-local';
 
 interface Props {
   biens: Bien[];
@@ -32,6 +32,7 @@ export default function EnregistrerPaiementModal({ biens, moisDefaut, onClose, o
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [modeGenerer, setModeGenerer] = useState(false);
+  const [genMsg, setGenMsg] = useState<string | null>(null);
 
   const bienSelectionne = biens.find((b) => b.id === bienId);
 
@@ -67,23 +68,40 @@ export default function EnregistrerPaiementModal({ biens, moisDefaut, onClose, o
   const handleGenererMois = async () => {
     if (biens.length === 0) return;
     setLoading(true);
+    setGenMsg(null);
     try {
       const [year, month] = mois.split('-');
       const dateAttendue = new Date(parseInt(year), parseInt(month) - 1, 1).getTime();
 
-      for (const bien of biens) {
-        const loyerTotal = bien.loyer + bien.charges;
+      // Vérifie les doublons existants pour ce mois
+      const existants = await listerPaiements(undefined, mois);
+      const existantsBienIds = new Set(existants.map((p) => p.bienId));
+
+      const biensFiltres = biens.filter((b) => !existantsBienIds.has(b.id));
+      if (biensFiltres.length === 0) {
+        setGenMsg(`Les entrées de ${getMoisLabel(mois)} existent déjà pour tous les biens.`);
+        return;
+      }
+
+      for (const bien of biensFiltres) {
         await creerPaiement({
           bienId: bien.id,
           locataireNom: 'Locataire',
           locatairePrenom: '',
-          loyerCC: loyerTotal,
+          loyerCC: bien.loyer + bien.charges,
           dateAttendue,
           statut: 'attendu',
           mois,
         });
       }
-      onSaved();
+      const skipped = biens.length - biensFiltres.length;
+      if (skipped > 0) {
+        setGenMsg(`${biensFiltres.length} entrée(s) créée(s). ${skipped} bien(s) déjà enregistré(s) ignoré(s).`);
+        // Petit délai pour lire le message avant de fermer
+        setTimeout(() => onSaved(), 1800);
+      } else {
+        onSaved();
+      }
     } finally {
       setLoading(false);
     }
@@ -128,9 +146,12 @@ export default function EnregistrerPaiementModal({ biens, moisDefaut, onClose, o
                 disabled={loading}
                 className="px-4 py-1.5 bg-emerald-600 text-white font-bold rounded-lg text-sm hover:bg-emerald-700 transition-colors disabled:opacity-50"
               >
-                Générer
+                {loading ? 'Génération…' : 'Générer'}
               </button>
             </div>
+            {genMsg && (
+              <p className="text-xs text-amber-700 font-semibold mt-2">{genMsg}</p>
+            )}
           </div>
 
           <div className="relative flex items-center">
