@@ -81,6 +81,7 @@ function ComptabiliteContent() {
   const [paiements, setPaiements] = useState<Paiement[]>([]);
   const [configs, setConfigs] = useState<Record<string, ConfigFiscalBien>>({});
   const [loading, setLoading] = useState(true);
+  const [travauxDeductibles, setTravauxDeductibles] = useState<{ id: string; titre: string; categorie: string; montantFinal: number | null; montantReel: number | null; montantDevis: number | null; dateFinReelle: string | null }[]>([]);
 
   /* Charger les données IndexedDB */
   useEffect(() => {
@@ -99,6 +100,18 @@ function ComptabiliteContent() {
     }
     load();
   }, []);
+
+  /* Charger les travaux déductibles pour l'année */
+  useEffect(() => {
+    getTravauxDeductibles(annee)
+      .then((t) => setTravauxDeductibles(t as unknown as typeof travauxDeductibles))
+      .catch(() => setTravauxDeductibles([]));
+  }, [annee]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const totalTravauxDeductibles = useMemo(
+    () => travauxDeductibles.reduce((s, t) => s + (t.montantFinal ?? t.montantReel ?? t.montantDevis ?? 0), 0),
+    [travauxDeductibles]
+  );
 
   /* Calculer le récap */
   const recap: RecapFiscal = useMemo(
@@ -302,6 +315,52 @@ function ComptabiliteContent() {
 
       {/* Tableau récap */}
       <RecapFiscalAnnuel recap={recap} onConfigChange={handleConfigChange} />
+
+      {/* Travaux déductibles */}
+      {(travauxDeductibles.length > 0 || recap.biens.length > 0) && (
+        <div className="mt-6 bg-white rounded-2xl border border-slate-100 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Wrench className="w-5 h-5 text-emerald-600" />
+              <h2 className="text-sm font-black text-slate-400 uppercase tracking-wider">
+                Travaux déductibles {annee}
+              </h2>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-lg font-black text-emerald-700">{euros(totalTravauxDeductibles)}</span>
+              <Link href="/dashboard/travaux"
+                className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-600 transition-colors">
+                <ExternalLink className="w-3 h-3" /> Voir les travaux
+              </Link>
+            </div>
+          </div>
+          {travauxDeductibles.length === 0 ? (
+            <p className="text-xs text-slate-400 text-center py-4">
+              Aucun chantier terminé et déductible pour {annee}. Les travaux marqués comme terminés avec une date de fin dans l&apos;année apparaîtront ici.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {travauxDeductibles.map((t) => (
+                <Link key={t.id} href={`/dashboard/travaux/${t.id}`}
+                  className="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors">
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">{t.titre}</p>
+                    <p className="text-[10px] text-slate-400">
+                      {t.categorie} · Terminé le {t.dateFinReelle ? new Date(t.dateFinReelle).toLocaleDateString("fr-FR") : "—"}
+                    </p>
+                  </div>
+                  <span className="text-sm font-black text-emerald-700">
+                    {euros(t.montantFinal ?? t.montantReel ?? t.montantDevis ?? 0)}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+          <p className="text-[10px] text-slate-400 mt-3">
+            Intégrez ce montant dans vos charges déductibles (colonne &laquo;&nbsp;Charges&nbsp;&raquo; du tableau ci-dessus) en régime réel.
+          </p>
+        </div>
+      )}
 
       {/* Info export 2044 + bouton PDF fiscal */}
       {recap.biens.length > 0 && (
