@@ -101,7 +101,7 @@ export default function Sidebar() {
         { href: "/dashboard/bails", label: "Baux actifs", icon: FileSignature, show: hasAccess(metier, "VIE_DU_BAIL") },
         { href: "/dashboard/impayes", label: "Paiements & impayes", icon: Banknote, badge: nbImpayes, show: hasAccess(metier, "DASHBOARD_IMPAYES") || hasAccess(metier, "SUIVI_PAIEMENTS") },
         { href: "/dashboard/comptabilite", label: "Comptabilite", icon: Calculator, show: hasAccess(metier, "COMPTABILITE_FISCALE") },
-
+        { href: "/dashboard/finances", label: "Finances & rendements", icon: TrendingUp, show: hasAccess(metier, "COMPTABILITE_FISCALE") },
         { href: "/dashboard/espaces-locataires", label: "Demandes locataires", icon: MessageSquare, show: hasAccess(metier, "ESPACE_LOCATAIRE") },
       ],
     },

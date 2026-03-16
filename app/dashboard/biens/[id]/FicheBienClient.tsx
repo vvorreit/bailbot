@@ -18,6 +18,7 @@ import {
 import { genererQuittancePDF } from '@/lib/generateur-quittance';
 import ConformiteReportWidget from '@/components/ConformiteReport';
 import LoyerMarcheWidget from '@/components/LoyerMarcheWidget';
+import KPIBienWidget from '@/components/KPIBienWidget';
 
 interface Colocataire {
   nom: string;
@@ -248,6 +249,13 @@ export default function FicheBienClient({ data }: Props) {
 
         {/* Colonne latérale */}
         <div className="space-y-6">
+          {/* KPIs financiers */}
+          <KPIBienWidget
+            bienId={bien.id}
+            bailActif={bailActif}
+            surface={bien.surface}
+          />
+
           {/* Conformité réglementaire */}
           {bailActif && (
             <ConformiteReportWidget
