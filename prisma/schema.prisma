@@ -1,4 +1,25 @@
 // prisma/schema.prisma
+//
+// Modèles principaux :
+//   User, Team, Invitation — authentification & collaboration
+//   BailActif, Bien, PaiementBien — gestion locative (baux, biens, paiements)
+//   CandidatureLocal — dossiers candidats
+//   EtatDesLieux — états des lieux entrée/sortie
+//   Travaux, DevisEntreprise, PhotoTravaux — gestion travaux
+//   Document — coffre-fort documentaire
+//   Garant — garants/cautionnaires liés aux baux
+//   ModeleBail — modèles de baux personnalisables (ALUR 2023)
+//   QuittanceAuto, AlerteBail — automatisations bail
+//   RelanceLoyer, RelanceCandidat — relances email
+//   ProfilBailleurTable — profil bailleur (IBAN chiffré)
+//   ConsentRGPD, AuditLog — RGPD & audit
+//   EspaceLocataire, DemandeLocataire — portail locataire
+//   SignatureRequest — signature électronique
+//   PretImmobilier — prêts immobiliers
+//   RegularisationCharges — régularisation charges
+//   ContratPro — baux professionnels
+//   DocumentCopro — copropriété
+//   PushSubscription, MessageTemplate — notifications & templates
 
 generator client {
   provider = "prisma-client-js"
@@ -266,9 +287,52 @@ model BailActif {
   alertes             AlerteBail[]
   quittancesAuto      QuittanceAuto[]
   relancesLoyer       RelanceLoyer[]
+  garantsRel          Garant[]
 
   @@index([userId])
   @@index([bienId])
+  @@index([statut])
+  @@index([locataireEmail])
+  @@index([dateDebut])
+}
+
+// ─── Garants / Cautionnaires ─────────────────────────────────────────────────
+
+enum TypeGarantie {
+  PHYSIQUE
+  MORAL
+  VISALE
+  CAUTIONNEMENT_BANCAIRE
+}
+
+model Garant {
+  id              String         @id @default(cuid())
+  bailId          String
+  nom             String
+  prenom          String?
+  email           String?
+  telephone       String?
+  typeGarantie    TypeGarantie   @default(PHYSIQUE)
+  revenus         Float?
+  employeur       String?
+  createdAt       DateTime       @default(now())
+  bail            BailActif      @relation(fields: [bailId], references: [id], onDelete: Cascade)
+
+  @@index([bailId])
+}
+
+// ─── Modèles de Baux (ALUR 2023) ────────────────────────────────────────────
+
+model ModeleBail {
+  id        String   @id @default(cuid())
+  userId    String
+  nom       String
+  type      String   // "HABITATION_VIDE" | "HABITATION_MEUBLE" | "MOBILITE"
+  clauses   Json     @default("[]")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model QuittanceAuto {
@@ -283,6 +347,7 @@ model QuittanceAuto {
 
   @@unique([bailId, mois])
   @@index([bailId])
+  @@index([mois])
 }
 
 model AlerteBail {
@@ -399,6 +464,7 @@ model Bien {
   createdAt            DateTime @default(now())
 
   @@index([userId])
+  @@index([statut])
 }
 
 // ─── Diagnostics Obligatoires ────────────────────────────────────────────
@@ -449,6 +515,8 @@ model PaiementBien {
   @@index([userId])
   @@index([bienId])
   @@index([mois])
+  @@index([statut])
+  @@index([dateAttendue])
 }
 
 // ─── Candidatures (migration depuis IndexedDB) ──────────────────────────
@@ -471,6 +539,8 @@ model CandidatureLocal {
 
   @@index([userId])
   @@index([bienId])
+  @@index([statut])
+  @@index([createdAt])
 }
 
 // ─── Bail Professionnel ───────────────────────────────────────────────────────
@@ -561,6 +631,7 @@ model Travaux {
 
   @@index([userId])
   @@index([bienId])
+  @@index([statut])
 }
 
 model TravauxDocument {

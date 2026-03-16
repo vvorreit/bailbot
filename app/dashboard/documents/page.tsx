@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { FolderOpen, Upload, Trash2, Loader2, FileText, Download } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 import { getDocuments, deleteDocument } from "@/app/actions/documents";
 
 export default function DocumentsPage() {
@@ -77,10 +78,14 @@ export default function DocumentsPage() {
           <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
         </div>
       ) : documents.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
-          <FolderOpen className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <p className="text-sm font-bold text-slate-600 mb-1">Aucun document</p>
-          <p className="text-xs text-slate-400">Ajoutez vos premiers documents (DPE, contrats, quittances...)</p>
+        <div className="bg-white rounded-2xl border border-slate-100">
+          <EmptyState
+            icon={FolderOpen}
+            title="Aucun document"
+            description="Uploadez vos premiers documents : DPE, contrats de bail, quittances, diagnostics..."
+            ctaLabel="Uploader un document"
+            ctaOnClick={() => document.getElementById("doc-upload-input")?.click()}
+          />
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">

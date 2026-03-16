@@ -32,6 +32,9 @@ export default function AppFooter() {
           <Link href="/legal/mentions-legales" className="text-[11px] font-bold text-slate-400 hover:text-slate-700 uppercase tracking-widest transition-colors">
             Mentions légales
           </Link>
+          <Link href="/legal/dpa" className="text-[11px] font-bold text-slate-400 hover:text-slate-700 uppercase tracking-widest transition-colors">
+            DPA
+          </Link>
         </div>
 
       </div>

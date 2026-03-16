@@ -87,6 +87,71 @@ export async function saveOnboardingStep4(data: {
   return { success: true };
 }
 
+export async function saveOnboardingLocataire(data: {
+  locataireNom: string;
+  locataireEmail?: string;
+  dateDebut?: string;
+  loyerMensuel?: number;
+}) {
+  const session = await getSession();
+  if (!session?.user?.email) throw new Error("Non autorise");
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { id: true },
+  });
+  if (!user) throw new Error("Utilisateur introuvable");
+
+  const bien = await prisma.bien.findFirst({
+    where: { userId: user.id },
+    select: { id: true, loyer: true },
+    orderBy: { createdAt: "desc" },
+  });
+  if (!bien) throw new Error("Créez d'abord un bien");
+
+  const dateDebut = data.dateDebut ? new Date(data.dateDebut) : new Date();
+  const dateProchRevision = new Date(dateDebut);
+  dateProchRevision.setFullYear(dateProchRevision.getFullYear() + 1);
+
+  await prisma.bailActif.create({
+    data: {
+      userId: user.id,
+      bienId: bien.id,
+      locataireNom: data.locataireNom,
+      locataireEmail: data.locataireEmail || "",
+      dateSignature: dateDebut,
+      dateDebut,
+      loyerMensuel: data.loyerMensuel || bien.loyer || 0,
+      dateProchRevision,
+    },
+  });
+
+  return { success: true };
+}
+
+export async function getOnboardingRecap() {
+  const session = await getSession();
+  if (!session?.user?.email) return null;
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { id: true, name: true, metier: true, bailleurNom: true, ville: true },
+  });
+  if (!user) return null;
+
+  const bienCount = await prisma.bien.count({ where: { userId: user.id } });
+  const bailCount = await prisma.bailActif.count({ where: { userId: user.id } });
+
+  return {
+    nom: user.name,
+    metier: user.metier,
+    bailleurNom: user.bailleurNom,
+    ville: user.ville,
+    bienCount,
+    bailCount,
+  };
+}
+
 export async function markOnboardingComplete() {
   const session = await getSession();
   if (!session?.user?.email) throw new Error("Non autorise");

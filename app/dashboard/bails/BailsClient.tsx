@@ -18,6 +18,7 @@ import {
   Check,
   TrendingUp,
 } from 'lucide-react';
+import EmptyState from '@/components/EmptyState';
 import { genererBailPDF, type DonneesBail } from '@/lib/generateur-bail';
 import IRLRevisionBailModal from '@/components/IRLRevisionBailModal';
 import {
@@ -216,12 +217,14 @@ export default function BailsClient() {
         {/* Colonne baux */}
         <div className="lg:col-span-2 order-1 lg:order-2 space-y-4">
           {bails.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-2xl border border-slate-100">
-              <FileSignature className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-500 font-semibold">Aucun bail enregistré</p>
-              <p className="text-sm text-slate-400 mt-1">
-                Cliquez sur &quot;Nouveau bail&quot; pour enregistrer votre premier bail signé.
-              </p>
+            <div className="bg-white rounded-2xl border border-slate-100">
+              <EmptyState
+                icon={FileSignature}
+                title="Aucun bail actif"
+                description="Créez votre premier bail pour suivre vos locataires, loyers et échéances."
+                ctaLabel="Créer votre premier bail"
+                ctaOnClick={() => setShowModal(true)}
+              />
             </div>
           ) : (
             bails.map((bail) => (

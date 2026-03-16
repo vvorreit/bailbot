@@ -8,7 +8,7 @@ import {
   Building2, FileSearch, Home, FileSignature, Banknote,
   Users, Wrench, Settings, ShieldCheck, CreditCard, LogOut,
   ChevronsLeft, ChevronsRight, Menu, X, TrendingUp, Mail,
-  Calendar,
+  Calendar, Search, BookOpen,
 } from "lucide-react";
 import { createPortalSession } from "@/app/dashboard/actions";
 import MessageTemplates from "@/components/MessageTemplates";
@@ -18,6 +18,7 @@ import { getNbImpayes } from "@/app/actions/stats-nav";
 import { getNbDiagnosticsExpires } from "@/app/actions/diagnostics-gestion";
 import { hasAccess, METIER_LABELS } from "@/lib/features";
 import { Tooltip } from "@/components/ui/Tooltip";
+import SearchGlobal from "@/components/SearchGlobal";
 import type { LucideIcon } from "lucide-react";
 
 const SIDEBAR_KEY = "sidebar-collapsed";
@@ -39,6 +40,7 @@ export default function Sidebar() {
   const [nbDiagExpires, setNbDiagExpires] = useState(0);
   const [messagesOpen, setMessagesOpen] = useState(false);
   const [revisionOpen, setRevisionOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
 
   const user = session?.user as any;
@@ -54,6 +56,17 @@ export default function Sidebar() {
   useEffect(() => {
     getNbImpayes().then(setNbImpayes).catch(() => {});
     getNbDiagnosticsExpires().then(setNbDiagExpires).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   const toggleCollapse = useCallback(() => {
@@ -94,6 +107,7 @@ export default function Sidebar() {
   ];
 
   const accountNav: NavItem[] = [
+    { href: "/dashboard/modeles-baux", label: "Modèles de baux", icon: BookOpen, show: hasAccess(metier, "VIE_DU_BAIL") },
     { href: "/dashboard/account", label: "Parametres", icon: Settings, show: true },
     ...(isAdmin ? [{ href: "/admin", label: "Administration", icon: ShieldCheck, show: true }] : []),
   ];
@@ -180,6 +194,11 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-4" aria-label="Navigation principale">
+        {/* Search */}
+        <div className="mb-2">
+          <ActionButton label="Rechercher..." icon={Search} onClick={() => { setMobileOpen(false); setSearchOpen(true); }} />
+        </div>
+
         {/* Main navigation */}
         <div>
           {(!isCollapsed || mobileOpen) && (
@@ -373,6 +392,7 @@ export default function Sidebar() {
       {/* Modals */}
       {messagesOpen && <MessageTemplates onClose={() => setMessagesOpen(false)} />}
       {revisionOpen && <RevisionLoyerModal onClose={() => setRevisionOpen(false)} />}
+      {searchOpen && <SearchGlobal onClose={() => setSearchOpen(false)} />}
     </>
   );
 }

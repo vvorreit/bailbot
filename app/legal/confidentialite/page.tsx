@@ -90,6 +90,9 @@ export default function PrivacyPage() {
               <li><strong>PostHog</strong> : analytics (soumis à consentement).</li>
               <li><strong>Google</strong> : authentification OAuth 2.0.</li>
             </ul>
+            <p className="text-slate-600 leading-relaxed mt-4">
+              Pour plus de détails sur nos sous-traitants et les accords de traitement des données, consultez notre <Link href="/legal/dpa" className="text-blue-600 hover:underline font-semibold">Accord de traitement des données (DPA)</Link>.
+            </p>
           </section>
 
           <section>

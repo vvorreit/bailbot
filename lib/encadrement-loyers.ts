@@ -243,10 +243,174 @@ const PARIS: VilleEncadrement = {
   },
 };
 
+// ─── LILLE ─────────────────────────────────────────────────────────────────────
+// Arrêté préfectoral 2024 — Données moyennes par secteur
+// Source : Préfecture du Nord
+const LILLE: VilleEncadrement = {
+  nom: 'Lille',
+  active: true,
+  dateApplication: '2020-03-01',
+  zones: [
+    { code: 'lille_centre', label: 'Lille Centre / Vieux-Lille', details: 'Centre historique, Grand Place' },
+    { code: 'lille_sud', label: 'Lille Sud / Fives / Moulins', details: 'Quartiers sud et est' },
+    { code: 'lille_nord', label: 'Lille Nord / Vauban / Wazemmes', details: 'Quartiers universitaires' },
+    { code: 'hellemmes_lomme', label: 'Hellemmes / Lomme', details: 'Communes associées' },
+  ],
+  data: {
+    lille_centre: {
+      vide: {
+        avant_1946:  { 1: { reference: 16.8, majore: 20.16, minore: 11.76 }, 2: { reference: 13.5, majore: 16.2, minore: 9.45 }, 3: { reference: 11.8, majore: 14.16, minore: 8.26 }, 4: { reference: 10.5, majore: 12.6, minore: 7.35 } },
+        '1946_1970': { 1: { reference: 14.2, majore: 17.04, minore: 9.94 }, 2: { reference: 11.6, majore: 13.92, minore: 8.12 }, 3: { reference: 10.2, majore: 12.24, minore: 7.14 }, 4: { reference: 9.2, majore: 11.04, minore: 6.44 } },
+        '1971_1990': { 1: { reference: 13.8, majore: 16.56, minore: 9.66 }, 2: { reference: 11.3, majore: 13.56, minore: 7.91 }, 3: { reference: 10.0, majore: 12.0, minore: 7.0 }, 4: { reference: 9.0, majore: 10.8, minore: 6.3 } },
+        '1991_2005': { 1: { reference: 14.8, majore: 17.76, minore: 10.36 }, 2: { reference: 12.0, majore: 14.4, minore: 8.4 }, 3: { reference: 10.6, majore: 12.72, minore: 7.42 }, 4: { reference: 9.6, majore: 11.52, minore: 6.72 } },
+        apres_2005:  { 1: { reference: 17.2, majore: 20.64, minore: 12.04 }, 2: { reference: 14.0, majore: 16.8, minore: 9.8 }, 3: { reference: 12.2, majore: 14.64, minore: 8.54 }, 4: { reference: 11.0, majore: 13.2, minore: 7.7 } },
+      },
+      meuble: {
+        avant_1946:  { 1: { reference: 19.1, majore: 22.92, minore: 13.37 }, 2: { reference: 15.3, majore: 18.36, minore: 10.71 }, 3: { reference: 13.4, majore: 16.08, minore: 9.38 }, 4: { reference: 11.9, majore: 14.28, minore: 8.33 } },
+        '1946_1970': { 1: { reference: 16.1, majore: 19.32, minore: 11.27 }, 2: { reference: 13.2, majore: 15.84, minore: 9.24 }, 3: { reference: 11.6, majore: 13.92, minore: 8.12 }, 4: { reference: 10.5, majore: 12.6, minore: 7.35 } },
+        '1971_1990': { 1: { reference: 15.7, majore: 18.84, minore: 10.99 }, 2: { reference: 12.8, majore: 15.36, minore: 8.96 }, 3: { reference: 11.4, majore: 13.68, minore: 7.98 }, 4: { reference: 10.2, majore: 12.24, minore: 7.14 } },
+        '1991_2005': { 1: { reference: 16.8, majore: 20.16, minore: 11.76 }, 2: { reference: 13.6, majore: 16.32, minore: 9.52 }, 3: { reference: 12.0, majore: 14.4, minore: 8.4 }, 4: { reference: 10.9, majore: 13.08, minore: 7.63 } },
+        apres_2005:  { 1: { reference: 19.5, majore: 23.4, minore: 13.65 }, 2: { reference: 15.9, majore: 19.08, minore: 11.13 }, 3: { reference: 13.9, majore: 16.68, minore: 9.73 }, 4: { reference: 12.5, majore: 15.0, minore: 8.75 } },
+      },
+    },
+    lille_sud: {
+      vide: {
+        avant_1946:  { 1: { reference: 13.5, majore: 16.2, minore: 9.45 }, 2: { reference: 11.0, majore: 13.2, minore: 7.7 }, 3: { reference: 9.7, majore: 11.64, minore: 6.79 }, 4: { reference: 8.7, majore: 10.44, minore: 6.09 } },
+        '1946_1970': { 1: { reference: 11.5, majore: 13.8, minore: 8.05 }, 2: { reference: 9.5, majore: 11.4, minore: 6.65 }, 3: { reference: 8.4, majore: 10.08, minore: 5.88 }, 4: { reference: 7.6, majore: 9.12, minore: 5.32 } },
+        '1971_1990': { 1: { reference: 11.2, majore: 13.44, minore: 7.84 }, 2: { reference: 9.2, majore: 11.04, minore: 6.44 }, 3: { reference: 8.2, majore: 9.84, minore: 5.74 }, 4: { reference: 7.4, majore: 8.88, minore: 5.18 } },
+        '1991_2005': { 1: { reference: 12.0, majore: 14.4, minore: 8.4 }, 2: { reference: 9.8, majore: 11.76, minore: 6.86 }, 3: { reference: 8.7, majore: 10.44, minore: 6.09 }, 4: { reference: 7.9, majore: 9.48, minore: 5.53 } },
+        apres_2005:  { 1: { reference: 14.0, majore: 16.8, minore: 9.8 }, 2: { reference: 11.4, majore: 13.68, minore: 7.98 }, 3: { reference: 10.0, majore: 12.0, minore: 7.0 }, 4: { reference: 9.1, majore: 10.92, minore: 6.37 } },
+      },
+      meuble: {
+        avant_1946:  { 1: { reference: 15.3, majore: 18.36, minore: 10.71 }, 2: { reference: 12.5, majore: 15.0, minore: 8.75 }, 3: { reference: 11.0, majore: 13.2, minore: 7.7 }, 4: { reference: 9.9, majore: 11.88, minore: 6.93 } },
+        '1946_1970': { 1: { reference: 13.1, majore: 15.72, minore: 9.17 }, 2: { reference: 10.8, majore: 12.96, minore: 7.56 }, 3: { reference: 9.5, majore: 11.4, minore: 6.65 }, 4: { reference: 8.6, majore: 10.32, minore: 6.02 } },
+        '1971_1990': { 1: { reference: 12.7, majore: 15.24, minore: 8.89 }, 2: { reference: 10.5, majore: 12.6, minore: 7.35 }, 3: { reference: 9.3, majore: 11.16, minore: 6.51 }, 4: { reference: 8.4, majore: 10.08, minore: 5.88 } },
+        '1991_2005': { 1: { reference: 13.6, majore: 16.32, minore: 9.52 }, 2: { reference: 11.1, majore: 13.32, minore: 7.77 }, 3: { reference: 9.9, majore: 11.88, minore: 6.93 }, 4: { reference: 9.0, majore: 10.8, minore: 6.3 } },
+        apres_2005:  { 1: { reference: 15.9, majore: 19.08, minore: 11.13 }, 2: { reference: 12.9, majore: 15.48, minore: 9.03 }, 3: { reference: 11.4, majore: 13.68, minore: 7.98 }, 4: { reference: 10.3, majore: 12.36, minore: 7.21 } },
+      },
+    },
+    lille_nord: {
+      vide: {
+        avant_1946:  { 1: { reference: 15.2, majore: 18.24, minore: 10.64 }, 2: { reference: 12.3, majore: 14.76, minore: 8.61 }, 3: { reference: 10.8, majore: 12.96, minore: 7.56 }, 4: { reference: 9.7, majore: 11.64, minore: 6.79 } },
+        '1946_1970': { 1: { reference: 12.9, majore: 15.48, minore: 9.03 }, 2: { reference: 10.6, majore: 12.72, minore: 7.42 }, 3: { reference: 9.3, majore: 11.16, minore: 6.51 }, 4: { reference: 8.4, majore: 10.08, minore: 5.88 } },
+        '1971_1990': { 1: { reference: 12.5, majore: 15.0, minore: 8.75 }, 2: { reference: 10.3, majore: 12.36, minore: 7.21 }, 3: { reference: 9.1, majore: 10.92, minore: 6.37 }, 4: { reference: 8.2, majore: 9.84, minore: 5.74 } },
+        '1991_2005': { 1: { reference: 13.4, majore: 16.08, minore: 9.38 }, 2: { reference: 10.9, majore: 13.08, minore: 7.63 }, 3: { reference: 9.7, majore: 11.64, minore: 6.79 }, 4: { reference: 8.8, majore: 10.56, minore: 6.16 } },
+        apres_2005:  { 1: { reference: 15.6, majore: 18.72, minore: 10.92 }, 2: { reference: 12.7, majore: 15.24, minore: 8.89 }, 3: { reference: 11.1, majore: 13.32, minore: 7.77 }, 4: { reference: 10.1, majore: 12.12, minore: 7.07 } },
+      },
+      meuble: {
+        avant_1946:  { 1: { reference: 17.3, majore: 20.76, minore: 12.11 }, 2: { reference: 14.0, majore: 16.8, minore: 9.8 }, 3: { reference: 12.3, majore: 14.76, minore: 8.61 }, 4: { reference: 11.0, majore: 13.2, minore: 7.7 } },
+        '1946_1970': { 1: { reference: 14.7, majore: 17.64, minore: 10.29 }, 2: { reference: 12.0, majore: 14.4, minore: 8.4 }, 3: { reference: 10.6, majore: 12.72, minore: 7.42 }, 4: { reference: 9.6, majore: 11.52, minore: 6.72 } },
+        '1971_1990': { 1: { reference: 14.2, majore: 17.04, minore: 9.94 }, 2: { reference: 11.7, majore: 14.04, minore: 8.19 }, 3: { reference: 10.3, majore: 12.36, minore: 7.21 }, 4: { reference: 9.3, majore: 11.16, minore: 6.51 } },
+        '1991_2005': { 1: { reference: 15.2, majore: 18.24, minore: 10.64 }, 2: { reference: 12.4, majore: 14.88, minore: 8.68 }, 3: { reference: 11.0, majore: 13.2, minore: 7.7 }, 4: { reference: 10.0, majore: 12.0, minore: 7.0 } },
+        apres_2005:  { 1: { reference: 17.7, majore: 21.24, minore: 12.39 }, 2: { reference: 14.4, majore: 17.28, minore: 10.08 }, 3: { reference: 12.6, majore: 15.12, minore: 8.82 }, 4: { reference: 11.5, majore: 13.8, minore: 8.05 } },
+      },
+    },
+    hellemmes_lomme: {
+      vide: {
+        avant_1946:  { 1: { reference: 12.5, majore: 15.0, minore: 8.75 }, 2: { reference: 10.3, majore: 12.36, minore: 7.21 }, 3: { reference: 9.1, majore: 10.92, minore: 6.37 }, 4: { reference: 8.2, majore: 9.84, minore: 5.74 } },
+        '1946_1970': { 1: { reference: 10.6, majore: 12.72, minore: 7.42 }, 2: { reference: 8.8, majore: 10.56, minore: 6.16 }, 3: { reference: 7.8, majore: 9.36, minore: 5.46 }, 4: { reference: 7.1, majore: 8.52, minore: 4.97 } },
+        '1971_1990': { 1: { reference: 10.3, majore: 12.36, minore: 7.21 }, 2: { reference: 8.6, majore: 10.32, minore: 6.02 }, 3: { reference: 7.6, majore: 9.12, minore: 5.32 }, 4: { reference: 6.9, majore: 8.28, minore: 4.83 } },
+        '1991_2005': { 1: { reference: 11.0, majore: 13.2, minore: 7.7 }, 2: { reference: 9.1, majore: 10.92, minore: 6.37 }, 3: { reference: 8.1, majore: 9.72, minore: 5.67 }, 4: { reference: 7.4, majore: 8.88, minore: 5.18 } },
+        apres_2005:  { 1: { reference: 12.8, majore: 15.36, minore: 8.96 }, 2: { reference: 10.6, majore: 12.72, minore: 7.42 }, 3: { reference: 9.4, majore: 11.28, minore: 6.58 }, 4: { reference: 8.5, majore: 10.2, minore: 5.95 } },
+      },
+      meuble: {
+        avant_1946:  { 1: { reference: 14.2, majore: 17.04, minore: 9.94 }, 2: { reference: 11.7, majore: 14.04, minore: 8.19 }, 3: { reference: 10.3, majore: 12.36, minore: 7.21 }, 4: { reference: 9.3, majore: 11.16, minore: 6.51 } },
+        '1946_1970': { 1: { reference: 12.0, majore: 14.4, minore: 8.4 }, 2: { reference: 10.0, majore: 12.0, minore: 7.0 }, 3: { reference: 8.9, majore: 10.68, minore: 6.23 }, 4: { reference: 8.1, majore: 9.72, minore: 5.67 } },
+        '1971_1990': { 1: { reference: 11.7, majore: 14.04, minore: 8.19 }, 2: { reference: 9.8, majore: 11.76, minore: 6.86 }, 3: { reference: 8.6, majore: 10.32, minore: 6.02 }, 4: { reference: 7.8, majore: 9.36, minore: 5.46 } },
+        '1991_2005': { 1: { reference: 12.5, majore: 15.0, minore: 8.75 }, 2: { reference: 10.3, majore: 12.36, minore: 7.21 }, 3: { reference: 9.2, majore: 11.04, minore: 6.44 }, 4: { reference: 8.4, majore: 10.08, minore: 5.88 } },
+        apres_2005:  { 1: { reference: 14.5, majore: 17.4, minore: 10.15 }, 2: { reference: 12.0, majore: 14.4, minore: 8.4 }, 3: { reference: 10.7, majore: 12.84, minore: 7.49 }, 4: { reference: 9.7, majore: 11.64, minore: 6.79 } },
+      },
+    },
+  },
+};
+
+// ─── BORDEAUX ─────────────────────────────────────────────────────────────────
+// Arrêté préfectoral 2024 — Données moyennes par secteur
+// Source : Préfecture de la Gironde
+const BORDEAUX: VilleEncadrement = {
+  nom: 'Bordeaux',
+  active: true,
+  dateApplication: '2022-07-15',
+  zones: [
+    { code: 'bordeaux_centre', label: 'Centre / Saint-Pierre / Chartrons', details: 'Hyper-centre, quais' },
+    { code: 'bordeaux_sud', label: 'Saint-Michel / Nansouty / Saint-Genès', details: 'Quartiers sud' },
+    { code: 'bordeaux_nord', label: 'Bacalan / Bastide / Lac', details: 'Quartiers nord et rive droite' },
+    { code: 'bordeaux_ouest', label: 'Caudéran / Saint-Augustin / Mériadeck', details: 'Quartiers ouest résidentiels' },
+  ],
+  data: {
+    bordeaux_centre: {
+      vide: {
+        avant_1946:  { 1: { reference: 16.0, majore: 19.2, minore: 11.2 }, 2: { reference: 13.0, majore: 15.6, minore: 9.1 }, 3: { reference: 11.3, majore: 13.56, minore: 7.91 }, 4: { reference: 10.2, majore: 12.24, minore: 7.14 } },
+        '1946_1970': { 1: { reference: 13.5, majore: 16.2, minore: 9.45 }, 2: { reference: 11.1, majore: 13.32, minore: 7.77 }, 3: { reference: 9.8, majore: 11.76, minore: 6.86 }, 4: { reference: 8.9, majore: 10.68, minore: 6.23 } },
+        '1971_1990': { 1: { reference: 13.1, majore: 15.72, minore: 9.17 }, 2: { reference: 10.8, majore: 12.96, minore: 7.56 }, 3: { reference: 9.6, majore: 11.52, minore: 6.72 }, 4: { reference: 8.7, majore: 10.44, minore: 6.09 } },
+        '1991_2005': { 1: { reference: 14.0, majore: 16.8, minore: 9.8 }, 2: { reference: 11.5, majore: 13.8, minore: 8.05 }, 3: { reference: 10.2, majore: 12.24, minore: 7.14 }, 4: { reference: 9.2, majore: 11.04, minore: 6.44 } },
+        apres_2005:  { 1: { reference: 16.5, majore: 19.8, minore: 11.55 }, 2: { reference: 13.5, majore: 16.2, minore: 9.45 }, 3: { reference: 11.8, majore: 14.16, minore: 8.26 }, 4: { reference: 10.7, majore: 12.84, minore: 7.49 } },
+      },
+      meuble: {
+        avant_1946:  { 1: { reference: 18.2, majore: 21.84, minore: 12.74 }, 2: { reference: 14.8, majore: 17.76, minore: 10.36 }, 3: { reference: 12.8, majore: 15.36, minore: 8.96 }, 4: { reference: 11.6, majore: 13.92, minore: 8.12 } },
+        '1946_1970': { 1: { reference: 15.3, majore: 18.36, minore: 10.71 }, 2: { reference: 12.6, majore: 15.12, minore: 8.82 }, 3: { reference: 11.1, majore: 13.32, minore: 7.77 }, 4: { reference: 10.1, majore: 12.12, minore: 7.07 } },
+        '1971_1990': { 1: { reference: 14.9, majore: 17.88, minore: 10.43 }, 2: { reference: 12.3, majore: 14.76, minore: 8.61 }, 3: { reference: 10.9, majore: 13.08, minore: 7.63 }, 4: { reference: 9.9, majore: 11.88, minore: 6.93 } },
+        '1991_2005': { 1: { reference: 15.9, majore: 19.08, minore: 11.13 }, 2: { reference: 13.1, majore: 15.72, minore: 9.17 }, 3: { reference: 11.6, majore: 13.92, minore: 8.12 }, 4: { reference: 10.5, majore: 12.6, minore: 7.35 } },
+        apres_2005:  { 1: { reference: 18.7, majore: 22.44, minore: 13.09 }, 2: { reference: 15.3, majore: 18.36, minore: 10.71 }, 3: { reference: 13.4, majore: 16.08, minore: 9.38 }, 4: { reference: 12.1, majore: 14.52, minore: 8.47 } },
+      },
+    },
+    bordeaux_sud: {
+      vide: {
+        avant_1946:  { 1: { reference: 14.0, majore: 16.8, minore: 9.8 }, 2: { reference: 11.5, majore: 13.8, minore: 8.05 }, 3: { reference: 10.1, majore: 12.12, minore: 7.07 }, 4: { reference: 9.1, majore: 10.92, minore: 6.37 } },
+        '1946_1970': { 1: { reference: 11.9, majore: 14.28, minore: 8.33 }, 2: { reference: 9.9, majore: 11.88, minore: 6.93 }, 3: { reference: 8.7, majore: 10.44, minore: 6.09 }, 4: { reference: 7.9, majore: 9.48, minore: 5.53 } },
+        '1971_1990': { 1: { reference: 11.6, majore: 13.92, minore: 8.12 }, 2: { reference: 9.6, majore: 11.52, minore: 6.72 }, 3: { reference: 8.5, majore: 10.2, minore: 5.95 }, 4: { reference: 7.7, majore: 9.24, minore: 5.39 } },
+        '1991_2005': { 1: { reference: 12.3, majore: 14.76, minore: 8.61 }, 2: { reference: 10.2, majore: 12.24, minore: 7.14 }, 3: { reference: 9.1, majore: 10.92, minore: 6.37 }, 4: { reference: 8.2, majore: 9.84, minore: 5.74 } },
+        apres_2005:  { 1: { reference: 14.5, majore: 17.4, minore: 10.15 }, 2: { reference: 11.9, majore: 14.28, minore: 8.33 }, 3: { reference: 10.5, majore: 12.6, minore: 7.35 }, 4: { reference: 9.5, majore: 11.4, minore: 6.65 } },
+      },
+      meuble: {
+        avant_1946:  { 1: { reference: 15.9, majore: 19.08, minore: 11.13 }, 2: { reference: 13.1, majore: 15.72, minore: 9.17 }, 3: { reference: 11.5, majore: 13.8, minore: 8.05 }, 4: { reference: 10.3, majore: 12.36, minore: 7.21 } },
+        '1946_1970': { 1: { reference: 13.5, majore: 16.2, minore: 9.45 }, 2: { reference: 11.2, majore: 13.44, minore: 7.84 }, 3: { reference: 9.9, majore: 11.88, minore: 6.93 }, 4: { reference: 9.0, majore: 10.8, minore: 6.3 } },
+        '1971_1990': { 1: { reference: 13.2, majore: 15.84, minore: 9.24 }, 2: { reference: 10.9, majore: 13.08, minore: 7.63 }, 3: { reference: 9.7, majore: 11.64, minore: 6.79 }, 4: { reference: 8.7, majore: 10.44, minore: 6.09 } },
+        '1991_2005': { 1: { reference: 14.0, majore: 16.8, minore: 9.8 }, 2: { reference: 11.6, majore: 13.92, minore: 8.12 }, 3: { reference: 10.3, majore: 12.36, minore: 7.21 }, 4: { reference: 9.3, majore: 11.16, minore: 6.51 } },
+        apres_2005:  { 1: { reference: 16.5, majore: 19.8, minore: 11.55 }, 2: { reference: 13.5, majore: 16.2, minore: 9.45 }, 3: { reference: 11.9, majore: 14.28, minore: 8.33 }, 4: { reference: 10.8, majore: 12.96, minore: 7.56 } },
+      },
+    },
+    bordeaux_nord: {
+      vide: {
+        avant_1946:  { 1: { reference: 13.2, majore: 15.84, minore: 9.24 }, 2: { reference: 10.8, majore: 12.96, minore: 7.56 }, 3: { reference: 9.5, majore: 11.4, minore: 6.65 }, 4: { reference: 8.6, majore: 10.32, minore: 6.02 } },
+        '1946_1970': { 1: { reference: 11.2, majore: 13.44, minore: 7.84 }, 2: { reference: 9.3, majore: 11.16, minore: 6.51 }, 3: { reference: 8.2, majore: 9.84, minore: 5.74 }, 4: { reference: 7.5, majore: 9.0, minore: 5.25 } },
+        '1971_1990': { 1: { reference: 10.9, majore: 13.08, minore: 7.63 }, 2: { reference: 9.1, majore: 10.92, minore: 6.37 }, 3: { reference: 8.0, majore: 9.6, minore: 5.6 }, 4: { reference: 7.3, majore: 8.76, minore: 5.11 } },
+        '1991_2005': { 1: { reference: 11.6, majore: 13.92, minore: 8.12 }, 2: { reference: 9.6, majore: 11.52, minore: 6.72 }, 3: { reference: 8.5, majore: 10.2, minore: 5.95 }, 4: { reference: 7.8, majore: 9.36, minore: 5.46 } },
+        apres_2005:  { 1: { reference: 13.6, majore: 16.32, minore: 9.52 }, 2: { reference: 11.2, majore: 13.44, minore: 7.84 }, 3: { reference: 9.9, majore: 11.88, minore: 6.93 }, 4: { reference: 9.0, majore: 10.8, minore: 6.3 } },
+      },
+      meuble: {
+        avant_1946:  { 1: { reference: 15.0, majore: 18.0, minore: 10.5 }, 2: { reference: 12.3, majore: 14.76, minore: 8.61 }, 3: { reference: 10.8, majore: 12.96, minore: 7.56 }, 4: { reference: 9.8, majore: 11.76, minore: 6.86 } },
+        '1946_1970': { 1: { reference: 12.7, majore: 15.24, minore: 8.89 }, 2: { reference: 10.6, majore: 12.72, minore: 7.42 }, 3: { reference: 9.3, majore: 11.16, minore: 6.51 }, 4: { reference: 8.5, majore: 10.2, minore: 5.95 } },
+        '1971_1990': { 1: { reference: 12.4, majore: 14.88, minore: 8.68 }, 2: { reference: 10.3, majore: 12.36, minore: 7.21 }, 3: { reference: 9.1, majore: 10.92, minore: 6.37 }, 4: { reference: 8.3, majore: 9.96, minore: 5.81 } },
+        '1991_2005': { 1: { reference: 13.2, majore: 15.84, minore: 9.24 }, 2: { reference: 10.9, majore: 13.08, minore: 7.63 }, 3: { reference: 9.7, majore: 11.64, minore: 6.79 }, 4: { reference: 8.9, majore: 10.68, minore: 6.23 } },
+        apres_2005:  { 1: { reference: 15.4, majore: 18.48, minore: 10.78 }, 2: { reference: 12.7, majore: 15.24, minore: 8.89 }, 3: { reference: 11.2, majore: 13.44, minore: 7.84 }, 4: { reference: 10.2, majore: 12.24, minore: 7.14 } },
+      },
+    },
+    bordeaux_ouest: {
+      vide: {
+        avant_1946:  { 1: { reference: 14.8, majore: 17.76, minore: 10.36 }, 2: { reference: 12.1, majore: 14.52, minore: 8.47 }, 3: { reference: 10.6, majore: 12.72, minore: 7.42 }, 4: { reference: 9.6, majore: 11.52, minore: 6.72 } },
+        '1946_1970': { 1: { reference: 12.5, majore: 15.0, minore: 8.75 }, 2: { reference: 10.3, majore: 12.36, minore: 7.21 }, 3: { reference: 9.2, majore: 11.04, minore: 6.44 }, 4: { reference: 8.3, majore: 9.96, minore: 5.81 } },
+        '1971_1990': { 1: { reference: 12.2, majore: 14.64, minore: 8.54 }, 2: { reference: 10.1, majore: 12.12, minore: 7.07 }, 3: { reference: 9.0, majore: 10.8, minore: 6.3 }, 4: { reference: 8.1, majore: 9.72, minore: 5.67 } },
+        '1991_2005': { 1: { reference: 13.0, majore: 15.6, minore: 9.1 }, 2: { reference: 10.7, majore: 12.84, minore: 7.49 }, 3: { reference: 9.5, majore: 11.4, minore: 6.65 }, 4: { reference: 8.6, majore: 10.32, minore: 6.02 } },
+        apres_2005:  { 1: { reference: 15.2, majore: 18.24, minore: 10.64 }, 2: { reference: 12.5, majore: 15.0, minore: 8.75 }, 3: { reference: 11.0, majore: 13.2, minore: 7.7 }, 4: { reference: 10.0, majore: 12.0, minore: 7.0 } },
+      },
+      meuble: {
+        avant_1946:  { 1: { reference: 16.8, majore: 20.16, minore: 11.76 }, 2: { reference: 13.7, majore: 16.44, minore: 9.59 }, 3: { reference: 12.0, majore: 14.4, minore: 8.4 }, 4: { reference: 10.9, majore: 13.08, minore: 7.63 } },
+        '1946_1970': { 1: { reference: 14.2, majore: 17.04, minore: 9.94 }, 2: { reference: 11.7, majore: 14.04, minore: 8.19 }, 3: { reference: 10.5, majore: 12.6, minore: 7.35 }, 4: { reference: 9.4, majore: 11.28, minore: 6.58 } },
+        '1971_1990': { 1: { reference: 13.9, majore: 16.68, minore: 9.73 }, 2: { reference: 11.5, majore: 13.8, minore: 8.05 }, 3: { reference: 10.2, majore: 12.24, minore: 7.14 }, 4: { reference: 9.2, majore: 11.04, minore: 6.44 } },
+        '1991_2005': { 1: { reference: 14.8, majore: 17.76, minore: 10.36 }, 2: { reference: 12.1, majore: 14.52, minore: 8.47 }, 3: { reference: 10.8, majore: 12.96, minore: 7.56 }, 4: { reference: 9.8, majore: 11.76, minore: 6.86 } },
+        apres_2005:  { 1: { reference: 17.3, majore: 20.76, minore: 12.11 }, 2: { reference: 14.2, majore: 17.04, minore: 9.94 }, 3: { reference: 12.5, majore: 15.0, minore: 8.75 }, 4: { reference: 11.4, majore: 13.68, minore: 7.98 } },
+      },
+    },
+  },
+};
+
 // ─── Index des villes ──────────────────────────────────────────────────────────
 export const VILLES_ENCADREMENT: Record<string, VilleEncadrement> = {
   lyon: LYON,
   paris: PARIS,
+  lille: LILLE,
+  bordeaux: BORDEAUX,
 };
 
 // ─── Détection ville depuis adresse ───────────────────────────────────────────
@@ -254,6 +418,8 @@ export function detecterVilleEncadrement(adresse: string): string | null {
   const lower = adresse.toLowerCase();
   if (lower.includes('paris') || /\b75\d{3}\b/.test(adresse)) return 'paris';
   if (lower.includes('lyon') || lower.includes('villeurbanne') || /\b69\d{3}\b/.test(adresse)) return 'lyon';
+  if (lower.includes('lille') || lower.includes('hellemmes') || lower.includes('lomme') || /\b59\d{3}\b/.test(adresse)) return 'lille';
+  if (lower.includes('bordeaux') || /\b33\d{3}\b/.test(adresse)) return 'bordeaux';
   return null;
 }
 
@@ -304,6 +470,47 @@ export function calculerPlafondLoyer(params: {
     loyerMinTotal: Math.round(refParM2.minore * surface * 100) / 100,
     encadre: ville.active,
   };
+}
+
+export interface CheckEncadrementResult {
+  encadre: boolean;
+  plafond?: number;
+  alerte?: string;
+}
+
+export function checkEncadrementLoyer(params: {
+  adresse: string;
+  loyer: number;
+  surface: number;
+  type: TypeLocation;
+  nbPieces: NbPieces;
+  zoneCode?: string;
+  epoque?: EpoqueConstruction;
+}): CheckEncadrementResult {
+  const villeKey = detecterVilleEncadrement(params.adresse);
+  if (!villeKey) return { encadre: false };
+
+  const ville = VILLES_ENCADREMENT[villeKey];
+  if (!ville.active) return { encadre: false };
+
+  const zoneCode = params.zoneCode || ville.zones[0]?.code;
+  const epoque = params.epoque || 'apres_2005';
+  if (!zoneCode) return { encadre: false };
+
+  const refParM2 = ville.data[zoneCode]?.[params.type]?.[epoque]?.[params.nbPieces];
+  if (!refParM2) return { encadre: true };
+
+  const plafond = Math.round(refParM2.majore * params.surface * 100) / 100;
+
+  if (params.loyer > plafond) {
+    return {
+      encadre: true,
+      plafond,
+      alerte: `Loyer supérieur au plafond légal d'encadrement à ${ville.nom} : ${params.loyer} € > ${plafond} € (${refParM2.majore} €/m² × ${params.surface} m²)`,
+    };
+  }
+
+  return { encadre: true, plafond };
 }
 
 export const EPOQUE_LABELS: Record<EpoqueConstruction, string> = {

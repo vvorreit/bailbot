@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Calendar, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Loader2, CalendarX } from "lucide-react";
 import { getAgendaEvents, type AgendaEvent } from "@/app/actions/agenda";
 
 const JOURS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
@@ -158,6 +158,14 @@ export default function AgendaPage() {
           </div>
         )}
       </div>
+
+      {!loading && events.length === 0 && (
+        <div className="mt-6 bg-white rounded-2xl border border-slate-100 p-8 text-center">
+          <CalendarX className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+          <p className="text-sm font-bold text-slate-600 mb-1">Aucun événement à venir</p>
+          <p className="text-xs text-slate-400">Les échéances de baux, diagnostics et révisions de loyer apparaîtront ici automatiquement.</p>
+        </div>
+      )}
     </div>
   );
 }
