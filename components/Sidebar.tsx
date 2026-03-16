@@ -13,7 +13,7 @@ import {
 import { createPortalSession } from "@/app/dashboard/actions";
 import MessageTemplates from "@/components/MessageTemplates";
 import RevisionLoyerModal from "@/components/RevisionLoyerModal";
-import { listerImpayes } from "@/lib/db-local";
+import { getNbImpayes } from "@/app/actions/stats-nav";
 import { hasAccess, METIER_LABELS } from "@/lib/features";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { LucideIcon } from "lucide-react";
@@ -47,7 +47,7 @@ export default function Sidebar() {
   }, []);
 
   useEffect(() => {
-    listerImpayes().then((list) => setNbImpayes(list.length)).catch(() => {});
+    getNbImpayes().then(setNbImpayes).catch(() => {});
   }, []);
 
   const toggleCollapse = useCallback(() => {
@@ -79,9 +79,10 @@ export default function Sidebar() {
 
   const navGroups: NavGroup[] = [
     {
-      label: "ANALYSE",
+      label: "CANDIDATURES",
       items: [
         { href: "/dashboard", label: "Analyser un dossier", icon: FileSearch, show: true },
+        { href: "/dashboard/depot", label: "Tous les candidats", icon: Users, show: true },
       ],
     },
     {
@@ -97,7 +98,7 @@ export default function Sidebar() {
         { href: "/dashboard/bails", label: "Baux actifs", icon: FileSignature, show: hasAccess(metier, "VIE_DU_BAIL") },
         { href: "/dashboard/impayes", label: "Paiements & impayes", icon: Banknote, badge: nbImpayes, show: hasAccess(metier, "DASHBOARD_IMPAYES") || hasAccess(metier, "SUIVI_PAIEMENTS") },
         { href: "/dashboard/comptabilite", label: "Comptabilite", icon: Calculator, show: hasAccess(metier, "COMPTABILITE_FISCALE") },
-        { href: "/dashboard/depot", label: "Candidatures", icon: Users, show: true },
+
         { href: "/dashboard/espaces-locataires", label: "Demandes locataires", icon: MessageSquare, show: hasAccess(metier, "ESPACE_LOCATAIRE") },
       ],
     },
