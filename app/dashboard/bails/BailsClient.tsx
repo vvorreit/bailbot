@@ -16,8 +16,10 @@ import {
   FileX,
   Share2,
   Check,
+  TrendingUp,
 } from 'lucide-react';
 import { genererBailPDF, type DonneesBail } from '@/lib/generateur-bail';
+import IRLRevisionBailModal from '@/components/IRLRevisionBailModal';
 import {
   envoyerLienProprietaire,
   getTokenInfo,
@@ -304,6 +306,13 @@ function BailCard({
   const alertesActives = bail.alertes.filter((a) => !a.traitee).length;
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [showClotureModal, setShowClotureModal] = useState(false);
+  const [showIRLModal, setShowIRLModal] = useState(false);
+
+  const irlDaysLeft = useMemo(() => {
+    const now = new Date();
+    const rev = new Date(bail.dateProchRevision);
+    return Math.ceil((rev.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  }, [bail.dateProchRevision]);
   const [pdfForm, setPdfForm] = useState({
     nomBailleur: '',
     adresseBailleur: '',
@@ -371,6 +380,11 @@ function BailCard({
               </span>
             )}
             <ConformiteBadge report={bail.conformiteReport ?? null} />
+            {irlDaysLeft >= 0 && irlDaysLeft <= 30 && bail.statut === 'ACTIF' && (
+              <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-600">
+                IRL {irlDaysLeft}j
+              </span>
+            )}
           </div>
           <p className="text-sm text-slate-500 truncate">{bienLabel}</p>
           <div className="flex items-center gap-4 mt-2 text-xs text-slate-400">
@@ -459,6 +473,13 @@ function BailCard({
             </button>
             {(bail.statut === 'ACTIF' || bail.statut === 'PREAVIS') && (
               <>
+                <button
+                  onClick={() => setShowIRLModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-bold rounded-xl transition-colors border border-indigo-200"
+                >
+                  <TrendingUp className="w-4 h-4" />
+                  Révision IRL
+                </button>
                 <button
                   onClick={() => setShowClotureModal(true)}
                   className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-bold rounded-xl transition-colors border border-red-200"
@@ -555,6 +576,17 @@ function BailCard({
           onClose={() => setShowClotureModal(false)}
           onClotured={() => {
             setShowClotureModal(false);
+            onReload?.();
+          }}
+        />
+      )}
+
+      {/* Modal révision IRL */}
+      {showIRLModal && (
+        <IRLRevisionBailModal
+          bailId={bail.id}
+          onClose={() => setShowIRLModal(false)}
+          onApplied={() => {
             onReload?.();
           }}
         />

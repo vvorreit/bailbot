@@ -251,6 +251,12 @@ model BailActif {
   fraisGestionPct     Decimal?    @default(0) @db.Decimal(5, 2)
   trancheMarginalePct Decimal?    @default(30) @db.Decimal(5, 2)
 
+  // Indexation IRL automatique
+  indexationIRLActive       Boolean   @default(false)
+  indexationIRLJoursAvant   Int       @default(30)
+  dernierIRLApplique        Float?
+  derniereLoyerRevise       DateTime?
+
   // Depot de garantie (restitution)
   depositGarantieRestitue        Float?
   depositGarantieRestitutionDate DateTime?

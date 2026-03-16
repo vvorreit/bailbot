@@ -1,0 +1,5 @@
+-- AlterTable: Ajout champs indexation IRL sur BailActif
+ALTER TABLE "BailActif" ADD COLUMN IF NOT EXISTS "indexationIRLActive" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "BailActif" ADD COLUMN IF NOT EXISTS "indexationIRLJoursAvant" INTEGER NOT NULL DEFAULT 30;
+ALTER TABLE "BailActif" ADD COLUMN IF NOT EXISTS "dernierIRLApplique" DOUBLE PRECISION;
+ALTER TABLE "BailActif" ADD COLUMN IF NOT EXISTS "derniereLoyerRevise" TIMESTAMP;
