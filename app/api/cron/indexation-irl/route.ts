@@ -3,10 +3,15 @@ import { prisma } from "@/lib/db";
 import { sendMail, smtpConfigured } from "@/lib/mailer";
 import { calculerRevisionLoyer, IRL_DERNIERE_MAJ } from "@/lib/revision-loyer";
 import { logCronStart, logCronSuccess, logCronFailure } from "@/lib/cron-logger";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
+  if (!isFeatureEnabled("FEATURE_INDEXATION_IRL")) {
+    return NextResponse.json({ skipped: true, reason: "FEATURE_INDEXATION_IRL disabled" });
+  }
+
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {

@@ -99,3 +99,28 @@ export async function triggerCron(cronName: string): Promise<{ ok: boolean; erro
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
 }
+
+export async function getFeatureFlags(): Promise<Record<string, boolean>> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user || (session.user as any).role !== "ADMIN") {
+    throw new Error("Acces refuse");
+  }
+
+  const { getAllFeatureFlags } = await import("@/lib/feature-flags");
+  return getAllFeatureFlags();
+}
+
+export async function toggleFeatureFlag(
+  flag: string,
+  enabled: boolean
+): Promise<{ ok: boolean }> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user || (session.user as any).role !== "ADMIN") {
+    throw new Error("Acces refuse");
+  }
+
+  /* Set the env var in-process (takes effect for this Node process) */
+  process.env[flag] = enabled ? "true" : "false";
+
+  return { ok: true };
+}

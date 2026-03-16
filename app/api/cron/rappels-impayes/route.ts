@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendMail } from "@/lib/mailer";
 import { logCronStart, logCronSuccess, logCronFailure } from "@/lib/cron-logger";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 export async function GET(req: NextRequest) {
+  if (!isFeatureEnabled("FEATURE_RAPPELS_IMPAYES")) {
+    return NextResponse.json({ skipped: true, reason: "FEATURE_RAPPELS_IMPAYES disabled" });
+  }
+
   if (process.env.NODE_ENV === "production") {
     const auth = req.headers.get("authorization");
     if (auth !== `Bearer ${process.env.CRON_SECRET}`) {

@@ -4,8 +4,13 @@ import { sendMail } from "@/lib/mailer";
 import { genererQuittancePDF } from "@/lib/generateur-quittance";
 import { generateQuittanceNumero } from "@/lib/quittance-numero";
 import { logCronStart, logCronSuccess, logCronFailure } from "@/lib/cron-logger";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 export async function GET(req: NextRequest) {
+  if (!isFeatureEnabled("FEATURE_QUITTANCES_AUTO")) {
+    return NextResponse.json({ skipped: true, reason: "FEATURE_QUITTANCES_AUTO disabled" });
+  }
+
   if (process.env.NODE_ENV === "production") {
     const auth = req.headers.get("authorization");
     if (auth !== `Bearer ${process.env.CRON_SECRET}`) {

@@ -3,8 +3,13 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
 import { executerPurgeRGPD } from '@/lib/rgpd-purge';
 import { logCronStart, logCronSuccess, logCronFailure } from '@/lib/cron-logger';
+import { isFeatureEnabled } from '@/lib/feature-flags';
 
 export async function GET(req: NextRequest) {
+  if (!isFeatureEnabled('FEATURE_RGPD_PURGE')) {
+    return NextResponse.json({ skipped: true, reason: 'FEATURE_RGPD_PURGE disabled' });
+  }
+
   const secret = req.nextUrl.searchParams.get('secret');
   if (process.env.CRON_SECRET && secret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
