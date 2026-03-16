@@ -9,8 +9,9 @@ const CACHE_DUREE_MS = 30 * 24 * 60 * 60 * 1000; /* 30 jours */
 
 async function getUser() {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.email) throw new Error("Non autorisé");
-  const user = await prisma.user.findUnique({ where: { email: session.user.email } });
+  const userId = (session?.user as any)?.id;
+  if (!userId) throw new Error("Non autorisé");
+  const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw new Error("Utilisateur introuvable");
   return user;
 }
