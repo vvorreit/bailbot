@@ -292,11 +292,11 @@ export default function ParticulierClient() {
                   ))}
                 </ul>
                 <Link
-                  href="/agence"
-                  aria-label="Voir les détails du plan Pro Agence BailBot"
+                  href="/dashboard"
+                  aria-label="Essayer le plan Premium BailBot"
                   className="w-full py-4 bg-slate-100 text-slate-700 font-black rounded-2xl hover:bg-slate-200 transition-all text-center uppercase tracking-widest text-xs"
                 >
-                  Voir les détails →
+                  Essayer Premium →
                 </Link>
               </div>
             </div>
@@ -335,28 +335,10 @@ export default function ParticulierClient() {
           </div>
         </section>
 
-        {/* Cross-sell — Vous n'êtes pas particulier ? */}
-        <section className="py-16 bg-slate-50 border-t border-slate-100 px-6" aria-label="Autres profils BailBot">
+        {/* Legal links */}
+        <section className="py-16 bg-slate-50 border-t border-slate-100 px-6" aria-label="Liens utiles">
           <div className="max-w-4xl mx-auto text-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-4">Autre profil ?</p>
-            <h2 className="text-2xl font-black text-slate-900 mb-8">Vous n'êtes pas propriétaire particulier ?</h2>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/agence"
-                aria-label="Découvrir BailBot pour les agences immobilières"
-                className="px-8 py-4 bg-white border border-slate-200 rounded-2xl font-black text-sm uppercase tracking-widest text-slate-700 hover:border-indigo-300 hover:text-indigo-700 transition-all"
-              >
-                Je suis une agence immobilière →
-              </Link>
-              <Link
-                href="/pro"
-                aria-label="Découvrir BailBot pour les administrateurs de biens et syndics"
-                className="px-8 py-4 bg-white border border-slate-200 rounded-2xl font-black text-sm uppercase tracking-widest text-slate-700 hover:border-violet-300 hover:text-violet-700 transition-all"
-              >
-                Je suis administrateur de biens →
-              </Link>
-            </div>
-            <nav aria-label="Liens légaux et accueil" className="mt-8 flex flex-wrap gap-6 justify-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+            <nav aria-label="Liens légaux et accueil" className="flex flex-wrap gap-6 justify-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
               <Link href="/" className="hover:text-slate-600 transition-colors">Accueil</Link>
               <Link href="/legal/cgu" className="hover:text-slate-600 transition-colors">CGU</Link>
               <Link href="/legal/confidentialite" className="hover:text-slate-600 transition-colors">Confidentialité</Link>
@@ -384,12 +366,6 @@ export default function ParticulierClient() {
           </Link>
           <nav aria-label="Liens utiles BailBot Particulier" className="mt-16 pt-10 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex flex-wrap gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-              <Link href="/agence" className="hover:text-white transition-colors">
-                BailBot Agence
-              </Link>
-              <Link href="/pro" className="hover:text-white transition-colors">
-                BailBot Pro (ADB)
-              </Link>
               <Link href="/legal/confidentialite" className="hover:text-white transition-colors">
                 Confidentialité
               </Link>

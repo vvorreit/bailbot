@@ -187,8 +187,6 @@ model FichierChiffre {
 
 enum Metier {
   PROPRIETAIRE
-  AGENCE
-  GESTIONNAIRE
 }
 
 // ─── Relances Candidat ────────────────────────────────────────────────────────

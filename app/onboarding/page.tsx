@@ -15,8 +15,6 @@ import {
   markOnboardingComplete,
   checkAndCompleteOnboarding,
 } from "@/app/actions/onboarding";
-import type { Metier } from "@prisma/client";
-
 const TOTAL_STEPS = 4;
 
 const STEP_CONFIG = [
@@ -24,12 +22,6 @@ const STEP_CONFIG = [
   { icon: Home, label: "Premier bien" },
   { icon: Users, label: "Locataire" },
   { icon: Sparkles, label: "Terminé" },
-];
-
-const METIER_OPTIONS: { value: Metier; icon: string; label: string; description: string }[] = [
-  { value: "PROPRIETAIRE", icon: "🏠", label: "Proprietaire bailleur", description: "Je gere mes propres biens en direct" },
-  { value: "AGENCE", icon: "🏢", label: "Agence / Mandataire", description: "Je gere des biens pour le compte de proprietaires" },
-  { value: "GESTIONNAIRE", icon: "⚖️", label: "Gestionnaire professionnel", description: "Administrateur de biens, syndic, notaire" },
 ];
 
 export default function OnboardingPage() {
@@ -42,7 +34,6 @@ export default function OnboardingPage() {
   const [checking, setChecking] = useState(true);
 
   // Step 1: Profil
-  const [metier, setMetier] = useState<Metier | null>(null);
   const [nom, setNom] = useState(session?.user?.name || "");
   const [telephone, setTelephone] = useState("");
   const [ville, setVille] = useState("");
@@ -83,10 +74,9 @@ export default function OnboardingPage() {
     setSaving(true);
     try {
       if (step === 1) {
-        if (!metier) { setError("Selectionnez un profil"); setSaving(false); return; }
         if (!nom.trim()) { setError("Le nom est requis"); setSaving(false); return; }
-        await saveOnboardingStep1(metier);
-        await updateSession({ metier });
+        await saveOnboardingStep1("PROPRIETAIRE");
+        await updateSession({ metier: "PROPRIETAIRE" });
         await saveOnboardingStep2({ name: nom.trim(), telephone: telephone.trim(), ville: ville.trim() });
         if (bailleurNom.trim() || bailleurAdresse.trim()) {
           await saveOnboardingStep3({ bailleurNom: bailleurNom.trim(), bailleurAdresse: bailleurAdresse.trim(), siret: siret.trim() });
@@ -220,26 +210,6 @@ export default function OnboardingPage() {
                 </div>
                 <p className="text-sm text-slate-500 mb-5">Commençons par vous connaître.</p>
 
-                <div className="space-y-3 mb-5">
-                  {METIER_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => setMetier(opt.value)}
-                      className={`w-full flex items-start gap-4 px-4 py-3 rounded-xl border-2 transition-all text-left ${
-                        metier === opt.value
-                          ? "border-emerald-500 bg-emerald-50"
-                          : "border-slate-200 hover:border-slate-300"
-                      }`}
-                    >
-                      <span className="text-xl leading-none mt-0.5">{opt.icon}</span>
-                      <div>
-                        <p className="text-sm font-bold text-slate-900">{opt.label}</p>
-                        <p className="text-xs text-slate-500">{opt.description}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-
                 <div className="space-y-3">
                   <Input label="Nom complet *" value={nom} onChange={(e) => setNom(e.target.value)} placeholder="Jean Dupont" />
                   <div className="grid grid-cols-2 gap-3">
@@ -248,9 +218,6 @@ export default function OnboardingPage() {
                   </div>
                   <Input label="Nom du bailleur" value={bailleurNom} onChange={(e) => setBailleurNom(e.target.value)} placeholder="Jean Dupont / SCI Dupont" />
                   <Input label="Adresse du bailleur" value={bailleurAdresse} onChange={(e) => setBailleurAdresse(e.target.value)} placeholder="12 rue de la Paix, 75002 Paris" />
-                  {metier !== "PROPRIETAIRE" && metier && (
-                    <Input label="SIRET" value={siret} onChange={(e) => setSiret(e.target.value)} placeholder="123 456 789 00010" />
-                  )}
                 </div>
               </>
             )}

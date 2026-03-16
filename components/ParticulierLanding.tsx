@@ -280,10 +280,10 @@ export default function ParticulierLanding() {
                 ))}
               </ul>
               <Link
-                href="/agence"
+                href="/dashboard"
                 className="w-full py-4 bg-slate-100 text-slate-700 font-black rounded-2xl hover:bg-slate-200 transition-all text-center uppercase tracking-widest text-xs"
               >
-                Voir les détails →
+                Essayer Premium →
               </Link>
             </div>
           </div>
@@ -322,18 +322,6 @@ export default function ParticulierLanding() {
         </div>
       </section>
 
-      {/* Interlinking */}
-      <section className="py-10 bg-slate-50 border-t border-slate-100 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <p className="text-sm text-slate-500 font-medium">
-            Vous n'êtes pas propriétaire bailleur ?{" "}
-            <Link href="/agence" className="text-indigo-600 hover:underline font-bold">Agence ou mandataire →</Link>
-            {" "}|{" "}
-            <Link href="/pro" className="text-violet-600 hover:underline font-bold">Gestionnaire pro (ADB) →</Link>
-          </p>
-        </div>
-      </section>
-
       {/* Footer */}
       <footer className="bg-slate-900 text-white py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
@@ -351,12 +339,6 @@ export default function ParticulierLanding() {
           </Link>
           <div className="mt-16 pt-10 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-              <Link href="/agence" className="hover:text-white transition-colors">
-                BailBot Agence
-              </Link>
-              <Link href="/pro" className="hover:text-white transition-colors">
-                BailBot Pro (ADB)
-              </Link>
               <Link href="/legal/confidentialite" className="hover:text-white transition-colors">
                 Confidentialité
               </Link>

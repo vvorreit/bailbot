@@ -89,7 +89,7 @@ function LandingContent() {
         <div className="max-w-6xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-[0.2em] mb-8">
             <Building2 className="w-3 h-3" />
-            L'assistant des gestionnaires locatifs
+            L'assistant des propriétaires bailleurs
           </div>
           <h1 className="text-5xl md:text-8xl font-black tracking-tight mb-8 leading-[0.95] text-slate-900">
             Traitez un dossier<br />locataire en{" "}
@@ -122,7 +122,7 @@ function LandingContent() {
       <section className="py-14 bg-white border-y border-slate-100 px-6">
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {[
-            { value: "35 000+", label: "Gestionnaires en France" },
+            { value: "10 000+", label: "Propriétaires en France" },
             { value: "45 min", label: "→ 5 min par dossier" },
             { value: "0", label: "Donnée stockée" },
             { value: "5", label: "Types de documents" },
@@ -318,20 +318,20 @@ function LandingContent() {
             </span>
           </div>
 
-          {/* Individual Plans */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto mb-16 items-stretch">
-            
+          {/* Pricing Plans */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto items-stretch">
+
             <div className="p-10 rounded-[40px] border border-slate-100 bg-white flex flex-col group hover:shadow-2xl transition-all duration-500">
               <h3 className="text-2xl font-black mb-2 uppercase tracking-tight">
-                Solo <span className="text-emerald-600">Gestionnaire</span>
+                Solo <span className="text-emerald-600">Bailleur</span>
               </h3>
-              <p className="text-slate-500 text-sm mb-8 font-medium italic">Un gestionnaire, un accès, illimité.</p>
+              <p className="text-slate-500 text-sm mb-8 font-medium italic">Un propriétaire, un accès, illimité.</p>
               <div className="mb-8">
                 <div className="text-5xl font-black whitespace-nowrap">
-                  {price(59).label}
-                  <span className="text-lg text-slate-400 font-bold">{price(59).suffix}</span>
+                  {price(29).label}
+                  <span className="text-lg text-slate-400 font-bold">{price(29).suffix}</span>
                 </div>
-                {isAnnual && <div className="text-xs text-emerald-600 font-bold mt-1">{price(59).annual}</div>}
+                {isAnnual && <div className="text-xs text-emerald-600 font-bold mt-1">{price(29).annual}</div>}
               </div>
               <ul className="space-y-4 mb-10 flex-grow">
                 <li className="flex items-center gap-3 text-sm font-bold text-slate-700">
@@ -344,7 +344,7 @@ function LandingContent() {
                   <CheckCircle className="w-5 h-5 text-emerald-600" /> CNI, Bulletins, Avis impo, RIB
                 </li>
                 <li className="flex items-center gap-3 text-sm font-bold text-slate-700">
-                  <CheckCircle className="w-5 h-5 text-emerald-600" /> Extension Chrome incluse
+                  <CheckCircle className="w-5 h-5 text-emerald-600" /> Bail ALUR + Quittances
                 </li>
               </ul>
               <Link
@@ -360,148 +360,40 @@ function LandingContent() {
                 Recommandé
               </div>
               <h3 className="text-3xl font-black mb-2 uppercase tracking-tight">
-                Agence <span className="text-emerald-600">Multi-postes</span>
+                Bailleur <span className="text-emerald-600">Premium</span>
               </h3>
               <p className="text-slate-500 text-sm mb-8 font-medium italic">
-                À partir de 3 utilisateurs. 49€/mois/utilisateur.
+                Gestion complète de vos biens locatifs.
               </p>
               <div className="mb-8">
                 <div className="text-5xl font-black whitespace-nowrap">
-                  {price(49).label}
-                  <span className="text-lg text-slate-400 font-bold">/user{price(49).suffix}</span>
+                  {price(59).label}
+                  <span className="text-lg text-slate-400 font-bold">{price(59).suffix}</span>
                 </div>
-                {isAnnual && <div className="text-xs text-emerald-600 font-bold mt-1">{price(49).annual}</div>}
-                <p className="text-slate-400 text-xs font-bold mt-1">Minimum 3 utilisateurs</p>
+                {isAnnual && <div className="text-xs text-emerald-600 font-bold mt-1">{price(59).annual}</div>}
               </div>
               <ul className="space-y-4 mb-10 flex-grow">
                 <li className="flex items-center gap-3 text-sm font-black text-slate-800">
                   <CheckCircle className="w-5 h-5 text-emerald-600" /> Tout le plan Solo
                 </li>
                 <li className="flex items-center gap-3 text-sm font-black text-slate-800">
-                  <CheckCircle className="w-5 h-5 text-emerald-600" /> Gestion d'équipe centralisée
+                  <CheckCircle className="w-5 h-5 text-emerald-600" /> Comptabilité fiscale
+                </li>
+                <li className="flex items-center gap-3 text-sm font-black text-slate-800">
+                  <CheckCircle className="w-5 h-5 text-emerald-600" /> Révision IRL automatique
                 </li>
                 <li className="flex items-center gap-3 text-sm font-black text-slate-800">
                   <CheckCircle className="w-5 h-5 text-emerald-600" /> Support prioritaire
-                </li>
-                <li className="flex items-center gap-3 text-sm font-black text-slate-800">
-                  <CheckCircle className="w-5 h-5 text-emerald-600" /> Onboarding personnalisé
                 </li>
               </ul>
               <Link
                 href="/dashboard"
                 className="w-full py-5 bg-emerald-600 text-white font-black rounded-[24px] hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200 flex items-center justify-center gap-3 uppercase tracking-widest text-sm"
               >
-                Essayer Agence
+                Essayer Premium
               </Link>
             </div>
           </div>
-
-          {/* Team Plans */}
-          <div className="mt-8">
-            <div className="text-center mb-10">
-              <span className="inline-block px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-[0.2em]">
-                Pour les équipes
-              </span>
-              <h4 className="text-2xl font-black tracking-tight text-slate-900 mt-4">
-                Un abonnement, toute l'équipe.
-              </h4>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-              <div className="p-10 rounded-[40px] border border-slate-100 bg-white flex flex-col group hover:shadow-2xl transition-all duration-500">
-                <div className="inline-flex items-center gap-2 mb-4">
-                  <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-full uppercase tracking-widest">
-                    3 postes
-                  </span>
-                </div>
-                <h3 className="text-2xl font-black mb-2 uppercase tracking-tight">
-                  Teams <span className="text-emerald-600">Trio</span>
-                </h3>
-                <p className="text-slate-500 text-sm mb-6 font-medium italic">Idéal pour une petite agence.</p>
-                <div className="mb-8">
-                  <div className="text-5xl font-black whitespace-nowrap">
-                    {price(149).label}
-                    <span className="text-lg text-slate-400 font-bold">{price(149).suffix}</span>
-                  </div>
-                  {isAnnual && <div className="text-xs text-emerald-600 font-bold mt-1">{price(149).annual}</div>}
-                  <p className="text-slate-400 text-xs font-bold mt-1">soit ~50€/poste/mois</p>
-                </div>
-                <ul className="space-y-4 mb-10 flex-grow">
-                  <li className="flex items-center gap-3 text-sm font-bold text-slate-700">
-                    <CheckCircle className="w-5 h-5 text-emerald-600" /> 3 postes inclus
-                  </li>
-                  <li className="flex items-center gap-3 text-sm font-bold text-slate-700">
-                    <CheckCircle className="w-5 h-5 text-emerald-600" /> Tableau de bord partagé
-                  </li>
-                  <li className="flex items-center gap-3 text-sm font-bold text-slate-700">
-                    <CheckCircle className="w-5 h-5 text-emerald-600" /> Support prioritaire
-                  </li>
-                </ul>
-                <Link
-                  href="/dashboard"
-                  className="w-full py-4 bg-emerald-600 text-white font-black rounded-2xl hover:bg-emerald-700 transition-all text-center uppercase tracking-widest text-xs"
-                >
-                  Essayer en équipe
-                </Link>
-              </div>
-
-              <div className="p-10 rounded-[40px] border-2 border-emerald-300 bg-white flex flex-col group hover:shadow-2xl transition-all duration-500 relative">
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-[0.2em] px-6 py-2 rounded-full shadow-lg">
-                  Meilleur rapport
-                </div>
-                <div className="inline-flex items-center gap-2 mb-4">
-                  <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-full uppercase tracking-widest">
-                    5 postes
-                  </span>
-                </div>
-                <h3 className="text-2xl font-black mb-2 uppercase tracking-tight">
-                  Teams <span className="text-emerald-600">Pro</span>
-                </h3>
-                <p className="text-slate-500 text-sm mb-6 font-medium italic">
-                  Pour les agences ou cabinets multi-sites.
-                </p>
-                <div className="mb-8">
-                  <div className="text-5xl font-black whitespace-nowrap">
-                    {price(249).label}
-                    <span className="text-lg text-slate-400 font-bold">{price(249).suffix}</span>
-                  </div>
-                  {isAnnual && <div className="text-xs text-emerald-600 font-bold mt-1">{price(249).annual}</div>}
-                  <p className="text-slate-400 text-xs font-bold mt-1">soit ~50€/poste/mois</p>
-                </div>
-                <ul className="space-y-4 mb-10 flex-grow">
-                  <li className="flex items-center gap-3 text-sm font-bold text-slate-700">
-                    <CheckCircle className="w-5 h-5 text-emerald-600" /> 5 postes inclus
-                  </li>
-                  <li className="flex items-center gap-3 text-sm font-bold text-slate-700">
-                    <CheckCircle className="w-5 h-5 text-emerald-600" /> Tableau de bord partagé
-                  </li>
-                  <li className="flex items-center gap-3 text-sm font-bold text-slate-700">
-                    <CheckCircle className="w-5 h-5 text-emerald-600" /> Support prioritaire dédié
-                  </li>
-                  <li className="flex items-center gap-3 text-sm font-bold text-slate-700">
-                    <CheckCircle className="w-5 h-5 text-emerald-600" /> Onboarding personnalisé
-                  </li>
-                </ul>
-                <Link
-                  href="/dashboard"
-                  className="w-full py-4 bg-emerald-600 text-white font-black rounded-2xl hover:bg-emerald-700 transition-all text-center uppercase tracking-widest text-xs shadow-xl shadow-emerald-100"
-                >
-                  Essayer Teams Pro
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* B2C Particulier CTA */}
-      <section className="py-8 bg-white px-6">
-        <div className="max-w-7xl mx-auto text-center">
-          <p className="text-slate-500 font-medium">
-            👤 Vous êtes propriétaire bailleur particulier ?{" "}
-            <Link href="/particulier" className="text-emerald-600 font-black hover:underline">
-              Découvrez BailBot Particulier →
-            </Link>
-          </p>
         </div>
       </section>
 
@@ -566,7 +458,7 @@ function LandingContent() {
               </Link>
             </div>
             <div className="text-slate-500 text-[10px] font-black uppercase tracking-widest">
-              © 2026 BailBot — Pour les gestionnaires locatifs
+              © 2026 BailBot — Pour les propriétaires bailleurs
             </div>
           </div>
         </div>

@@ -4,10 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { X, ChevronRight, GraduationCap } from "lucide-react";
 import { setMetier } from "@/app/dashboard/actions";
-import type { Metier } from "@prisma/client";
 
 const ONBOARDING_KEY = "bailbot_onboarding_done";
-const SIGNUP_METIER_KEY = "bailbot_signup_metier";
 
 interface Step {
   target: string;
@@ -54,27 +52,6 @@ const STEPS: Step[] = [
   },
 ];
 
-const METIER_OPTIONS: { value: Metier; icon: string; label: string; description: string }[] = [
-  {
-    value: "PROPRIETAIRE",
-    icon: "🏠",
-    label: "Propriétaire bailleur",
-    description: "Je gère mes propres biens en direct",
-  },
-  {
-    value: "AGENCE",
-    icon: "🏢",
-    label: "Agence / Mandataire",
-    description: "Je gère des biens pour le compte de propriétaires",
-  },
-  {
-    value: "GESTIONNAIRE",
-    icon: "⚖️",
-    label: "Gestionnaire professionnel",
-    description: "Administrateur de biens, syndic, notaire",
-  },
-];
-
 interface SpotlightRect {
   top: number;
   left: number;
@@ -114,17 +91,10 @@ export default function Onboarding() {
   const { data: session, update: updateSession } = useSession();
   const user = session?.user as any;
 
-  /* Phase 0 : sélection métier (bloquante) */
-  const [metierPhase, setMetierPhase] = useState(false);
+  /* Auto-set PROPRIETAIRE si pas de metier */
   const [metierSaving, setMetierSaving] = useState(false);
-  const [selectedMetier, setSelectedMetier] = useState<Metier | null>(() => {
-    if (typeof window === "undefined") return null;
-    const stored = localStorage.getItem(SIGNUP_METIER_KEY) as Metier | null;
-    const valid: Metier[] = ["PROPRIETAIRE", "AGENCE", "GESTIONNAIRE"];
-    return stored && valid.includes(stored) ? stored : null;
-  });
 
-  /* Phase 1 : tour guidé */
+  /* Tour guidé */
   const [active, setActive] = useState(false);
   const [step, setStep] = useState(0);
   const [spotlightRect, setSpotlightRect] = useState<SpotlightRect | null>(null);
@@ -133,7 +103,12 @@ export default function Onboarding() {
   useEffect(() => {
     if (!session) return;
     if (user?.metier == null) {
-      setMetierPhase(true);
+      /* Auto-assign PROPRIETAIRE */
+      setMetierSaving(true);
+      setMetier("PROPRIETAIRE")
+        .then(() => updateSession({ metier: "PROPRIETAIRE" }))
+        .catch(() => {})
+        .finally(() => setMetierSaving(false));
       return;
     }
     if (typeof window !== "undefined") {
@@ -144,27 +119,6 @@ export default function Onboarding() {
       }
     }
   }, [session, user?.metier]);
-
-  /* ─── Sélection métier ─────────────────────────────────────────────────── */
-  const handleConfirmMetier = async () => {
-    if (!selectedMetier) return;
-    setMetierSaving(true);
-    try {
-      await setMetier(selectedMetier);
-      await updateSession({ metier: selectedMetier });
-      localStorage.removeItem(SIGNUP_METIER_KEY);
-      setMetierPhase(false);
-      /* Lancer le tour guidé juste après */
-      const done = typeof window !== "undefined" && localStorage.getItem(ONBOARDING_KEY);
-      if (!done) {
-        setTimeout(() => setActive(true), 600);
-      }
-    } catch {
-      /* silent */
-    } finally {
-      setMetierSaving(false);
-    }
-  };
 
   /* ─── Tour guidé ───────────────────────────────────────────────────────── */
   useEffect(() => {
@@ -198,51 +152,8 @@ export default function Onboarding() {
     setActive(false);
   };
 
-  /* ─── Rendu sélection métier ───────────────────────────────────────────── */
-  if (metierPhase) {
-    return (
-      <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Sélection de votre profil métier">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-          <h2 className="text-xl font-black text-slate-900 mb-1">Quel est votre profil ?</h2>
-          <p className="text-sm text-slate-500 mb-5">
-            Personnalisez BailBot selon votre activité.
-          </p>
-
-          <div className="space-y-3 mb-6">
-            {METIER_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => setSelectedMetier(opt.value)}
-                className={`w-full flex items-start gap-4 px-4 py-3.5 rounded-2xl border-2 transition-all text-left ${
-                  selectedMetier === opt.value
-                    ? "border-emerald-500 bg-emerald-50"
-                    : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                }`}
-              >
-                <span className="text-2xl leading-none mt-0.5" aria-hidden="true">{opt.icon}</span>
-                <div>
-                  <p className="text-sm font-black text-slate-900">{opt.label}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{opt.description}</p>
-                </div>
-              </button>
-            ))}
-          </div>
-
-          <button
-            onClick={handleConfirmMetier}
-            disabled={!selectedMetier || metierSaving}
-            aria-label={metierSaving ? "Enregistrement en cours" : "Confirmer le profil et continuer"}
-            className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 text-white text-sm font-black hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {metierSaving ? "Enregistrement..." : "Continuer →"}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   /* ─── Rendu tour guidé ─────────────────────────────────────────────────── */
-  if (!active) return null;
+  if (metierSaving || !active) return null;
 
   const currentStep = STEPS[step];
   const tooltipStyle = spotlightRect

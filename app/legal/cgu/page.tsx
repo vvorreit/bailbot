@@ -21,11 +21,10 @@ export default function CGUPage() {
           <section>
             <h2 className="text-xl font-bold mb-4 border-b pb-2">1. Objet du service</h2>
             <p className="text-slate-600">
-              BailBot est un outil d'assistance à la saisie destiné aux professionnels gestionnaire locatifs. Il repose sur une
-              technologie de reconnaissance immobilière de caractères (OCR) afin de faciliter le pré-remplissage de
-              formulaires à partir de documents tels que des dossiers locataires ou des cartes de mutuelle.
-              BailBot n'est pas un logiciel médical, n'effectue aucun acte de soin et ne se substitue en aucun cas
-              au jugement professionnel de l'gestionnaire locatif.
+              BailBot est un outil d'assistance à la gestion locative destiné aux propriétaires bailleurs particuliers. Il repose sur une
+              technologie de reconnaissance de caractères (OCR) afin de faciliter le pré-remplissage de
+              formulaires à partir de documents tels que des dossiers locataires.
+              BailBot ne se substitue en aucun cas au jugement du propriétaire bailleur.
             </p>
           </section>
 

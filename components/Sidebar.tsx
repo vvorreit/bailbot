@@ -18,7 +18,6 @@ import RevisionLoyerModal from "@/components/RevisionLoyerModal";
 import NotificationCenter from "@/components/NotificationCenter";
 import { getNbImpayes } from "@/app/actions/stats-nav";
 import { getNbDiagnosticsExpires } from "@/app/actions/diagnostics-gestion";
-import { hasAccess, METIER_LABELS } from "@/lib/features";
 import { Tooltip } from "@/components/ui/Tooltip";
 import SearchGlobal from "@/components/SearchGlobal";
 import type { LucideIcon } from "lucide-react";
@@ -48,8 +47,6 @@ export default function Sidebar() {
 
   const user = session?.user as any;
   const isAdmin = user?.role === "ADMIN";
-  const metier = user?.metier ?? null;
-  const isPro = user?.isPro;
 
   useEffect(() => {
     const stored = localStorage.getItem(SIDEBAR_KEY);
@@ -105,16 +102,16 @@ export default function Sidebar() {
 
   /* ─── 5 main entries + Agenda ─────────────────────────────────────────── */
   const mainNav: NavItem[] = [
-    { href: "/dashboard", label: "Biens", icon: Home, show: hasAccess(metier, "MES_LOGEMENTS") },
+    { href: "/dashboard", label: "Biens", icon: Home, show: true },
     { href: "/dashboard/candidatures", label: "Candidatures", icon: FileSearch, show: true },
-    { href: "/dashboard/bails", label: "Baux & Locataires", icon: FileSignature, badge: nbImpayes > 0 ? nbImpayes : undefined, show: hasAccess(metier, "VIE_DU_BAIL") },
-    { href: "/dashboard/finances", label: "Finances", icon: TrendingUp, show: hasAccess(metier, "COMPTABILITE_FISCALE") || hasAccess(metier, "SUIVI_PAIEMENTS") },
-    { href: "/dashboard/propriete", label: "Propriete", icon: Wrench, badge: nbDiagExpires > 0 ? nbDiagExpires : undefined, show: hasAccess(metier, "MES_LOGEMENTS") },
+    { href: "/dashboard/bails", label: "Baux & Locataires", icon: FileSignature, badge: nbImpayes > 0 ? nbImpayes : undefined, show: true },
+    { href: "/dashboard/finances", label: "Finances", icon: TrendingUp, show: true },
+    { href: "/dashboard/propriete", label: "Propriete", icon: Wrench, badge: nbDiagExpires > 0 ? nbDiagExpires : undefined, show: true },
     { href: "/dashboard/agenda", label: "Agenda", icon: Calendar, show: true },
   ];
 
   const accountNav: NavItem[] = [
-    { href: "/dashboard/modeles-baux", label: "Modèles de baux", icon: BookOpen, show: hasAccess(metier, "VIE_DU_BAIL") },
+    { href: "/dashboard/modeles-baux", label: "Modèles de baux", icon: BookOpen, show: true },
     { href: "/dashboard/account", label: "Parametres", icon: Settings, show: true },
     ...(isAdmin ? [{ href: "/admin", label: "Administration", icon: ShieldCheck, show: true }] : []),
   ];
@@ -274,16 +271,9 @@ export default function Sidebar() {
           {(!isCollapsed || mobileOpen) && (
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold text-slate-900 truncate">{user?.name || "Mon compte"}</p>
-              <div className="flex items-center gap-1.5">
-                {isPro && (
-                  <span className="px-1.5 py-0.5 bg-emerald-600 text-white text-[9px] font-black rounded-full uppercase">PRO</span>
-                )}
-                {metier && (
-                  <span className="text-[10px] text-slate-400 font-medium truncate">
-                    {METIER_LABELS[metier as keyof typeof METIER_LABELS]}
-                  </span>
-                )}
-              </div>
+              <span className="text-[10px] text-slate-400 font-medium truncate">
+                Propriétaire
+              </span>
             </div>
           )}
           {(!isCollapsed || mobileOpen) && <NotificationCenter />}

@@ -400,7 +400,7 @@ export default function Dashboard() {
               </div>
               {userData?.isPro && (
                 <span className="px-3 py-1 bg-emerald-600 text-white text-[10px] font-black rounded-full uppercase tracking-tighter mb-1">
-                  {userData.plan === "DUO" ? "AGENCE" : "SOLO"}
+                  {userData.plan === "DUO" ? "DUO" : "SOLO"}
                 </span>
               )}
             </div>
