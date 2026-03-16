@@ -13,7 +13,10 @@ import {
   Banknote,
   AlertTriangle,
   Table,
+  Wrench,
+  ExternalLink,
 } from "lucide-react";
+import Link from "next/link";
 import { FeatureGate } from "@/components/FeatureGate";
 import RecapFiscalAnnuel from "@/components/RecapFiscalAnnuel";
 import {
@@ -32,6 +35,7 @@ import {
 import { getTransactionsAnnuelles } from "@/app/actions/export-transactions";
 import { getRecapFiscal } from "@/app/actions/recap-fiscal";
 import { generateCSV as buildCSV } from "@/lib/export-csv";
+import { getTravauxDeductibles } from "@/app/actions/travaux";
 
 /* ─── localStorage helpers pour persister les configs fiscales ──────────── */
 
