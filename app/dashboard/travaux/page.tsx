@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import Link from "next/link";
 import {
   Wrench,
   Plus,
@@ -19,6 +20,8 @@ import {
   Clock,
   Ban,
   Paperclip,
+  Eye,
+  Camera,
 } from "lucide-react";
 import { listerBiens, type Bien } from "@/lib/db-local";
 
@@ -468,7 +471,7 @@ function TravauxCard({
       )}
 
       {/* Dates */}
-      <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
+      <div className="flex items-center justify-between text-xs text-slate-400 mb-3">
         <span>{formatDate(travaux.dateDebut)} → {formatDate(travaux.dateFin)}</span>
         {travaux.documents.length > 0 && (
           <button onClick={onDocs} className="inline-flex items-center gap-1 text-emerald-600 hover:underline font-bold">
@@ -476,6 +479,15 @@ function TravauxCard({
           </button>
         )}
       </div>
+
+      {/* Detail link */}
+      <Link
+        href={`/dashboard/travaux/${travaux.id}`}
+        className="flex items-center justify-center gap-1.5 w-full py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-bold text-slate-600 transition-colors"
+      >
+        <Eye className="w-3.5 h-3.5" />
+        Voir détail · Devis · Photos
+      </Link>
     </div>
   );
 }
