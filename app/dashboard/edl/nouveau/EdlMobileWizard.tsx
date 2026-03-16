@@ -20,6 +20,7 @@ import {
 import PieceEDL, { type PieceData, type EtatElement } from '@/components/edl/PieceEDL';
 import { createEDL, sendEdlByEmail, getBiensForEdl, getBailsForBien } from '@/app/actions/edl';
 import { genererEdlPDF, PIECES_PAR_DEFAUT, type DonneesEDL } from '@/lib/generateur-edl';
+import { compressImage, formatSize } from '@/lib/compress-image';
 
 /* ─── Constants ──────────────────────────────────────────────────────────── */
 
@@ -74,6 +75,9 @@ export default function EdlMobileWizard() {
     }))
   );
   const [expandedPiece, setExpandedPiece] = useState(0);
+
+  /* Compression info */
+  const [compressionInfoCompteur, setCompressionInfoCompteur] = useState<string | null>(null);
 
   /* Step 4 — Signatures */
   const [signatureBailleur, setSignatureBailleur] = useState<string | undefined>();
@@ -210,16 +214,21 @@ export default function EdlMobileWizard() {
     input.accept = 'image/*';
     input.setAttribute('capture', 'environment');
     input.multiple = true;
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const files = (e.target as HTMLInputElement).files;
       if (!files) return;
-      Array.from(files).forEach((file) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          setPhotosCompteurs((prev) => [...prev, reader.result as string]);
-        };
-        reader.readAsDataURL(file);
-      });
+      for (const file of Array.from(files)) {
+        try {
+          const result = await compressImage(file, 1200, 0.75);
+          setPhotosCompteurs((prev) => [...prev, result.base64]);
+          setCompressionInfoCompteur(`${formatSize(result.originalSize)} → ${formatSize(result.compressedSize)}`);
+          setTimeout(() => setCompressionInfoCompteur(null), 3000);
+        } catch {
+          const reader = new FileReader();
+          reader.onload = () => setPhotosCompteurs((prev) => [...prev, reader.result as string]);
+          reader.readAsDataURL(file);
+        }
+      }
     };
     input.click();
   };
@@ -413,6 +422,14 @@ export default function EdlMobileWizard() {
                   <span className="text-[10px] font-semibold">Photo</span>
                 </button>
               </div>
+              {photosCompteurs.length > 0 && (
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <span className="text-[10px] text-emerald-600 font-semibold">Photos optimisees pour le PDF</span>
+                  {compressionInfoCompteur && (
+                    <span className="text-[10px] text-slate-400 font-medium">({compressionInfoCompteur})</span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Clés */}

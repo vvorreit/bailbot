@@ -206,10 +206,10 @@ export function genererEdlPDF(donnees: DonneesEDL): Blob {
         doc.setTextColor(0, 0, 0);
       }
 
-      /* Photos */
+      /* Photos — max 800px dans le PDF (images déjà compressées côté client) */
       if (el.photos.length > 0) {
         checkPage(35);
-        const photoSize = 25;
+        const photoSize = 22;
         const gap = 3;
         let px = marginL + 6;
         for (const photo of el.photos.slice(0, 5)) {
@@ -219,7 +219,7 @@ export function genererEdlPDF(donnees: DonneesEDL): Blob {
             doc.setDrawColor(200, 200, 200);
             doc.rect(px, y, photoSize, photoSize);
             doc.setFontSize(6);
-            doc.text('Photo', px + 5, y + 13);
+            doc.text('Photo', px + 5, y + 11);
           }
           px += photoSize + gap;
         }

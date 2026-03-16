@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Camera, Plus, Trash2, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Camera, Plus, Trash2, X, ChevronDown, ChevronUp, ImageIcon } from 'lucide-react';
+import { compressImage, formatSize } from '@/lib/compress-image';
 
 export type EtatElement = 'Très bon' | 'Bon' | 'Usure normale' | 'Mauvais état' | 'À remplacer';
 
@@ -59,6 +60,7 @@ interface Props {
 export default function PieceEDL({ piece, index, expanded, onToggle, onChange, onRemove }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activePhotoUpload, setActivePhotoUpload] = useState<number | null>(null);
+  const [compressionInfo, setCompressionInfo] = useState<string | null>(null);
 
   const updateElement = (elemIdx: number, field: string, value: string | string[]) => {
     const next = {
@@ -92,21 +94,29 @@ export default function PieceEDL({ piece, index, expanded, onToggle, onChange, o
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || activePhotoUpload === null) return;
+    const elemIdx = activePhotoUpload;
 
-    Array.from(files).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const base64 = reader.result as string;
-        const elem = piece.elements[activePhotoUpload!];
+    for (const file of Array.from(files)) {
+      try {
+        const result = await compressImage(file, 1200, 0.75);
+        const elem = piece.elements[elemIdx];
         if (elem) {
-          updateElement(activePhotoUpload!, 'photos', [...elem.photos, base64]);
+          updateElement(elemIdx, 'photos', [...elem.photos, result.base64]);
+          setCompressionInfo(`${formatSize(result.originalSize)} → ${formatSize(result.compressedSize)}`);
+          setTimeout(() => setCompressionInfo(null), 3000);
         }
-      };
-      reader.readAsDataURL(file);
-    });
+      } catch {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const elem = piece.elements[elemIdx];
+          if (elem) updateElement(elemIdx, 'photos', [...elem.photos, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
 
     e.target.value = '';
   };
@@ -204,25 +214,36 @@ export default function PieceEDL({ piece, index, expanded, onToggle, onChange, o
               />
 
               {/* Photos */}
-              <div className="flex items-center gap-2 flex-wrap">
-                {elem.photos.map((photo, phi) => (
-                  <div key={phi} className="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-200">
-                    <img src={photo} alt="" className="w-full h-full object-cover" loading="lazy" />
-                    <button
-                      onClick={() => removePhoto(ei, phi)}
-                      className="absolute top-0 right-0 bg-red-500 text-white rounded-bl-lg p-0.5"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {elem.photos.map((photo, phi) => (
+                    <div key={phi} className="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-200">
+                      <img src={photo} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      <button
+                        onClick={() => removePhoto(ei, phi)}
+                        className="absolute top-0 right-0 bg-red-500 text-white rounded-bl-lg p-0.5"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => handlePhotoCapture(ei)}
+                    className="w-16 h-16 rounded-lg border-2 border-dashed border-slate-200 active:border-emerald-400 flex flex-col items-center justify-center text-slate-300 active:text-emerald-500 transition-colors gap-0.5"
+                  >
+                    <Camera className="w-5 h-5" />
+                    <span className="text-[9px] font-semibold">Photo</span>
+                  </button>
+                </div>
+                {elem.photos.length > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <ImageIcon className="w-3 h-3 text-emerald-500" />
+                    <span className="text-[10px] text-emerald-600 font-semibold">Photos optimisees pour le PDF</span>
+                    {compressionInfo && (
+                      <span className="text-[10px] text-slate-400 font-medium">({compressionInfo})</span>
+                    )}
                   </div>
-                ))}
-                <button
-                  onClick={() => handlePhotoCapture(ei)}
-                  className="w-16 h-16 rounded-lg border-2 border-dashed border-slate-200 active:border-emerald-400 flex flex-col items-center justify-center text-slate-300 active:text-emerald-500 transition-colors gap-0.5"
-                >
-                  <Camera className="w-5 h-5" />
-                  <span className="text-[9px] font-semibold">Photo</span>
-                </button>
+                )}
               </div>
             </div>
           ))}
