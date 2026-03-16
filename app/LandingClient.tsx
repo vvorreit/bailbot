@@ -60,6 +60,11 @@ const features = [
     title: "Portail locataire",
     desc: "Votre locataire accède à ses documents 24h/24 sans vous appeler.",
   },
+  {
+    icon: ShieldCheck,
+    title: "100% français",
+    desc: "Conçu en France, pour le droit français. Données hébergées en France. Aucune donnée ne quitte le territoire européen.",
+  },
 ];
 
 const testimonials = [
@@ -121,6 +126,10 @@ const faqData = [
   {
     question: "Les frais BailBot sont-ils déductibles fiscalement ?",
     answer: "Oui. En régime réel, les frais de gestion locative (dont BailBot) sont déductibles de vos revenus fonciers. BailBot est une charge déductible au même titre qu'une assurance ou des frais de gestion d'agence.",
+  },
+  {
+    question: "BailBot est-il un service français ?",
+    answer: "Oui, BailBot est 100% français. Développé en France, pour la loi française (ALUR, loi de 1989, encadrement des loyers). Vos données sont hébergées en France. Support disponible à support@bailbot.fr",
   },
 ];
 
@@ -263,6 +272,10 @@ export default function LandingClient() {
             <span className="flex items-center gap-2">
               <span className="text-base">🇫🇷</span>
               Données hébergées en France
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="text-base">🇫🇷</span>
+              100% français
             </span>
           </div>
 
@@ -702,8 +715,8 @@ export default function LandingClient() {
               <div>
                 <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-4">Contact</h4>
                 <div className="space-y-3">
-                  <a href="mailto:contact@optibot.fr" className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">
-                    contact@optibot.fr
+                  <a href="mailto:support@bailbot.fr" className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">
+                    support@bailbot.fr
                   </a>
                   <p className="text-sm text-slate-500 font-medium">Support inclus dans tous les plans</p>
                 </div>

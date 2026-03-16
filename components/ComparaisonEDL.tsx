@@ -251,7 +251,7 @@ export default function ComparaisonEDL({ resultat, bailleurNom, bailleurAdresse 
     /* Footer */
     doc.setFontSize(7);
     doc.setTextColor(150, 150, 150);
-    doc.text('Généré par BailBot · contact@optibot.fr', 105, 287, { align: 'center' });
+    doc.text('Généré par BailBot · support@bailbot.fr', 105, 287, { align: 'center' });
 
     doc.save(`Lettre_retenue_${resultat.adresse.substring(0, 20)}.pdf`);
   };

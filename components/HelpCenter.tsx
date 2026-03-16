@@ -27,7 +27,7 @@ const helpSections = [
     icon: MessageSquare,
     title: "Support",
     items: [
-      "Email : contact@optibot.fr",
+      "Email : support@bailbot.fr",
       "Réponse sous 24h en jours ouvrés",
     ],
   },

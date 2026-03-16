@@ -52,6 +52,14 @@ export default function CGUPage() {
             <div className="bg-red-50 border-l-4 border-red-500 p-5 rounded-r-xl space-y-3">
               <p className="text-slate-700 font-bold text-sm uppercase tracking-wide">Clause essentielle — à lire attentivement</p>
               <p className="text-slate-700">
+                BailBot ne garantit pas l'exactitude, la complétude ou la conformité légale des données saisies
+                par l'utilisateur dans les baux, quittances, états des lieux et autres documents générés via le
+                service. L'utilisateur est seul responsable de la vérification et de la validation de toutes les
+                informations renseignées dans les documents produits par BailBot. BailBot ne saurait être tenu
+                responsable d'un document mal rempli, incomplet, non conforme à la réglementation applicable ou
+                contesté par un tiers du fait de données erronées saisies par l'utilisateur.
+              </p>
+              <p className="text-slate-700">
                 <strong>BailBot est un outil d'aide à la saisie, non un logiciel certifié.</strong> Dans les limites
                 permises par la loi applicable, BailBot, ses dirigeants, employés, partenaires et prestataires
                 déclinent expressément toute responsabilité pour :
@@ -139,7 +147,7 @@ export default function CGUPage() {
             <p className="text-slate-600">
               Les présentes CGU sont soumises au droit français. En cas de litige, et à défaut de résolution amiable,
               les tribunaux compétents du ressort du siège social d'BailBot seront seuls compétents.
-              Pour tout contact : <a href="mailto:contact@bailbot.fr" className="text-blue-600 underline">contact@bailbot.fr</a>
+              Pour tout contact : <a href="mailto:support@bailbot.fr" className="text-blue-600 underline">support@bailbot.fr</a>
             </p>
           </section>
 

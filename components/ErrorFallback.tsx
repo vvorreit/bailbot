@@ -31,7 +31,7 @@ export function ErrorFallback({ error, onRetry }: ErrorFallbackProps) {
           </button>
         )}
         <a
-          href={`mailto:contact@optibot.fr?subject=${encodeURIComponent("Bug report — BailBot")}&body=${encodeURIComponent(error?.message ? `Erreur : ${error.message}` : "Une erreur est survenue")}`}
+          href={`mailto:support@bailbot.fr?subject=${encodeURIComponent("Bug report — BailBot")}&body=${encodeURIComponent(error?.message ? `Erreur : ${error.message}` : "Une erreur est survenue")}`}
           className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
         >
           <AlertTriangle className="w-4 h-4" aria-hidden="true" />
