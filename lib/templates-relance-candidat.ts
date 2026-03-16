@@ -1,6 +1,8 @@
 // lib/templates-relance-candidat.ts
 // Templates email pour les relances candidat automatiques (J+1 / J+3 / J+7)
 
+import { escapeHtml } from '@/lib/mailer';
+
 export interface TemplateRelance {
   sujet: string;
   corps: string;
@@ -16,13 +18,13 @@ export interface ParamsTemplate {
 
 function listeManquants(docs?: string[]): string {
   if (!docs || docs.length === 0) return '<li>Documents en attente de vérification</li>';
-  return docs.map((d) => `<li>${d}</li>`).join('');
+  return docs.map((d) => `<li>${escapeHtml(d)}</li>`).join('');
 }
 
 // ─── J+1 : Rappel doux ────────────────────────────────────────────────────────
 
 export function templateRelance1(p: ParamsTemplate): TemplateRelance {
-  const prenom = p.prenomNom ? `<strong>${p.prenomNom}</strong>` : 'Bonjour';
+  const prenom = p.prenomNom ? `<strong>${escapeHtml(p.prenomNom)}</strong>` : 'Bonjour';
   return {
     sujet: `[Rappel] Votre dossier pour ${p.bienAdresse} est incomplet`,
     corps: `
@@ -31,7 +33,7 @@ export function templateRelance1(p: ParamsTemplate): TemplateRelance {
     <h2 style="color: #0f172a; margin-top: 0;">📄 Votre dossier attend quelques documents</h2>
     <p>Bonjour ${prenom},</p>
     <p>Vous avez commencé à déposer votre dossier pour le bien situé au
-      <strong>${p.bienAdresse}</strong>. Il manque encore quelques pièces pour le finaliser.</p>
+      <strong>${escapeHtml(p.bienAdresse)}</strong>. Il manque encore quelques pièces pour le finaliser.</p>
 
     <p><strong>Documents à ajouter :</strong></p>
     <ul style="line-height: 1.8;">${listeManquants(p.docsManquants)}</ul>
@@ -49,7 +51,7 @@ export function templateRelance1(p: ParamsTemplate): TemplateRelance {
     </p>
   </div>
   <p style="font-size: 11px; color: #94a3b8; text-align: center; margin-top: 16px;">
-    ${p.nomGestionnaire ?? 'Votre gestionnaire'} — BailBot · contact@optibot.fr
+    ${escapeHtml(p.nomGestionnaire ?? 'Votre gestionnaire')} — BailBot · contact@optibot.fr
   </p>
 </div>`,
   };
@@ -58,7 +60,7 @@ export function templateRelance1(p: ParamsTemplate): TemplateRelance {
 // ─── J+3 : Relance urgente ────────────────────────────────────────────────────
 
 export function templateRelance2(p: ParamsTemplate): TemplateRelance {
-  const prenom = p.prenomNom ? `<strong>${p.prenomNom}</strong>` : 'Bonjour';
+  const prenom = p.prenomNom ? `<strong>${escapeHtml(p.prenomNom)}</strong>` : 'Bonjour';
   return {
     sujet: `⚠️ Urgent — Votre dossier pour ${p.bienAdresse} expire bientôt`,
     corps: `
@@ -66,7 +68,7 @@ export function templateRelance2(p: ParamsTemplate): TemplateRelance {
   <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 32px 24px;">
     <h2 style="color: #92400e; margin-top: 0;">⏰ Votre dossier n'est pas encore complet</h2>
     <p>Bonjour ${prenom},</p>
-    <p>Nous vous rappelons que votre dossier pour le bien au <strong>${p.bienAdresse}</strong>
+    <p>Nous vous rappelons que votre dossier pour le bien au <strong>${escapeHtml(p.bienAdresse)}</strong>
       est toujours incomplet. D'autres candidats ont déjà déposé les leurs.</p>
 
     <p><strong>Il vous manque encore :</strong></p>
@@ -85,7 +87,7 @@ export function templateRelance2(p: ParamsTemplate): TemplateRelance {
     </p>
   </div>
   <p style="font-size: 11px; color: #94a3b8; text-align: center; margin-top: 16px;">
-    ${p.nomGestionnaire ?? 'Votre gestionnaire'} — BailBot · contact@optibot.fr
+    ${escapeHtml(p.nomGestionnaire ?? 'Votre gestionnaire')} — BailBot · contact@optibot.fr
   </p>
 </div>`,
   };
@@ -94,7 +96,7 @@ export function templateRelance2(p: ParamsTemplate): TemplateRelance {
 // ─── J+7 : Dernière relance ───────────────────────────────────────────────────
 
 export function templateRelance3(p: ParamsTemplate): TemplateRelance {
-  const prenom = p.prenomNom ? `<strong>${p.prenomNom}</strong>` : 'Bonjour';
+  const prenom = p.prenomNom ? `<strong>${escapeHtml(p.prenomNom)}</strong>` : 'Bonjour';
   return {
     sujet: `Dernière relance — Dossier ${p.bienAdresse}`,
     corps: `
@@ -103,7 +105,7 @@ export function templateRelance3(p: ParamsTemplate): TemplateRelance {
     <h2 style="color: #991b1b; margin-top: 0;">🔔 Dernière chance — Dossier incomplet depuis 7 jours</h2>
     <p>Bonjour ${prenom},</p>
     <p>Malgré nos relances, votre dossier pour le bien situé au
-      <strong>${p.bienAdresse}</strong> n'est toujours pas complet.</p>
+      <strong>${escapeHtml(p.bienAdresse)}</strong> n'est toujours pas complet.</p>
 
     <p>C'est notre <strong>dernière relance automatique</strong>. Sans réponse de votre part,
       votre dossier sera classé et le bien sera proposé à d'autres candidats.</p>
@@ -124,7 +126,7 @@ export function templateRelance3(p: ParamsTemplate): TemplateRelance {
     </p>
   </div>
   <p style="font-size: 11px; color: #94a3b8; text-align: center; margin-top: 16px;">
-    ${p.nomGestionnaire ?? 'Votre gestionnaire'} — BailBot · contact@optibot.fr
+    ${escapeHtml(p.nomGestionnaire ?? 'Votre gestionnaire')} — BailBot · contact@optibot.fr
   </p>
 </div>`,
   };

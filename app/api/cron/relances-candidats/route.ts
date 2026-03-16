@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { sendMail } from '@/lib/mailer';
+import { sendMail, escapeHtml } from '@/lib/mailer';
 import { getTemplate } from '@/lib/templates-relance-candidat';
 
 // GET /api/cron/relances-candidats — déclenché quotidiennement par Vercel Cron
@@ -113,8 +113,8 @@ export async function GET(req: NextRequest) {
         await sendMail({
           to: gestionnaire.email,
           subject: `[BailBot] Candidat non réactif — ${depot.bienAdresse}`,
-          html: `<p>Le candidat <strong>${r.email}</strong> n'a pas complété son dossier pour
-            <strong>${depot.bienAdresse}</strong> malgré 3 relances.
+          html: `<p>Le candidat <strong>${escapeHtml(r.email)}</strong> n'a pas complété son dossier pour
+            <strong>${escapeHtml(depot.bienAdresse)}</strong> malgré 3 relances.
             <a href="${baseUrl}/dashboard/candidats">Consultez le tableau de bord</a> pour prendre une décision.</p>`,
         });
       }

@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { sendPushToUser } from "@/lib/push-notifications";
 
 export async function POST(req: NextRequest) {
+  const secret = process.env.CRON_SECRET;
   const auth = req.headers.get("authorization");
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!secret || auth !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 
@@ -12,6 +13,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "userId, title et body requis" }, { status: 400 });
   }
 
-  const result = await sendPushToUser(userId, { title, body, url, icon });
-  return NextResponse.json(result);
+  try {
+    const result = await sendPushToUser(userId, { title, body, url, icon });
+    return NextResponse.json(result);
+  } catch (err) {
+    console.error("[push/send] Erreur:", err);
+    return NextResponse.json({ error: "Erreur envoi notification" }, { status: 500 });
+  }
 }

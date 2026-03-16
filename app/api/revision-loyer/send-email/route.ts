@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { sendMail } from '@/lib/mailer';
+import { sendMail, escapeHtml } from '@/lib/mailer';
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b;">
   <div style="background: #f8fafc; border-radius: 12px; padding: 32px 24px;">
     <h2 style="color: #0f172a; margin-top: 0;">Révision annuelle du loyer</h2>
-    <p>Bonjour ${locataireNom || ''},</p>
+    <p>Bonjour ${escapeHtml(locataireNom || '')},</p>
     <p>Conform&eacute;ment &agrave; l'article 17-1 de la loi du 6 juillet 1989, votre loyer sera r&eacute;vis&eacute; :</p>
     <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
       <p style="margin: 4px 0;"><strong>Loyer actuel :</strong> ${typeof loyerActuel === 'number' ? loyerActuel.toFixed(2) : loyerActuel} &euro;</p>
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       </a>
     </p>
     <p style="font-size: 13px; color: #64748b;">
-      Ce courrier a &eacute;t&eacute; envoy&eacute; par ${nomBailleur || 'votre bailleur'} via BailBot.
+      Ce courrier a &eacute;t&eacute; envoy&eacute; par ${escapeHtml(nomBailleur || 'votre bailleur')} via BailBot.
     </p>
   </div>
   <p style="font-size: 11px; color: #94a3b8; text-align: center; margin-top: 16px;">

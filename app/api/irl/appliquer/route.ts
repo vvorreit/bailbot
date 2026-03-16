@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { sendMail, smtpConfigured } from "@/lib/mailer";
+import { sendMail, smtpConfigured, escapeHtml } from "@/lib/mailer";
 import { calculerRevisionLoyer } from "@/lib/revision-loyer";
 
 export const dynamic = "force-dynamic";
@@ -77,11 +77,11 @@ export async function POST(request: Request) {
       loyerMensuel: nouveauLoyer,
       dernierIRLApplique: resultat.irlNouveau,
       derniereLoyerRevise: now,
-      dateProchRevision: new Date(
-        bail.dateProchRevision.getFullYear() + 1,
-        bail.dateProchRevision.getMonth(),
-        bail.dateProchRevision.getDate()
-      ),
+      dateProchRevision: (() => {
+        const d = new Date(bail.dateProchRevision);
+        d.setFullYear(d.getFullYear() + 1);
+        return d;
+      })(),
     },
   });
 
@@ -122,7 +122,7 @@ export async function POST(request: Request) {
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h2 style="color: #1e293b;">Révision annuelle de votre loyer</h2>
-          <p>Madame, Monsieur <strong>${bail.locataireNom}</strong>,</p>
+          <p>Madame, Monsieur <strong>${escapeHtml(bail.locataireNom)}</strong>,</p>
           <p>Conformément aux dispositions de votre contrat de bail signé le ${new Date(bail.dateSignature).toLocaleDateString("fr-FR")} et à l'article 17-1 de la loi du 6 juillet 1989 modifiée par la loi ALUR du 24 mars 2014, nous vous informons de la révision annuelle de votre loyer.</p>
 
           <h3 style="color: #334155; margin-top: 24px;">Détail du calcul</h3>
@@ -138,7 +138,7 @@ export async function POST(request: Request) {
           <p><strong>Date d'application :</strong> ${dateApplicationStr}</p>
 
           <h3 style="color: #334155; margin-top: 24px;">Coordonnées du bailleur</h3>
-          <p>${nomBailleur}${adresseBailleur ? `<br/>${adresseBailleur}` : ""}${telBailleur ? `<br/>Tél : ${telBailleur}` : ""}<br/>Email : contact@optibot.fr</p>
+          <p>${escapeHtml(nomBailleur)}${adresseBailleur ? `<br/>${escapeHtml(adresseBailleur)}` : ""}${telBailleur ? `<br/>Tél : ${escapeHtml(telBailleur)}` : ""}<br/>Email : contact@optibot.fr</p>
 
           <p style="color: #94a3b8; font-size: 12px; margin-top: 32px; border-top: 1px solid #e2e8f0; padding-top: 16px;">
             Ce courrier tient lieu de notification de révision de loyer conformément aux articles 17-1 et 17-2 de la loi n° 89-462 du 6 juillet 1989 tendant à améliorer les rapports locatifs. En cas de contestation, vous pouvez saisir la commission départementale de conciliation dans un délai de 4 mois à compter de la réception de cette notification.

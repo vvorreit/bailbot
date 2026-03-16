@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { sendMail } from '@/lib/mailer';
+import { sendMail, escapeHtml } from '@/lib/mailer';
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -25,9 +25,9 @@ export async function POST(req: NextRequest) {
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b;">
   <div style="background: ${isMiseEnDemeure ? '#fef2f2' : '#f8fafc'}; border-radius: 12px; padding: 32px 24px; ${isMiseEnDemeure ? 'border: 1px solid #fecaca;' : ''}">
     <h2 style="color: #0f172a; margin-top: 0;">${objet}</h2>
-    <p>Bonjour ${locataireNom || ''},</p>
+    <p>Bonjour ${escapeHtml(locataireNom || '')},</p>
     <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0; white-space: pre-line; font-size: 14px; line-height: 1.6;">
-${corps || ''}
+${escapeHtml(corps || '')}
     </div>
     ${pdfBase64 ? `<p style="text-align: center; margin: 24px 0;">
       <a href="data:application/pdf;base64,${pdfBase64}" download="${isMiseEnDemeure ? 'mise-en-demeure' : 'courrier-relance'}.pdf"
@@ -37,7 +37,7 @@ ${corps || ''}
     </p>` : ''}
   </div>
   <p style="font-size: 11px; color: #94a3b8; text-align: center; margin-top: 16px;">
-    ${nomBailleur || ''} &mdash; BailBot &middot; contact@optibot.fr
+    ${escapeHtml(nomBailleur || '')} &mdash; BailBot &middot; contact@optibot.fr
   </p>
 </div>`,
   });

@@ -1,11 +1,11 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 
 export function useOptimisticUpdate<T>(initialValue: T) {
   const [value, setValue] = useState(initialValue);
   const [isOptimistic, setIsOptimistic] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const previousRef = { current: initialValue };
+  const previousRef = useRef(initialValue);
 
   const update = useCallback(
     async (optimisticValue: T, asyncFn: () => Promise<T>) => {

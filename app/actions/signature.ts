@@ -3,7 +3,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { sendMail } from "@/lib/mailer";
+import { sendMail, escapeHtml } from "@/lib/mailer";
 import { createSignatureRequest as yousignCreate } from "@/lib/yousign";
 
 export async function createSignatureRequest(documentType: string, documentId: string, signataire: string, email: string) {
@@ -53,7 +53,7 @@ export async function createSignatureRequest(documentType: string, documentId: s
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b;">
   <div style="background: #f8fafc; border-radius: 12px; padding: 32px 24px;">
     <h2 style="color: #0f172a; margin-top: 0;">Document a signer</h2>
-    <p>Bonjour ${signataire},</p>
+    <p>Bonjour ${escapeHtml(signataire)},</p>
     <p>Un document necessite votre signature electronique${yousignRequestId ? " avancee eIDAS via Yousign" : ""}.</p>
     <p style="text-align: center; margin: 24px 0;">
       <a href="${lien}" style="display: inline-block; background: #059669; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">

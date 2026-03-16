@@ -11,6 +11,16 @@ function getResend(): Resend {
 
 export const smtpConfigured = () => Boolean(process.env.RESEND_API_KEY);
 
+/** Échappe les caractères HTML pour prévenir les injections XSS dans les emails */
+export function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 interface MailOptions {
   from?: string;
   to: string | string[];

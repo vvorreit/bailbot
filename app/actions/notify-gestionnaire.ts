@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from '@/lib/db';
-import { sendMail, smtpConfigured } from '@/lib/mailer';
+import { sendMail, smtpConfigured, escapeHtml } from '@/lib/mailer';
 
 export async function notifyNouveauDepot(depotTokenId: string): Promise<{ ok: boolean; error?: string }> {
   try {
@@ -37,7 +37,7 @@ export async function notifyNouveauDepot(depotTokenId: string): Promise<{ ok: bo
               Un candidat a déposé ses documents pour le bien :
             </p>
             <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
-              <p style="font-weight: bold; color: #0f172a; margin: 0 0 4px;">${depot.bienAdresse}</p>
+              <p style="font-weight: bold; color: #0f172a; margin: 0 0 4px;">${escapeHtml(depot.bienAdresse)}</p>
               <p style="color: #64748b; margin: 0; font-size: 13px;">${nbFichiers} document${nbFichiers > 1 ? 's' : ''} déposé${nbFichiers > 1 ? 's' : ''}</p>
             </div>
             <a href="${lien}" style="display: inline-block; background: #10B981; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 14px;">
@@ -72,7 +72,7 @@ export async function notifyConfirmationCandidat(email: string, bienAdresse: str
           </div>
           <div style="background: #f8fafc; padding: 24px; border: 1px solid #e2e8f0; border-top: 0; border-radius: 0 0 12px 12px;">
             <p style="color: #334155; font-size: 14px;">
-              Votre dossier pour le bien <strong>${bienAdresse}</strong> a bien été reçu.
+              Votre dossier pour le bien <strong>${escapeHtml(bienAdresse)}</strong> a bien été reçu.
             </p>
             <p style="color: #334155; font-size: 14px;">
               Nous vous recontactons sous 48h.

@@ -11,7 +11,8 @@ export default function SessionGuard() {
   const { data: session } = useSession();
 
   useEffect(() => {
-    if ((session as any)?.error === "SessionInvalidated") {
+    const error = (session as any)?.error;
+    if (error === "SessionInvalidated" || error === "RefreshAccessTokenError") {
       signOut({ callbackUrl: "/auth/signin" });
     }
   }, [session]);

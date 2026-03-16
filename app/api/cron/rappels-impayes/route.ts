@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { sendMail } from "@/lib/mailer";
+import { sendMail, escapeHtml } from "@/lib/mailer";
 import { logCronStart, logCronSuccess, logCronFailure } from "@/lib/cron-logger";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 
@@ -11,7 +11,8 @@ export async function GET(req: NextRequest) {
 
   if (process.env.NODE_ENV === "production") {
     const auth = req.headers.get("authorization");
-    if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+    const secret = process.env.CRON_SECRET;
+    if (!secret || auth !== `Bearer ${secret}`) {
       return NextResponse.json({ error: "Non autorise" }, { status: 401 });
     }
   }
@@ -66,7 +67,7 @@ export async function GET(req: NextRequest) {
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b;">
   <div style="background: #f8fafc; border-radius: 12px; padding: 32px 24px;">
     <h2 style="color: #0f172a; margin-top: 0;">Rappel de paiement</h2>
-    <p>Bonjour ${p.locataireNom},</p>
+    <p>Bonjour ${escapeHtml(p.locataireNom || "")},</p>
     <p>Nous constatons que votre loyer pour le mois de <strong>${moisLabel}</strong> n'a pas encore ete regle.</p>
     <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
       <p style="margin: 4px 0;"><strong>Montant du :</strong> ${montant} EUR</p>

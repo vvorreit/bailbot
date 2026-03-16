@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
-import { getTransporter, smtpConfigured } from "@/lib/mailer";
+import { getTransporter, smtpConfigured, escapeHtml } from "@/lib/mailer";
 
 export async function registerUser(name: string, email: string, password: string) {
   if (!name || !email || !password) {
@@ -42,7 +42,7 @@ export async function registerUser(name: string, email: string, password: string
       subject: "Confirmez votre adresse email — BailBot",
       html: `
         <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px">
-          <h2 style="color:#1e293b">Bienvenue sur BailBot, ${name} !</h2>
+          <h2 style="color:#1e293b">Bienvenue sur BailBot, ${escapeHtml(name)} !</h2>
           <p style="color:#475569">Cliquez sur le bouton ci-dessous pour confirmer votre adresse email et activer votre compte.</p>
           <a href="${verifyUrl}" style="display:inline-block;margin:24px 0;background:#2563eb;color:white;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:bold;">
             Confirmer mon email

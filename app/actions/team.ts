@@ -3,7 +3,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getTransporter, smtpConfigured } from "@/lib/mailer";
+import { getTransporter, smtpConfigured, escapeHtml } from "@/lib/mailer";
 import { randomBytes } from "crypto";
 
 // Nombre de postes maximum par plan d'équipe
@@ -97,7 +97,7 @@ export async function inviteMember(email: string) {
     }
   });
 
-  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3011";
   const inviteLink = `${baseUrl}/join/${token}`;
 
   try {
@@ -108,7 +108,7 @@ export async function inviteMember(email: string) {
         subject: `Rejoignez l'équipe ${user.team?.name} sur BailBot`,
         html: `
           <h1>Invitation d'équipe</h1>
-          <p><strong>${user.name || user.email}</strong> vous a invité à rejoindre l'équipe <strong>${user.team?.name}</strong>.</p>
+          <p><strong>${escapeHtml(user.name || user.email || "")}</strong> vous a invité à rejoindre l'équipe <strong>${escapeHtml(user.team?.name || "")}</strong>.</p>
           <p><a href="${inviteLink}" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Accepter l'invitation</a></p>
           <p>Ou copiez ce lien : ${inviteLink}</p>
         `,

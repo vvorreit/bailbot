@@ -3,7 +3,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { sendMail } from "@/lib/mailer";
+import { sendMail, escapeHtml } from "@/lib/mailer";
 import { rateLimit } from "@/lib/rateLimit";
 
 export async function getPortailLocataireData(token: string, ip?: string) {
@@ -124,7 +124,7 @@ export async function envoyerLienPortail(bailId: string) {
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b;">
   <div style="background: #f8fafc; border-radius: 12px; padding: 32px 24px;">
     <h2 style="color: #0f172a; margin-top: 0;">Votre espace locataire</h2>
-    <p>Bonjour ${bail.locataireNom},</p>
+    <p>Bonjour ${escapeHtml(bail.locataireNom)},</p>
     <p>Votre bailleur vous donne acces a votre espace locataire en ligne.</p>
     <p>Vous pouvez y consulter vos quittances, votre bail, et soumettre des demandes.</p>
     <p style="text-align: center; margin: 24px 0;">

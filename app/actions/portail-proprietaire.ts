@@ -3,7 +3,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { sendMail, smtpConfigured } from "@/lib/mailer";
+import { sendMail, smtpConfigured, escapeHtml } from "@/lib/mailer";
 import { randomBytes } from "crypto";
 
 async function getUserId(): Promise<string> {
@@ -31,7 +31,7 @@ export async function genererTokenProprietaire(bailId: string) {
     data: { tokenProprietaire: token, tokenProprietaireExpiresAt: expiresAt },
   });
 
-  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3011";
   return { token, lien: `${baseUrl}/proprietaire/${token}`, expiresAt: expiresAt.toISOString() };
 }
 
@@ -52,7 +52,7 @@ export async function renewTokenProprietaire(bailId: string) {
     data: { tokenProprietaire: token, tokenProprietaireExpiresAt: expiresAt },
   });
 
-  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3011";
   return { token, lien: `${baseUrl}/proprietaire/${token}`, expiresAt: expiresAt.toISOString() };
 }
 
@@ -85,7 +85,7 @@ export async function getTokenInfo(bailId: string) {
 
   if (!bail.tokenProprietaire) return { active: false, lien: null, expiresAt: null };
 
-  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3011";
   return {
     active: true,
     lien: `${baseUrl}/proprietaire/${bail.tokenProprietaire}`,
@@ -110,7 +110,7 @@ export async function envoyerLienProprietaire(bailId: string, emailProprietaire:
     token = result.token;
   }
 
-  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3011";
   const lien = `${baseUrl}/proprietaire/${token}`;
 
   if (!smtpConfigured()) {
@@ -127,8 +127,8 @@ export async function envoyerLienProprietaire(bailId: string, emailProprietaire:
         <h1 style="color: #1e293b; font-size: 24px;">Portail Propriétaire</h1>
         <p style="color: #475569;">Bonjour,</p>
         <p style="color: #475569;">
-          ${user?.name || "Votre gestionnaire"} vous donne accès au suivi de votre bien
-          situé au <strong>${bien?.adresse || ""}</strong>.
+          ${escapeHtml(user?.name || "Votre gestionnaire")} vous donne accès au suivi de votre bien
+          situé au <strong>${escapeHtml(bien?.adresse || "")}</strong>.
         </p>
         <p style="color: #475569;">Ce portail vous permet de consulter en lecture seule :</p>
         <ul style="color: #475569;">

@@ -104,10 +104,10 @@ export async function GET(req: NextRequest) {
     // Le cookie sera lu côté client au chargement du dashboard
     const profileJson = JSON.stringify(profile);
     cookieStore.set("df_profile", profileJson, {
-      httpOnly: false, // Lisible côté JS pour le pré-remplissage du formulaire
+      httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 1800, // 30 minutes
+      maxAge: 1800,
       path: "/",
     });
 
