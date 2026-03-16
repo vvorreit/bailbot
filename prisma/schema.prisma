@@ -239,6 +239,8 @@ model BailActif {
   assigneA            String?     // US 23 — userId du collaborateur assigné
   tokenProprietaire   String?     @unique // US 24 — token portail propriétaire
   tokenProprietaireExpiresAt DateTime? // Expiration du token propriétaire
+  conformiteReport    Json?       // Rapport de conformité ALUR/DPE/encadrement
+  conformiteAnalysedAt DateTime?  // Date du dernier scan conformité
   createdAt           DateTime    @default(now())
   alertes             AlerteBail[]
   quittancesAuto      QuittanceAuto[]
@@ -369,6 +371,7 @@ model Bien {
   dateGaz         DateTime?
   datePlomb       DateTime?
   dateAmiante     DateTime?
+  classeDPE       String?  // Classe DPE (A à G)
   assigneA        String?  // US 23 — userId du collaborateur assigné
   createdAt       DateTime @default(now())
 

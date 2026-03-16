@@ -88,7 +88,7 @@ export default function Sidebar() {
     {
       label: "BIENS",
       items: [
-        { href: "/dashboard/logements", label: "Mes biens", icon: Home, show: hasAccess(metier, "MES_LOGEMENTS") },
+        { href: "/dashboard", label: "Mes biens", icon: Home, show: hasAccess(metier, "MES_LOGEMENTS") },
         { href: "/dashboard/copro", label: "Copropriete", icon: Building2, show: hasAccess(metier, "ANALYSE_COPRO") },
       ],
     },
