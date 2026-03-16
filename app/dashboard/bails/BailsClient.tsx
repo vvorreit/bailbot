@@ -29,6 +29,8 @@ import { listerBiens, type Bien } from '@/lib/db-local';
 import CreerBailActifModal from '@/components/CreerBailActifModal';
 import ClotureBailModal from '@/components/ClotureBailModal';
 import TimelineBail from '@/components/TimelineBail';
+import ConformiteReportWidget, { ConformiteBadge } from '@/components/ConformiteReport';
+import type { ConformiteReport as ConformiteReportType } from '@/lib/conformite/types';
 import AlertesEcheances, { type AlerteDiagnosticUI } from '@/components/AlertesEcheances';
 import BiensVacantsWidget from '@/components/BiensVacantsWidget';
 import { getAlertesExpirationDiagnostics } from '@/app/actions/alertes-diagnostics';
@@ -63,6 +65,8 @@ interface BailAPI {
   alertes: Alerte[];
   colocataires?: { nom: string; prenom: string; email?: string; partLoyer?: number }[];
   garants?: { nom: string; prenom: string; email?: string; type: string; organisme?: string }[];
+  conformiteReport?: ConformiteReportType | null;
+  conformiteAnalysedAt?: string | null;
 }
 
 /* ─── Statut badges ──────────────────────────────────────────────────────── */
@@ -366,6 +370,7 @@ function BailCard({
                 {alertesActives} alerte{alertesActives > 1 ? 's' : ''}
               </span>
             )}
+            <ConformiteBadge report={bail.conformiteReport ?? null} />
           </div>
           <p className="text-sm text-slate-500 truncate">{bienLabel}</p>
           <div className="flex items-center gap-4 mt-2 text-xs text-slate-400">
@@ -437,6 +442,11 @@ function BailCard({
             Chronologie
           </h4>
           <TimelineBail bail={bail} />
+
+          {/* Conformité réglementaire */}
+          <div className="mt-4 pt-4 border-t border-slate-100">
+            <ConformiteReportWidget bailId={bail.id} initialReport={bail.conformiteReport ?? null} />
+          </div>
 
           {/* Actions bail */}
           <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-3">

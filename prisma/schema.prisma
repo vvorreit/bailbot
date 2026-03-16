@@ -372,8 +372,10 @@ model Bien {
   datePlomb       DateTime?
   dateAmiante     DateTime?
   classeDPE       String?  // Classe DPE (A à G)
-  assigneA        String?  // US 23 — userId du collaborateur assigné
-  createdAt       DateTime @default(now())
+  assigneA             String?  // US 23 — userId du collaborateur assigné
+  loyerMarcheCache     Json?
+  loyerMarcheCachedAt  DateTime?
+  createdAt            DateTime @default(now())
 
   @@index([userId])
 }

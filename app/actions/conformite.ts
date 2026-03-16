@@ -86,7 +86,7 @@ export async function lancerScanConformite(bailId: string): Promise<ConformiteRe
   await prisma.bailActif.update({
     where: { id: bailId },
     data: {
-      conformiteReport: report as unknown as Record<string, unknown>,
+      conformiteReport: JSON.parse(JSON.stringify(report)),
       conformiteAnalysedAt: new Date(),
     },
   });

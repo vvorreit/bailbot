@@ -137,22 +137,30 @@ export default function AccountPage() {
           </form>
         </div>
 
-        {/* Export RGPD */}
+        {/* RGPD & Vie privée */}
         <div className="bg-white rounded-[28px] border border-slate-100 shadow-sm p-8">
           <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-2">Mes données personnelles</h2>
           <p className="text-sm font-medium text-slate-500 mb-5">
-            Conformément à l'<strong>article 20 du RGPD</strong>, vous pouvez télécharger l'ensemble de vos données personnelles détenues par BailBot au format JSON.
+            Conformément au <strong>RGPD</strong>, vous pouvez exporter vos données, gérer vos consentements et demander la suppression de votre compte.
           </p>
-          <button
-            onClick={handleExport}
-            disabled={exportLoading}
-            className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            <Download className="w-4 h-4" />
-            {exportLoading ? "Préparation..." : "Télécharger mes données"}
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={handleExport}
+              disabled={exportLoading}
+              className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <Download className="w-4 h-4" />
+              {exportLoading ? "Préparation..." : "Télécharger mes données"}
+            </button>
+            <a
+              href="/dashboard/account/rgpd"
+              className="flex items-center gap-2 px-6 py-3 bg-emerald-50 text-emerald-700 font-bold rounded-2xl hover:bg-emerald-100 transition-colors"
+            >
+              Vie privée & suppression
+            </a>
+          </div>
           <p className="text-xs text-slate-400 font-medium mt-3">
-            Données incluses : profil, abonnement, utilisation, équipe, fournisseurs OAuth connectés. Les données sensibles (mot de passe, tokens) sont exclues.
+            Export complet : profil, biens, baux, paiements, candidatures, quittances, modèles. Les données sensibles (mot de passe, tokens) sont exclues.
           </p>
         </div>
 

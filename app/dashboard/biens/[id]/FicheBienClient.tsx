@@ -15,6 +15,8 @@ import {
   Download,
 } from 'lucide-react';
 import { genererQuittancePDF } from '@/lib/generateur-quittance';
+import ConformiteReportWidget from '@/components/ConformiteReport';
+import LoyerMarcheWidget from '@/components/LoyerMarcheWidget';
 
 interface Colocataire {
   nom: string;
@@ -245,6 +247,21 @@ export default function FicheBienClient({ data }: Props) {
 
         {/* Colonne latérale */}
         <div className="space-y-6">
+          {/* Conformité réglementaire */}
+          {bailActif && (
+            <ConformiteReportWidget
+              bailId={bailActif.id}
+              initialReport={bailActif.conformiteReport ?? null}
+            />
+          )}
+
+          {/* Analyse de marché */}
+          <LoyerMarcheWidget
+            bienId={bien.id}
+            loyerActuel={bien.loyer ?? 0}
+            surface={bien.surface ?? null}
+          />
+
           {/* États des lieux */}
           <section className="bg-white rounded-2xl border border-slate-100 p-6">
             <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
