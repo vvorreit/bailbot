@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { sendMail } from "@/lib/mailer";
 import { genererQuittancePDF } from "@/lib/generateur-quittance";
 import { generateQuittanceNumero } from "@/lib/quittance-numero";
+import { logCronStart, logCronSuccess, logCronFailure } from "@/lib/cron-logger";
 
 export async function GET(req: NextRequest) {
   if (process.env.NODE_ENV === "production") {
@@ -11,6 +12,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
   }
+
+  const cronRunId = await logCronStart("quittances-auto");
+  try {
 
   const now = new Date();
   const moisCle = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -213,12 +217,19 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({
+  const responseData = {
     success: true,
     mois: moisCle,
     emailsLocataire,
     emailsProprio,
     quittancesCrees: resultats.length,
     erreurs: erreurs.length > 0 ? erreurs : undefined,
-  });
+  };
+  await logCronSuccess(cronRunId, responseData);
+  return NextResponse.json(responseData);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    await logCronFailure(cronRunId, msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }

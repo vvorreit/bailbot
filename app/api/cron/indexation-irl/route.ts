@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendMail, smtpConfigured } from "@/lib/mailer";
 import { calculerRevisionLoyer, IRL_DERNIERE_MAJ } from "@/lib/revision-loyer";
+import { logCronStart, logCronSuccess, logCronFailure } from "@/lib/cron-logger";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,9 @@ export async function GET(request: Request) {
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
+
+  const cronRunId = await logCronStart("indexation-irl");
+  try {
 
   const now = new Date();
   const bails = await prisma.bailActif.findMany({
@@ -99,5 +103,12 @@ export async function GET(request: Request) {
     results.push({ bailId: bail.id, action: `notified_${diffJours}j_before` });
   }
 
-  return NextResponse.json({ ok: true, processed: results.length, results });
+  const responseData = { ok: true, processed: results.length, results };
+  await logCronSuccess(cronRunId, responseData);
+  return NextResponse.json(responseData);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    await logCronFailure(cronRunId, msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }

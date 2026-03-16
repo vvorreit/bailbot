@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendMail } from "@/lib/mailer";
+import { logCronStart, logCronSuccess, logCronFailure } from "@/lib/cron-logger";
 
 export async function GET(req: NextRequest) {
   if (process.env.NODE_ENV === "production") {
@@ -9,6 +10,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Non autorise" }, { status: 401 });
     }
   }
+
+  const cronRunId = await logCronStart("rappels-impayes");
+  try {
 
   const now = new Date();
   let emailsEnvoyes = 0;
@@ -91,10 +95,17 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({
+  const responseData = {
     success: true,
     emailsEnvoyes,
     paiementsVerifies: paiementsRetard.length,
     erreurs: erreurs.length > 0 ? erreurs : undefined,
-  });
+  };
+  await logCronSuccess(cronRunId, responseData);
+  return NextResponse.json(responseData);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    await logCronFailure(cronRunId, msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }
