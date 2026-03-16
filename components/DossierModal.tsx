@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { X, Download, Trash2, ChevronDown, Package, FileText, Receipt, Banknote } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Download, Trash2, ChevronDown, Package, FileText, Receipt, Banknote, Lock } from 'lucide-react';
 import { PrerequisButton } from '@/components/ui/PrerequisList';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import Link from 'next/link';
 import GenerateurBailModal from './GenerateurBailModal';
 import QuittanceModal from './QuittanceModal';
+import UpgradeModal from './UpgradeModal';
 import ImprimerDossier from './ImprimerDossier';
 import type { Candidature, Bien } from '@/lib/db-local';
 import { mettreAJourCandidature, supprimerCandidature } from '@/lib/db-local';
@@ -14,6 +15,7 @@ import { calculerBailScore } from '@/lib/bailscore';
 import { calculerEligibiliteVisale } from '@/lib/eligibilite-visale';
 import EligibiliteVisaleCard from './EligibiliteVisaleCard';
 import ComparateurGLI from './ComparateurGLI';
+import { hasQuittanceTrial } from '@/lib/features';
 
 interface Props {
   candidature: Candidature;
@@ -57,6 +59,18 @@ export default function DossierModal({ candidature, bien, onClose, onUpdated, on
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showBailModal, setShowBailModal] = useState(false);
   const [showQuittanceModal, setShowQuittanceModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [userPlan, setUserPlan] = useState<{ isPro: boolean; plan: string; createdAt: string | Date } | null>(null);
+
+  useEffect(() => {
+    import('@/app/dashboard/actions').then(({ getUserDashboardData }) => {
+      getUserDashboardData().then((d: any) => { if (d) setUserPlan(d); }).catch(() => {});
+    });
+  }, []);
+
+  const canGenerateQuittance = userPlan
+    ? userPlan.isPro || hasQuittanceTrial(userPlan.plan, userPlan.createdAt)
+    : true;
 
   const { dossier, bailScore, scoreGrade, alertesFraude, completude, aGarant, dossierGarant } = candidature;
 
@@ -283,13 +297,26 @@ export default function DossierModal({ candidature, bien, onClose, onUpdated, on
             label="Generer le bail"
             icon={<FileText aria-hidden="true" className="w-4 h-4" />}
           />
-          <button
-            onClick={() => setShowQuittanceModal(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-bold hover:bg-amber-600 transition-colors"
-          >
-            <Receipt aria-hidden="true" className="w-4 h-4" />
-            🧾 Quittance
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => canGenerateQuittance ? setShowQuittanceModal(true) : setShowUpgradeModal(true)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-colors ${
+                canGenerateQuittance
+                  ? 'bg-amber-500 text-white hover:bg-amber-600'
+                  : 'bg-slate-200 text-slate-500 hover:bg-slate-300'
+              }`}
+            >
+              {canGenerateQuittance ? (
+                <Receipt aria-hidden="true" className="w-4 h-4" />
+              ) : (
+                <Lock aria-hidden="true" className="w-4 h-4" />
+              )}
+              Quittance
+              {!canGenerateQuittance && (
+                <span className="ml-1 px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[9px] font-black rounded-full">Essentiel</span>
+              )}
+            </button>
+          </div>
           {statut === 'selectionne' && (
             <Link
               href="/dashboard/impayes"
@@ -335,6 +362,14 @@ export default function DossierModal({ candidature, bien, onClose, onUpdated, on
           loyerHC={bien?.loyer ?? 0}
           charges={bien?.charges ?? 0}
           onClose={() => setShowQuittanceModal(false)}
+        />
+      )}
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <UpgradeModal
+          feature="Quittances automatiques"
+          onClose={() => setShowUpgradeModal(false)}
         />
       )}
     </div>

@@ -186,7 +186,7 @@ export default function Dashboard() {
     refreshData();
   }, [refreshData]);
 
-  const handleCheckout = async (plan: "ESSENTIEL" | "SERENITE" | "PORTFOLIO") => {
+  const handleCheckout = async (plan: "ESSENTIEL" | "SERENITE") => {
     setIsStripeLoading(plan);
     try {
       const { url } = await createCheckoutSession(plan);
@@ -282,10 +282,7 @@ export default function Dashboard() {
 
   const handleFile = useCallback(
     async (file: File, type: DropType) => {
-      if (isLimitReached) {
-        alert("Période d'essai terminée. Passez à la version PRO pour continuer.");
-        return;
-      }
+      /* OCR est gratuit pour tous les plans — pas de restriction */
       setDocStates((prev) => ({
         ...prev,
         [type]: { loading: true, progress: 0, fileName: file.name },
@@ -329,7 +326,7 @@ export default function Dashboard() {
   );
 
   const copyData = async () => {
-    if (isLimitReached) return;
+    /* Plus de restriction trial sur la copie des données */
     try {
       const payload = await generateAutofillPayload({
         mutuelle: dossier as any,
@@ -388,60 +385,50 @@ export default function Dashboard() {
             <div className="flex justify-between items-end mb-3">
               <div>
                 <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">
-                  {userData?.isPro ? "Votre Plan" : "Essai Gratuit"}
+                  Votre Plan
                 </p>
-                {!userData?.isPro && (
-                  <p className={`text-2xl font-black ${isLimitReached ? "text-red-500" : "text-slate-900"}`}>
-                    {isLimitReached
-                      ? "Expiré"
-                      : `${trialDaysLeft}j restant${trialDaysLeft > 1 ? "s" : ""}`}
-                  </p>
-                )}
+                <p className="text-2xl font-black text-slate-900">
+                  {userData?.isPro
+                    ? userData.plan === "SERENITE" ? "Sérénité" : "Essentiel"
+                    : "Gratuit"}
+                </p>
               </div>
               {userData?.isPro && (
                 <span className="px-3 py-1 bg-emerald-600 text-white text-[10px] font-black rounded-full uppercase tracking-tighter mb-1">
-                  {userData.plan}
+                  {userData.plan === "SERENITE" ? "Sérénité" : userData.plan}
                 </span>
               )}
             </div>
+
+            {/* Message OCR gratuit */}
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold mb-4">
+              <span>✅</span>
+              <span>Analyse OCR gratuite — incluse dans tous les plans</span>
+            </div>
+
             {!userData?.isPro && (
-              <>
-                <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full transition-all duration-700 ${isLimitReached ? "bg-red-500" : "bg-emerald-600"}`}
-                    style={{ width: `${((TRIAL_DAYS - trialDaysLeft) / TRIAL_DAYS) * 100}%` }}
-                  ></div>
-                </div>
-                <div className="mt-4 pt-4 border-t border-slate-100 space-y-2">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
-                    Passer au PRO
-                  </p>
-                  <button
-                    onClick={() => handleCheckout("ESSENTIEL")}
-                    disabled={isStripeLoading !== null}
-                    className="w-full px-3 py-2 rounded-xl bg-emerald-600 text-white text-[11px] font-black hover:bg-emerald-700 transition-colors disabled:opacity-50"
-                  >
-                    {isStripeLoading === "ESSENTIEL" ? "Chargement..." : "Essentiel — 39€/mois"}
-                  </button>
-                  <button
-                    onClick={() => handleCheckout("SERENITE")}
-                    disabled={isStripeLoading !== null}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-100 text-slate-700 text-[11px] font-black hover:bg-slate-200 transition-colors disabled:opacity-50"
-                  >
-                    {isStripeLoading === "SERENITE" ? "Chargement..." : "Sérénité — 59€/mois"}
-                  </button>
-                  <button
-                    onClick={() => handleCheckout("PORTFOLIO")}
-                    disabled={isStripeLoading !== null}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-100 text-slate-700 text-[11px] font-black hover:bg-slate-200 transition-colors disabled:opacity-50"
-                  >
-                    {isStripeLoading === "PORTFOLIO" ? "Chargement..." : "Portfolio — 89€/mois"}
-                  </button>
-                </div>
-              </>
+              <div className="pt-4 border-t border-slate-100 space-y-2">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                  Débloquer plus de fonctionnalités
+                </p>
+                <button
+                  onClick={() => handleCheckout("ESSENTIEL")}
+                  disabled={isStripeLoading !== null}
+                  className="w-full px-3 py-2 rounded-xl bg-emerald-600 text-white text-[11px] font-black hover:bg-emerald-700 transition-colors disabled:opacity-50"
+                >
+                  {isStripeLoading === "ESSENTIEL" ? "Chargement..." : "Essentiel — 9,90€/mois"}
+                </button>
+                <button
+                  onClick={() => handleCheckout("SERENITE")}
+                  disabled={isStripeLoading !== null}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-100 text-slate-700 text-[11px] font-black hover:bg-slate-200 transition-colors disabled:opacity-50"
+                >
+                  {isStripeLoading === "SERENITE" ? "Chargement..." : "Sérénité — 17,90€/mois"}
+                </button>
+              </div>
             )}
             {userData?.isPro && (
-              <div className="mt-4 pt-4 border-t border-slate-50 space-y-3">
+              <div className="pt-4 border-t border-slate-50 space-y-3">
                 <div className="flex justify-between items-center">
                   <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-tight">
                     Utilisation illimitée activée
@@ -473,26 +460,7 @@ export default function Dashboard() {
                     disabled={isStripeLoading !== null}
                     className="w-full px-3 py-2 rounded-xl bg-slate-100 text-slate-700 text-[11px] font-black hover:bg-slate-200 transition-colors disabled:opacity-50"
                   >
-                    {isStripeLoading === "SERENITE" ? "Chargement..." : "Passer Sérénité — 59€/mois"}
-                  </button>
-                )}
-                {(userData.plan === "ESSENTIEL" || userData.plan === "SERENITE") && (
-                  <button
-                    onClick={async () => {
-                      setIsStripeLoading("PORTFOLIO");
-                      try {
-                        await upgradePlan("PORTFOLIO");
-                        await refreshData();
-                      } catch (err: any) {
-                        alert(err?.message || "Erreur lors de la montée en gamme.");
-                      } finally {
-                        setIsStripeLoading(null);
-                      }
-                    }}
-                    disabled={isStripeLoading !== null}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-100 text-slate-700 text-[11px] font-black hover:bg-slate-200 transition-colors disabled:opacity-50"
-                  >
-                    {isStripeLoading === "PORTFOLIO" ? "Chargement..." : "Passer Portfolio — 89€/mois"}
+                    {isStripeLoading === "SERENITE" ? "Chargement..." : "Passer Sérénité — 17,90€/mois"}
                   </button>
                 )}
               </div>
@@ -537,7 +505,7 @@ export default function Dashboard() {
             {/* ─── Zone de drop universelle ─────────────────────────────── */}
             <div id="drop-zone">
               <UniversalDropZone
-                disabled={isLimitReached}
+                disabled={false}
                 onDossierUpdate={(patch) => setDossier((prev) => ({ ...prev, ...patch }))}
                 onFilesUpdate={(files) => setUploadedFiles(files)}
               />
@@ -551,7 +519,7 @@ export default function Dashboard() {
               </summary>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-3">
                 {dropZones.map(({ type, label, icon }) => (
-                  <div key={type} className={isLimitReached ? "opacity-40 grayscale pointer-events-none" : ""}>
+                  <div key={type} className="">
                     <DropZone
                       label={label}
                       icon={icon}

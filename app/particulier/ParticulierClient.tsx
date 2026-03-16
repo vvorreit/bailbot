@@ -91,7 +91,7 @@ export default function ParticulierClient() {
                 aria-label="Essayer BailBot gratuitement — 3 dossiers locataires inclus sans carte bancaire"
                 className="px-10 py-5 bg-emerald-600 text-white font-black rounded-2xl hover:bg-emerald-700 transition-all shadow-2xl shadow-emerald-200 flex items-center justify-center gap-3 text-lg group active:scale-95 uppercase tracking-widest"
               >
-                Essayer gratuitement (3 dossiers)
+                Commencer gratuitement
                 <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
               </Link>
             </div>
@@ -196,73 +196,113 @@ export default function ParticulierClient() {
               <h2 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900">
                 Choisissez votre formule.
               </h2>
-              <p className="text-slate-500 font-medium mt-4">Commencez gratuitement — 3 dossiers inclus sans carte bancaire.</p>
+              <p className="text-slate-500 font-medium mt-4">Commencez gratuitement — OCR et calcul de rendement inclus sans carte bancaire.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
-              {/* Plan Occasion */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
+              {/* Plan Gratuit */}
               <div className="p-10 rounded-[40px] border border-slate-200 bg-white flex flex-col group hover:shadow-2xl transition-all duration-500">
-                <h3 className="text-2xl font-black mb-2 uppercase tracking-tight text-slate-900">Occasion</h3>
-                <p className="text-slate-500 text-sm mb-8 font-medium italic">Parfait pour un locataire ponctuel.</p>
+                <h3 className="text-2xl font-black mb-2 uppercase tracking-tight text-slate-900">Gratuit</h3>
+                <p className="text-slate-500 text-sm mb-8 font-medium italic">Pour découvrir BailBot.</p>
                 <div className="mb-8">
                   <div className="text-5xl font-black text-slate-900">
-                    4,90€
+                    0€
+                    <span className="text-lg text-slate-400 font-bold">/mois</span>
                   </div>
-                  <div className="text-sm text-slate-400 font-bold mt-1">par dossier</div>
                 </div>
-                <ul className="space-y-4 mb-10 flex-grow">
+                <ul className="space-y-4 mb-6 flex-grow">
                   {[
-                    "1 dossier complet",
-                    "Toutes les fonctionnalités",
-                    "Export ZIP",
-                    "Bail PDF loi ALUR",
+                    "1 bien",
+                    "Analyse OCR + BailScore",
+                    "Calcul rendement brut/net",
+                    "Encadrement des loyers",
+                    "1 quittance offerte (1er mois)",
                   ].map((f) => (
                     <li key={f} className="flex items-center gap-3 text-sm font-bold text-slate-700">
                       <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" aria-hidden="true" /> {f}
                     </li>
                   ))}
                 </ul>
+                <p className="text-xs text-emerald-600 font-bold text-center mb-6">Calcul de rendement inclus — gratuit pour toujours</p>
                 <Link
                   href="/dashboard"
-                  aria-label="Commencer avec le plan Occasion à 4,90€ par dossier"
+                  aria-label="Commencer gratuitement avec BailBot"
                   className="w-full py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-emerald-600 transition-all text-center uppercase tracking-widest text-xs"
                 >
-                  Commencer
+                  Commencer gratuitement
                 </Link>
               </div>
 
-              {/* Plan Particulier — Recommandé */}
-              <div className="p-12 rounded-[50px] border-4 border-emerald-600 bg-white shadow-[0_50px_80px_-20px_rgba(16,185,129,0.2)] flex flex-col relative scale-105 z-10">
-                <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-[0.2em] px-8 py-3 rounded-full shadow-xl">
-                  Recommandé
-                </div>
-                <h3 className="text-3xl font-black mb-2 uppercase tracking-tight text-slate-900">Particulier</h3>
-                <p className="text-slate-500 text-sm mb-8 font-medium italic">Pour les propriétaires réguliers.</p>
+              {/* Plan Essentiel */}
+              <div className="p-10 rounded-[40px] border border-slate-200 bg-white flex flex-col group hover:shadow-2xl transition-all duration-500">
+                <h3 className="text-2xl font-black mb-2 uppercase tracking-tight text-slate-900">Essentiel</h3>
+                <p className="text-slate-500 text-sm mb-8 font-medium italic">Pour les propriétaires actifs.</p>
                 <div className="mb-8">
                   <div className="text-5xl font-black text-slate-900">
                     9,90€
                     <span className="text-lg text-slate-400 font-bold">/mois</span>
                   </div>
                 </div>
-                <ul className="space-y-4 mb-10 flex-grow">
+                <ul className="space-y-4 mb-6 flex-grow">
                   {[
-                    "Dossiers illimités",
-                    "Toutes les fonctionnalités",
-                    "Quittances PDF",
-                    "Bail PDF loi ALUR",
-                    "Support email",
+                    "3 biens max",
+                    "Tout le Gratuit +",
+                    "Bail ALUR complet",
+                    "Quittances automatiques",
+                    "Portail locataire",
+                    "IRL automatique",
+                    "Diagnostics + alertes",
+                  ].map((f) => (
+                    <li key={f} className="flex items-center gap-3 text-sm font-bold text-slate-700">
+                      <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" aria-hidden="true" /> {f}
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-xs text-emerald-600 font-bold text-center mb-6">≈ 6€ réels après déduction fiscale</p>
+                <Link
+                  href="/dashboard"
+                  aria-label="Choisir le plan Essentiel à 9,90€/mois"
+                  className="w-full py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-emerald-600 transition-all text-center uppercase tracking-widest text-xs"
+                >
+                  Choisir Essentiel
+                </Link>
+              </div>
+
+              {/* Plan Sérénité — Recommandé */}
+              <div className="p-12 rounded-[50px] border-4 border-emerald-600 bg-white shadow-[0_50px_80px_-20px_rgba(16,185,129,0.2)] flex flex-col relative scale-105 z-10">
+                <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-[0.2em] px-8 py-3 rounded-full shadow-xl">
+                  Plus populaire
+                </div>
+                <h3 className="text-3xl font-black mb-2 uppercase tracking-tight text-slate-900">Sérénité</h3>
+                <p className="text-slate-500 text-sm mb-8 font-medium italic">Pour une gestion sereine.</p>
+                <div className="mb-8">
+                  <div className="text-5xl font-black text-slate-900">
+                    17,90€
+                    <span className="text-lg text-slate-400 font-bold">/mois</span>
+                  </div>
+                </div>
+                <ul className="space-y-4 mb-6 flex-grow">
+                  {[
+                    "Biens illimités",
+                    "Tout Essentiel +",
+                    "OCR avancé multi-docs",
+                    "Signature eIDAS Yousign",
+                    "Export FEC/CSV comptable",
+                    "EDL complets avec photos",
+                    "Support prioritaire",
                   ].map((f) => (
                     <li key={f} className="flex items-center gap-3 text-sm font-black text-slate-800">
                       <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" aria-hidden="true" /> {f}
                     </li>
                   ))}
                 </ul>
+                <p className="text-xs text-emerald-600 font-bold text-center mb-6">≈ 11€ réels après déduction fiscale</p>
                 <Link
                   href="/dashboard"
-                  aria-label="Démarrer un essai gratuit du plan Particulier à 9,90€/mois"
+                  aria-label="Choisir le plan Sérénité à 17,90€/mois"
                   className="w-full py-5 bg-emerald-600 text-white font-black rounded-[24px] hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200 flex items-center justify-center gap-3 uppercase tracking-widest text-sm"
                 >
-                  Essai gratuit
+                  Choisir Sérénité
                 </Link>
               </div>
 

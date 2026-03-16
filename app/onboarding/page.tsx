@@ -299,8 +299,21 @@ export default function OnboardingPage() {
                     </div>
                   )}
 
-                  <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-sm text-emerald-700">
-                    Vous pouvez maintenant gérer vos biens, baux, candidatures et finances depuis votre tableau de bord.
+                  <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-sm text-emerald-700 space-y-2">
+                    <p className="font-bold">Commencez gratuitement — votre première quittance est offerte</p>
+                    <p>Votre plan Gratuit inclut : analyse OCR, BailScore, calcul de rendement et votre 1re quittance offerte.</p>
+                  </div>
+
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-600 space-y-2">
+                    <p className="font-black text-slate-800 text-sm">Besoin de plus ?</p>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold">Essentiel — 9,90€/mois</span>
+                      <span className="text-slate-400">3 biens, baux ALUR, quittances auto</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold">Sérénité — 17,90€/mois</span>
+                      <span className="text-slate-400">Illimité, signature eIDAS, export FEC</span>
+                    </div>
                   </div>
                 </div>
               </>

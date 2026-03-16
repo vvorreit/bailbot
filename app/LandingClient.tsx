@@ -108,8 +108,8 @@ const faqData = [
     answer: "Absolument. Toutes les données sont chiffrées en AES-256, hébergées en France, et nous sommes conformes au RGPD. L'analyse OCR des documents se fait localement dans votre navigateur — aucune donnée personnelle de vos locataires ne transite par nos serveurs.",
   },
   {
-    question: "Que se passe-t-il à la fin de l'essai ?",
-    answer: "À la fin des 14 jours d'essai gratuit, vous choisissez le plan qui vous convient. Si vous ne souscrivez pas, votre compte passe en lecture seule — vous ne perdez aucune donnée. Aucune carte bancaire n'est requise pour l'essai.",
+    question: "Quelles fonctionnalités sont gratuites ?",
+    answer: "Le plan Gratuit inclut 1 bien, l'analyse OCR avec BailScore, le calcul de rendement brut/net, l'encadrement des loyers et votre première quittance offerte. Pour les baux ALUR, les quittances automatiques et l'IRL, passez à Essentiel à 9,90\u20ac/mois.",
   },
   {
     question: "BailBot fonctionne pour quel type de biens ?",
@@ -225,7 +225,7 @@ export default function LandingClient() {
                 href={dashHref}
                 className="px-6 py-3 bg-emerald-600 text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200 active:scale-95"
               >
-                Essai 14j gratuit
+                Commencer gratuitement
               </Link>
             )}
           </div>
@@ -251,11 +251,11 @@ export default function LandingClient() {
               href={dashHref}
               className="px-10 py-5 bg-emerald-600 text-white font-black rounded-2xl hover:bg-emerald-700 transition-all shadow-2xl shadow-emerald-200 flex items-center justify-center gap-3 text-lg group active:scale-95 uppercase tracking-widest"
             >
-              Commencer mon essai gratuit de 14 jours
+              Commencer gratuitement
               <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
             </Link>
             <p className="text-sm text-slate-400 font-medium">
-              Sans carte bancaire · Annulable à tout moment
+              Sans carte bancaire · Analyse OCR gratuite · Annulable à tout moment
             </p>
           </div>
 
@@ -525,13 +525,24 @@ export default function LandingClient() {
                   <span className="text-lg text-slate-400 font-bold">/mois</span>
                 </div>
               </div>
-              <ul className="space-y-4 mb-10 flex-grow">
-                {["1 bien", "Baux ALUR basiques", "Quittances manuelles"].map((feat) => (
+              <ul className="space-y-4 mb-6 flex-grow">
+                {[
+                  "1 bien",
+                  "Analyse OCR + BailScore",
+                  "Calcul rendement brut/net",
+                  "Encadrement des loyers",
+                  "Dépôt de dossier candidat",
+                  "1 quittance offerte (1er mois)",
+                ].map((feat) => (
                   <li key={feat} className="flex items-center gap-3 text-sm font-bold text-slate-700">
                     <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" /> {feat}
                   </li>
                 ))}
               </ul>
+              <div className="space-y-1 mb-6">
+                <p className="text-xs text-emerald-600 font-bold text-center">Calcul de rendement inclus — gratuit pour toujours</p>
+                <p className="text-xs text-slate-500 font-bold text-center">Votre 1re quittance est offerte. Passez à Essentiel pour continuer.</p>
+              </div>
               <Link
                 href={dashHref}
                 className="w-full py-4 font-black rounded-2xl text-center uppercase tracking-widest text-xs bg-slate-900 text-white hover:bg-emerald-600 transition-all"
@@ -559,11 +570,13 @@ export default function LandingClient() {
               <ul className="space-y-4 mb-6 flex-grow">
                 {[
                   "3 biens max",
-                  "Baux ALUR conformes",
+                  "Tout le Gratuit +",
+                  "Bail ALUR complet",
                   "Quittances automatiques",
                   "Portail locataire",
                   "IRL automatique",
-                  "Analyse dossier basique",
+                  "États des lieux basiques",
+                  "Diagnostics avec alertes",
                 ].map((feat) => (
                   <li key={feat} className="flex items-center gap-3 text-sm font-bold text-slate-700">
                     <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" /> {feat}
@@ -579,7 +592,7 @@ export default function LandingClient() {
                 disabled={isStripeLoading === "ESSENTIEL"}
                 className="w-full py-4 font-black rounded-2xl text-center uppercase tracking-widest text-xs bg-slate-900 text-white hover:bg-emerald-600 transition-all disabled:opacity-50"
               >
-                {isStripeLoading === "ESSENTIEL" ? "Chargement..." : "Démarrer l'essai 14j"}
+                {isStripeLoading === "ESSENTIEL" ? "Chargement..." : "Choisir Essentiel"}
               </button>
             </div>
 
@@ -605,12 +618,13 @@ export default function LandingClient() {
                 {[
                   "Biens illimités",
                   "Tout Essentiel +",
-                  "Analyse OCR + BailScore",
+                  "OCR avancé multi-docs",
                   "Signature eIDAS Yousign",
-                  "Finances & rendements",
-                  "Export FEC comptable",
-                  "États des lieux complets",
-                  "Diagnostics avec alertes",
+                  "Export FEC/CSV comptable",
+                  "Finances avancées",
+                  "EDL complets avec photos",
+                  "Garants/cautionnaires",
+                  "Modèles de baux personnalisables",
                   "Support prioritaire",
                 ].map((feat) => (
                   <li key={feat} className="flex items-center gap-3 text-sm font-bold text-slate-700">
@@ -624,14 +638,14 @@ export default function LandingClient() {
                 disabled={isStripeLoading === "SERENITE"}
                 className="w-full py-4 font-black rounded-2xl text-center uppercase tracking-widest text-xs bg-emerald-600 text-white hover:bg-emerald-700 shadow-xl shadow-emerald-200 transition-all disabled:opacity-50"
               >
-                {isStripeLoading === "SERENITE" ? "Chargement..." : "Démarrer l'essai 14j"}
+                {isStripeLoading === "SERENITE" ? "Chargement..." : "Choisir Sérénité"}
               </button>
             </div>
           </div>
 
           <div className="text-center mt-10 space-y-2">
             <p className="text-sm text-slate-400 font-medium">
-              Aucune carte de crédit requise pour l&apos;essai · Annulable à tout moment · Support inclus
+              Sans carte bancaire pour le plan Gratuit · Annulable à tout moment · Support inclus
             </p>
             <p className="text-xs text-slate-500 font-medium mt-4">
               * En régime réel, les frais de gestion locative sont déductibles de vos revenus fonciers. BailBot est une charge déductible.
@@ -673,11 +687,11 @@ export default function LandingClient() {
             href={dashHref}
             className="px-12 py-6 bg-emerald-600 text-white font-black rounded-[32px] hover:bg-emerald-500 transition-all text-xl shadow-2xl shadow-emerald-500/30 active:scale-95 inline-flex items-center gap-3 uppercase tracking-widest"
           >
-            Commencer mon essai gratuit de 14 jours
+            Commencer gratuitement
             <ArrowRight className="w-6 h-6" />
           </Link>
           <p className="text-sm text-slate-500 font-medium mt-6">
-            Sans carte bancaire · Configuration en 5 minutes · Support disponible
+            Sans carte bancaire · OCR gratuit · Configuration en 5 minutes
           </p>
         </div>
       </section>

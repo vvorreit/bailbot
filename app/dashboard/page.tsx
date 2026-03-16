@@ -132,6 +132,55 @@ function formatDate(ts?: number): string {
   return new Date(ts).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
 }
 
+/* ─── Freemium Banner ────────────────────────────────────────────────────── */
+
+function FreemiumBanner() {
+  const [userData, setUserData] = useState<{ isPro: boolean; plan: string; createdAt: string | Date } | null>(null);
+
+  useEffect(() => {
+    import("@/app/dashboard/actions").then(({ getUserDashboardData }) => {
+      getUserDashboardData().then((d: any) => { if (d) setUserData(d); }).catch(() => {});
+    });
+  }, []);
+
+  if (!userData || userData.isPro) return null;
+
+  const created = new Date(userData.createdAt);
+  const daysSince = Math.floor((Date.now() - created.getTime()) / 86_400_000);
+  const trialAvailable = daysSince <= 30;
+
+  return (
+    <div className="mb-4">
+      {trialAvailable ? (
+        <div className="flex items-center justify-between gap-3 px-5 py-3 rounded-2xl bg-emerald-50 border border-emerald-200">
+          <div className="flex items-center gap-2 text-sm font-bold text-emerald-700">
+            <span>🎁</span>
+            <span>Votre première quittance est offerte ce mois-ci</span>
+          </div>
+          <Link
+            href="/dashboard/bails"
+            className="shrink-0 px-4 py-2 bg-emerald-600 text-white text-xs font-black rounded-xl hover:bg-emerald-700 transition-colors uppercase tracking-wider"
+          >
+            Générer ma quittance →
+          </Link>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between gap-3 px-5 py-3 rounded-2xl bg-amber-50 border border-amber-200">
+          <p className="text-sm font-bold text-amber-700">
+            Continuez avec Essentiel à 9,90€/mois pour les quittances automatiques
+          </p>
+          <Link
+            href="/#tarifs"
+            className="shrink-0 px-4 py-2 bg-amber-600 text-white text-xs font-black rounded-xl hover:bg-amber-700 transition-colors uppercase tracking-wider"
+          >
+            Voir les offres
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── KPI Band ──────────────────────────────────────────────────────────── */
 
 function KPIBand() {
@@ -209,6 +258,9 @@ export default function LogementsPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      {/* Freemium banner */}
+      <FreemiumBanner />
+
       {/* KPI Band */}
       <KPIBand />
 
