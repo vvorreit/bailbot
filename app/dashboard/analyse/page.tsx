@@ -186,7 +186,7 @@ export default function Dashboard() {
     refreshData();
   }, [refreshData]);
 
-  const handleCheckout = async (plan: "SOLO" | "DUO") => {
+  const handleCheckout = async (plan: "ESSENTIEL" | "SERENITE" | "PORTFOLIO") => {
     setIsStripeLoading(plan);
     try {
       const { url } = await createCheckoutSession(plan);
@@ -400,7 +400,7 @@ export default function Dashboard() {
               </div>
               {userData?.isPro && (
                 <span className="px-3 py-1 bg-emerald-600 text-white text-[10px] font-black rounded-full uppercase tracking-tighter mb-1">
-                  {userData.plan === "DUO" ? "DUO" : "SOLO"}
+                  {userData.plan}
                 </span>
               )}
             </div>
@@ -417,18 +417,25 @@ export default function Dashboard() {
                     Passer au PRO
                   </p>
                   <button
-                    onClick={() => handleCheckout("SOLO")}
+                    onClick={() => handleCheckout("ESSENTIEL")}
                     disabled={isStripeLoading !== null}
                     className="w-full px-3 py-2 rounded-xl bg-emerald-600 text-white text-[11px] font-black hover:bg-emerald-700 transition-colors disabled:opacity-50"
                   >
-                    {isStripeLoading === "SOLO" ? "Chargement..." : "Solo — 59€/mois"}
+                    {isStripeLoading === "ESSENTIEL" ? "Chargement..." : "Essentiel — 39€/mois"}
                   </button>
                   <button
-                    onClick={() => handleCheckout("DUO")}
+                    onClick={() => handleCheckout("SERENITE")}
                     disabled={isStripeLoading !== null}
                     className="w-full px-3 py-2 rounded-xl bg-slate-100 text-slate-700 text-[11px] font-black hover:bg-slate-200 transition-colors disabled:opacity-50"
                   >
-                    {isStripeLoading === "DUO" ? "Chargement..." : "Premium — 49€/user/mois"}
+                    {isStripeLoading === "SERENITE" ? "Chargement..." : "Sérénité — 59€/mois"}
+                  </button>
+                  <button
+                    onClick={() => handleCheckout("PORTFOLIO")}
+                    disabled={isStripeLoading !== null}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-100 text-slate-700 text-[11px] font-black hover:bg-slate-200 transition-colors disabled:opacity-50"
+                  >
+                    {isStripeLoading === "PORTFOLIO" ? "Chargement..." : "Portfolio — 89€/mois"}
                   </button>
                 </div>
               </>
@@ -450,12 +457,12 @@ export default function Dashboard() {
                     Factures
                   </button>
                 </div>
-                {userData.plan === "SOLO" && (
+                {userData.plan === "ESSENTIEL" && (
                   <button
                     onClick={async () => {
-                      setIsStripeLoading("DUO");
+                      setIsStripeLoading("SERENITE");
                       try {
-                        await upgradePlan("DUO");
+                        await upgradePlan("SERENITE");
                         await refreshData();
                       } catch (err: any) {
                         alert(err?.message || "Erreur lors de la montée en gamme.");
@@ -466,7 +473,26 @@ export default function Dashboard() {
                     disabled={isStripeLoading !== null}
                     className="w-full px-3 py-2 rounded-xl bg-slate-100 text-slate-700 text-[11px] font-black hover:bg-slate-200 transition-colors disabled:opacity-50"
                   >
-                    {isStripeLoading === "DUO" ? "Chargement..." : "Passer Premium — 49€/user/mois"}
+                    {isStripeLoading === "SERENITE" ? "Chargement..." : "Passer Sérénité — 59€/mois"}
+                  </button>
+                )}
+                {(userData.plan === "ESSENTIEL" || userData.plan === "SERENITE") && (
+                  <button
+                    onClick={async () => {
+                      setIsStripeLoading("PORTFOLIO");
+                      try {
+                        await upgradePlan("PORTFOLIO");
+                        await refreshData();
+                      } catch (err: any) {
+                        alert(err?.message || "Erreur lors de la montée en gamme.");
+                      } finally {
+                        setIsStripeLoading(null);
+                      }
+                    }}
+                    disabled={isStripeLoading !== null}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-100 text-slate-700 text-[11px] font-black hover:bg-slate-200 transition-colors disabled:opacity-50"
+                  >
+                    {isStripeLoading === "PORTFOLIO" ? "Chargement..." : "Passer Portfolio — 89€/mois"}
                   </button>
                 )}
               </div>

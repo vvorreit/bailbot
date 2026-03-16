@@ -85,10 +85,13 @@ export async function incrementClientCountInDB() {
   }
 }
 
-export async function createCheckoutSession(plan: "SOLO" | "DUO") {
-  const priceId = plan === "SOLO"
-    ? process.env.STRIPE_PRICE_SOLO
-    : process.env.STRIPE_PRICE_DUO;
+export async function createCheckoutSession(plan: "ESSENTIEL" | "SERENITE" | "PORTFOLIO") {
+  const priceMap: Record<string, string | undefined> = {
+    ESSENTIEL: process.env.STRIPE_PRICE_ESSENTIEL,
+    SERENITE: process.env.STRIPE_PRICE_SERENITE,
+    PORTFOLIO: process.env.STRIPE_PRICE_PORTFOLIO,
+  };
+  const priceId = priceMap[plan];
 
   if (!priceId) throw new Error(`Plan Stripe non configuré : STRIPE_PRICE_${plan}`);
   const session = await getSession();
@@ -161,7 +164,7 @@ export async function createCheckoutSession(plan: "SOLO" | "DUO") {
   return { url: checkoutSession.url };
 }
 
-export async function upgradePlan(newPlan: "SOLO" | "DUO") {
+export async function upgradePlan(newPlan: "ESSENTIEL" | "SERENITE" | "PORTFOLIO") {
   const session = await getSession();
   if (!session?.user?.email) throw new Error("Non autorisé");
 
@@ -173,9 +176,12 @@ export async function upgradePlan(newPlan: "SOLO" | "DUO") {
   if (!user?.stripeSubscriptionId) throw new Error("Aucun abonnement actif.");
   if (user.plan === newPlan) throw new Error("Vous êtes déjà sur ce plan.");
 
-  const newPriceId = newPlan === "DUO"
-    ? process.env.STRIPE_PRICE_DUO
-    : process.env.STRIPE_PRICE_SOLO;
+  const priceMap: Record<string, string | undefined> = {
+    ESSENTIEL: process.env.STRIPE_PRICE_ESSENTIEL,
+    SERENITE: process.env.STRIPE_PRICE_SERENITE,
+    PORTFOLIO: process.env.STRIPE_PRICE_PORTFOLIO,
+  };
+  const newPriceId = priceMap[newPlan];
 
   if (!newPriceId) throw new Error(`Plan Stripe non configuré : STRIPE_PRICE_${newPlan}`);
 

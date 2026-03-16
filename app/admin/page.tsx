@@ -14,15 +14,16 @@ import {
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 
-const PLANS = ["FREE", "SOLO", "DUO", "TEAM_3", "TEAM_5"] as const;
+const PLANS = ["FREE", "ESSENTIEL", "SERENITE", "PORTFOLIO", "TEAM_3", "TEAM_5"] as const;
 type Plan = typeof PLANS[number];
 
 const PLAN_COLORS: Record<Plan, string> = {
-  FREE:   "bg-slate-100 text-slate-400",
-  SOLO:   "bg-green-100 text-green-600",
-  DUO:    "bg-purple-100 text-purple-600",
-  TEAM_3: "bg-indigo-100 text-indigo-600",
-  TEAM_5: "bg-blue-100 text-blue-700",
+  FREE:      "bg-slate-100 text-slate-400",
+  ESSENTIEL: "bg-green-100 text-green-600",
+  SERENITE:  "bg-purple-100 text-purple-600",
+  PORTFOLIO: "bg-amber-100 text-amber-700",
+  TEAM_3:    "bg-indigo-100 text-indigo-600",
+  TEAM_5:    "bg-blue-100 text-blue-700",
 };
 
 interface AdminUser {
@@ -56,7 +57,7 @@ interface TeamData {
 }
 
 interface Analytics {
-  totalUsers: number; proUsers: number; soloUsers: number; duoUsers: number;
+  totalUsers: number; proUsers: number; essentielUsers: number; sereniteUsers: number; portfolioUsers: number;
   freeUsers: number; newThisMonth: number; newLastMonth: number;
   totalScans: number; verifiedUsers: number; unverifiedUsers: number;
   teamsCount: number; conversionRate: number; mrrEstimate: number;
@@ -304,7 +305,7 @@ export default function AdminDashboard() {
               <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
                 <h2 className="font-black mb-5">MRR projeté</h2>
                 <p className="text-4xl font-black text-green-600 mb-1">{analytics.mrrEstimate.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €</p>
-                <p className="text-xs text-slate-400 font-semibold mb-4">{analytics.soloUsers} Solo × 32,90 € + {analytics.duoUsers} Duo × 49,90 €</p>
+                <p className="text-xs text-slate-400 font-semibold mb-4">{analytics.essentielUsers} Essentiel × 39 € + {analytics.sereniteUsers} Sérénité × 59 € + {analytics.portfolioUsers} Portfolio × 89 €</p>
                 <p className="text-sm font-bold text-slate-400">ARR estimé : <span className="text-slate-700">{(analytics.mrrEstimate * 12).toLocaleString("fr-FR", { minimumFractionDigits: 0 })} €</span></p>
               </div>
             </div>

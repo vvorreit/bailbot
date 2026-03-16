@@ -23,14 +23,15 @@ export async function getAdminAnalytics() {
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
   const [
-    totalUsers, proUsers, soloUsers, duoUsers,
+    totalUsers, proUsers, essentielUsers, sereniteUsers, portfolioUsers,
     newThisMonth, newLastMonth, usersLast30Days,
     scansAggregate, verifiedUsers, teamsCount,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.user.count({ where: { isPro: true } }),
-    prisma.user.count({ where: { plan: "SOLO" } }),
-    prisma.user.count({ where: { plan: "DUO" } }),
+    prisma.user.count({ where: { plan: "ESSENTIEL" } }),
+    prisma.user.count({ where: { plan: "SERENITE" } }),
+    prisma.user.count({ where: { plan: "PORTFOLIO" } }),
     prisma.user.count({ where: { createdAt: { gte: thisMonthStart } } }),
     prisma.user.count({ where: { createdAt: { gte: lastMonthStart, lt: thisMonthStart } } }),
     prisma.user.findMany({ where: { createdAt: { gte: thirtyDaysAgo } }, select: { createdAt: true } }),
@@ -50,12 +51,13 @@ export async function getAdminAnalytics() {
   }
 
   const conversionRate = totalUsers > 0 ? Math.round((proUsers / totalUsers) * 1000) / 10 : 0;
-  const priceSolo = Number(process.env.STRIPE_PRICE_SOLO_AMOUNT ?? 32.9);
-  const priceDuo = Number(process.env.STRIPE_PRICE_DUO_AMOUNT ?? 49.9);
-  const mrrEstimate = Math.round((soloUsers * priceSolo + duoUsers * priceDuo) * 100) / 100;
+  const priceEssentiel = Number(process.env.STRIPE_PRICE_ESSENTIEL_AMOUNT ?? 39);
+  const priceSerenite = Number(process.env.STRIPE_PRICE_SERENITE_AMOUNT ?? 59);
+  const pricePortfolio = Number(process.env.STRIPE_PRICE_PORTFOLIO_AMOUNT ?? 89);
+  const mrrEstimate = Math.round((essentielUsers * priceEssentiel + sereniteUsers * priceSerenite + portfolioUsers * pricePortfolio) * 100) / 100;
 
   return {
-    totalUsers, proUsers, soloUsers, duoUsers,
+    totalUsers, proUsers, essentielUsers, sereniteUsers, portfolioUsers,
     freeUsers: totalUsers - proUsers,
     newThisMonth, newLastMonth,
     totalScans: scansAggregate._sum.clientCount ?? 0,
