@@ -372,8 +372,8 @@ function BailCard({
         className="w-full text-left p-5 flex items-start justify-between gap-3"
       >
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-base font-black text-slate-900 truncate">{bail.locataireNom}</h3>
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <h3 className="text-base font-black text-slate-900 truncate max-w-[200px] sm:max-w-none">{bail.locataireNom}</h3>
             <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${cfg.bg} ${cfg.text}`}>
               {cfg.label}
             </span>
@@ -416,7 +416,7 @@ function BailCard({
       {/* Timeline expanded */}
       {expanded && (
         <div className="px-5 pb-5 border-t border-slate-100 pt-4">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-4 text-xs">
             <InfoPill label="Indice" value={bail.indiceRevision} />
             <InfoPill
               label="Proch. révision"
@@ -466,26 +466,26 @@ function BailCard({
           </div>
 
           {/* Actions bail */}
-          <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-3">
+          <div className="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center gap-2 sm:gap-3">
             <button
               onClick={() => setShowPdfModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-colors"
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold rounded-xl transition-colors"
             >
               <Download className="w-4 h-4" />
-              Bail PDF
+              <span className="hidden sm:inline">Bail</span> PDF
             </button>
             {(bail.statut === 'ACTIF' || bail.statut === 'PREAVIS') && (
               <>
                 <button
                   onClick={() => setShowIRLModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-bold rounded-xl transition-colors border border-indigo-200"
+                  className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs sm:text-sm font-bold rounded-xl transition-colors border border-indigo-200"
                 >
                   <TrendingUp className="w-4 h-4" />
-                  Révision IRL
+                  <span className="hidden sm:inline">Révision</span> IRL
                 </button>
                 <button
                   onClick={() => setShowClotureModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-bold rounded-xl transition-colors border border-red-200"
+                  className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-xs sm:text-sm font-bold rounded-xl transition-colors border border-red-200"
                 >
                   <FileX className="w-4 h-4" />
                   Clôturer
@@ -499,8 +499,8 @@ function BailCard({
 
       {/* Modal complétion données PDF */}
       {showPdfModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-5 border-b border-slate-100">
               <h3 className="text-base font-black text-slate-900">Générer le bail PDF</h3>
               <button onClick={() => setShowPdfModal(false)} className="p-1 hover:bg-slate-100 rounded-lg">

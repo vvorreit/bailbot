@@ -644,11 +644,44 @@ export default function ImpayesPage() {
                   return (
                     <div
                       key={p.id}
-                      className={`px-5 py-4 flex flex-wrap items-center gap-3 hover:bg-slate-50/50 transition-colors ${
+                      className={`px-4 sm:px-5 py-4 hover:bg-slate-50/50 transition-colors ${
                         isActionable ? 'bg-amber-50/30' : ''
                       }`}
                     >
-                      {/* Statut icône */}
+                      {/* Mobile: card layout */}
+                      <div className="sm:hidden space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            {p.statut === 'paye' && <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />}
+                            {p.statut === 'retard' && <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />}
+                            {p.statut === 'impaye' && <XCircle className="w-4 h-4 text-red-500 shrink-0" />}
+                            {(p.statut === 'attendu' || p.statut === 'partiel') && (
+                              <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 shrink-0" />
+                            )}
+                            <p className="text-sm font-bold text-slate-800 truncate">{bien?.adresse ?? p.bienId}</p>
+                          </div>
+                          <p className="text-sm font-bold text-slate-800 shrink-0">{p.loyerCC.toLocaleString('fr-FR')}€</p>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-xs text-slate-500">{p.locatairePrenom} {p.locataireNom}</p>
+                          <StatutBadge statut={p.statut} joursRetard={joursRetard} />
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {p.statut !== 'paye' && (
+                            <button onClick={() => handleMarquerPaye(p)} className="px-2.5 py-1.5 text-xs font-bold bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100">Paye</button>
+                          )}
+                          {isActionable && (
+                            <button onClick={() => setRelanceTarget(p)} className="px-2.5 py-1.5 text-xs font-bold bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100">Relancer</button>
+                          )}
+                          {isActionable && prochainEtape && prochainEtape.numero >= 3 && (
+                            <button onClick={() => handleMiseEnDemeure(p)} className="px-2.5 py-1.5 text-xs font-bold bg-red-50 text-red-700 rounded-lg hover:bg-red-100">Mise en dem.</button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Desktop: row layout */}
+                      <div className="hidden sm:flex flex-wrap items-center gap-3">
+                      {/* Statut icone */}
                       <div className="w-6 flex-shrink-0">
                         {p.statut === 'paye' && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
                         {p.statut === 'retard' && <AlertTriangle className="w-5 h-5 text-amber-500" />}
@@ -664,7 +697,7 @@ export default function ImpayesPage() {
                       </div>
 
                       {/* Locataire */}
-                      <div className="w-36 hidden sm:block">
+                      <div className="w-36">
                         <p className="text-sm text-slate-600">
                           {p.locatairePrenom} {p.locataireNom}
                         </p>
@@ -677,7 +710,7 @@ export default function ImpayesPage() {
                         </p>
                       </div>
 
-                      {/* Statut + étape */}
+                      {/* Statut + etape */}
                       <div className="w-36 text-right">
                         <StatutBadge statut={p.statut} joursRetard={joursRetard} />
                         {prochainEtape && (
@@ -743,6 +776,7 @@ export default function ImpayesPage() {
                             {p.relances.length}
                           </button>
                         )}
+                      </div>
                       </div>
                     </div>
                   );
