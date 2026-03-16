@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Building2, ChevronRight, ChevronLeft, Check, Bell, Home, User, Briefcase } from "lucide-react";
@@ -11,6 +11,7 @@ import {
   saveOnboardingStep3,
   saveOnboardingStep4,
   markOnboardingComplete,
+  checkAndCompleteOnboarding,
 } from "@/app/actions/onboarding";
 import type { Metier } from "@prisma/client";
 
@@ -30,6 +31,21 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [checking, setChecking] = useState(true);
+
+  /* Auto-skip onboarding si l'user a deja des donnees en base */
+  useEffect(() => {
+    checkAndCompleteOnboarding()
+      .then(async ({ shouldSkip }) => {
+        if (shouldSkip) {
+          await updateSession({ onboardingCompleted: true });
+          router.push("/dashboard");
+        } else {
+          setChecking(false);
+        }
+      })
+      .catch(() => setChecking(false));
+  }, []);
 
   // Step 1
   const [metier, setMetier] = useState<Metier | null>(null);
@@ -128,6 +144,19 @@ export default function OnboardingPage() {
   };
 
   const progress = (step / TOTAL_STEPS) * 100;
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white mx-auto mb-3">
+            <Building2 className="w-5 h-5" />
+          </div>
+          <p className="text-sm text-slate-500 font-semibold">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
