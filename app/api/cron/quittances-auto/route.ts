@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { sendMail } from "@/lib/mailer";
+import { sendMail, escapeHtml } from "@/lib/mailer";
 import { genererQuittancePDF } from "@/lib/generateur-quittance";
 import { generateQuittanceNumero } from "@/lib/quittance-numero";
 import { logCronStart, logCronSuccess, logCronFailure } from "@/lib/cron-logger";
@@ -13,7 +13,8 @@ export async function GET(req: NextRequest) {
 
   if (process.env.NODE_ENV === "production") {
     const auth = req.headers.get("authorization");
-    if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+    const secret = process.env.CRON_SECRET;
+    if (!secret || auth !== `Bearer ${secret}`) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
   }
@@ -119,7 +120,7 @@ export async function GET(req: NextRequest) {
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b;">
   <div style="background: #f8fafc; border-radius: 12px; padding: 32px 24px;">
     <h2 style="color: #0f172a; margin-top: 0;">Votre quittance de loyer</h2>
-    <p>Bonjour ${bail.locataireNom},</p>
+    <p>Bonjour ${escapeHtml(bail.locataireNom)},</p>
     <p>Veuillez trouver ci-dessous votre quittance de loyer pour le mois de <strong>${moisNom}</strong>.</p>
     <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
       <p style="margin: 4px 0;"><strong>Loyer :</strong> ${bail.loyerMensuel.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €</p>
@@ -169,9 +170,9 @@ export async function GET(req: NextRequest) {
           const lotLabel = p.descriptionLot || `Bail ${i + 1}`;
           return `
     <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 8px 0;">
-      <p style="margin: 4px 0;"><strong>${lotLabel}</strong> — ${p.locataireNom}</p>
+      <p style="margin: 4px 0;"><strong>${escapeHtml(lotLabel)}</strong> — ${escapeHtml(p.locataireNom)}</p>
       <p style="margin: 8px 0;">
-        <a href="data:application/pdf;base64,${p.base64}" download="quittance-${p.locataireNom.replace(/\s+/g, "-")}-${moisCle}.pdf"
+        <a href="data:application/pdf;base64,${p.base64}" download="quittance-${escapeHtml(p.locataireNom.replace(/\s+/g, "-"))}-${moisCle}.pdf"
            style="color: #4f46e5; text-decoration: underline;">
           Télécharger la quittance PDF
         </a>
@@ -187,8 +188,8 @@ export async function GET(req: NextRequest) {
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b;">
   <div style="background: #f8fafc; border-radius: 12px; padding: 32px 24px;">
     <h2 style="color: #0f172a; margin-top: 0;">Récapitulatif quittances — ${moisNom}</h2>
-    <p>Bonjour ${user.name || ""},</p>
-    <p>${nbBaux} quittance${nbBaux > 1 ? "s ont" : " a"} été envoyée${nbBaux > 1 ? "s" : ""} pour le bien <strong>${bienLabel}</strong>.</p>
+    <p>Bonjour ${escapeHtml(user.name || "")},</p>
+    <p>${nbBaux} quittance${nbBaux > 1 ? "s ont" : " a"} été envoyée${nbBaux > 1 ? "s" : ""} pour le bien <strong>${escapeHtml(bienLabel)}</strong>.</p>
     ${lignesRecap}
   </div>
   <p style="font-size: 11px; color: #94a3b8; text-align: center; margin-top: 16px;">

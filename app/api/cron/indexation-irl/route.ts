@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { sendMail, smtpConfigured } from "@/lib/mailer";
+import { sendMail, smtpConfigured, escapeHtml } from "@/lib/mailer";
 import { calculerRevisionLoyer, IRL_DERNIERE_MAJ } from "@/lib/revision-loyer";
 import { logCronStart, logCronSuccess, logCronFailure } from "@/lib/cron-logger";
 import { isFeatureEnabled } from "@/lib/feature-flags";
@@ -86,9 +86,9 @@ export async function GET(request: Request) {
         subject: `Rappel : Révision IRL possible pour ${adresse} — Date anniversaire dans ${diffJours} jours`,
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #1e293b;">Révision IRL — ${adresse}</h2>
-            <p>Bonjour ${user.name || ""},</p>
-            <p>La date anniversaire du bail de <strong>${bail.locataireNom}</strong> approche :</p>
+            <h2 style="color: #1e293b;">Révision IRL — ${escapeHtml(adresse)}</h2>
+            <p>Bonjour ${escapeHtml(user.name || "")},</p>
+            <p>La date anniversaire du bail de <strong>${escapeHtml(bail.locataireNom)}</strong> approche :</p>
             <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
               <tr><td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: bold;">Date anniversaire</td><td style="padding: 8px; border: 1px solid #e2e8f0;">${dateRevisionStr}</td></tr>
               <tr><td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: bold;">Loyer actuel</td><td style="padding: 8px; border: 1px solid #e2e8f0;">${bail.loyerMensuel.toFixed(2)} €</td></tr>

@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { sendMail } from '@/lib/mailer';
+import { sendMail, escapeHtml } from '@/lib/mailer';
 import { TYPE_ALERTE_LABELS } from '@/lib/echeances-bail';
 
 export async function GET(req: NextRequest) {
   if (process.env.NODE_ENV === 'production') {
     const auth = req.headers.get('authorization');
-    if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+    const secret = process.env.CRON_SECRET;
+    if (!secret || auth !== `Bearer ${secret}`) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
   }
@@ -69,12 +70,12 @@ export async function GET(req: NextRequest) {
       ${urgencyLabel} &mdash; ${palier}
     </div>
     <h2 style="color: #0f172a; margin-top: 0;">${label}</h2>
-    <p>Bonjour ${user.name || ''},</p>
-    <p>Une &eacute;ch&eacute;ance arrive pour le bail de <strong>${bail.locataireNom}</strong> :</p>
+    <p>Bonjour ${escapeHtml(user.name || '')},</p>
+    <p>Une &eacute;ch&eacute;ance arrive pour le bail de <strong>${escapeHtml(bail.locataireNom)}</strong> :</p>
     <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
       <p style="margin: 4px 0;"><strong>Type :</strong> ${label}</p>
       <p style="margin: 4px 0;"><strong>Date :</strong> ${dateStr}</p>
-      <p style="margin: 4px 0;"><strong>Locataire :</strong> ${bail.locataireNom}</p>
+      <p style="margin: 4px 0;"><strong>Locataire :</strong> ${escapeHtml(bail.locataireNom)}</p>
       <p style="margin: 4px 0;"><strong>Loyer :</strong> ${bail.loyerMensuel.toLocaleString('fr-FR')}&euro;</p>
     </div>
     <p>Connectez-vous &agrave; BailBot pour g&eacute;rer cette &eacute;ch&eacute;ance.</p>

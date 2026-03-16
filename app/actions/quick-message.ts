@@ -3,7 +3,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { sendMail } from "@/lib/mailer";
+import { sendMail, escapeHtml } from "@/lib/mailer";
 
 export interface LocataireOption {
   email: string;
@@ -53,10 +53,10 @@ export async function sendQuickMessage(to: string, subject: string, body: string
       to,
       subject,
       html: `<div style="font-family: sans-serif; max-width: 600px;">
-        <p>${body.replace(/\n/g, "<br>")}</p>
+        <p>${escapeHtml(body).replace(/\n/g, "<br>")}</p>
         <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
         <p style="font-size: 12px; color: #94a3b8;">
-          Envoyé via BailBot par ${user.name || user.email}
+          Envoyé via BailBot par ${escapeHtml(user.name || user.email || "")}
         </p>
       </div>`,
       replyTo: user.email ?? undefined,

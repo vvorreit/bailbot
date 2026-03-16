@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getTeamDetails } from "@/app/actions/team";
 import TeamSettings from "@/components/TeamSettings";
 import { getServerSession } from "next-auth";

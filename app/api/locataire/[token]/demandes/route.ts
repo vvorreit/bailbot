@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { sendMail, smtpConfigured } from '@/lib/mailer';
+import { sendMail, smtpConfigured, escapeHtml } from '@/lib/mailer';
 
 const TYPES_VALIDES = ['DOCUMENT', 'TRAVAUX', 'QUESTION', 'CONGE'] as const;
 
@@ -87,7 +87,7 @@ export async function POST(
             <p><strong>Type :</strong> ${TYPE_LABELS[type] || type}</p>
             <p><strong>Message :</strong></p>
             <blockquote style="border-left:3px solid #059669;padding-left:12px;color:#475569">
-              ${message.trim().replace(/\n/g, '<br>')}
+              ${escapeHtml(message.trim()).replace(/\n/g, '<br>')}
             </blockquote>
             <p style="margin-top:20px">
               <a href="${process.env.NEXTAUTH_URL || 'https://app.optibot.fr'}/dashboard/espaces-locataires"

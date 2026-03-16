@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Search, X } from 'lucide-react';
 import { rechercherCandidatures, listerBiens, type Candidature, type Bien } from '@/lib/db-local';
 import DossierModal from './DossierModal';
@@ -67,6 +67,8 @@ export default function SearchDossiers() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const searchIdRef = useRef(0);
+
   const handleSearch = useCallback(async (q: string) => {
     setQuery(q);
     if (q.length < 2) {
@@ -74,15 +76,18 @@ export default function SearchDossiers() {
       setOpen(q.length > 0);
       return;
     }
+    const id = ++searchIdRef.current;
     setLoading(true);
     setOpen(true);
     try {
       const res = await rechercherCandidatures(q);
-      setResults(res.slice(0, 8)); // max 8 résultats
+      if (searchIdRef.current !== id) return;
+      setResults(res.slice(0, 8));
     } catch {
+      if (searchIdRef.current !== id) return;
       setResults([]);
     } finally {
-      setLoading(false);
+      if (searchIdRef.current === id) setLoading(false);
     }
   }, []);
 

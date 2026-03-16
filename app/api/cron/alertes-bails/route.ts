@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { sendMail } from '@/lib/mailer';
+import { sendMail, escapeHtml } from '@/lib/mailer';
 import { sendPushToUser } from '@/lib/push-notifications';
 import { TYPE_ALERTE_LABELS } from '@/lib/echeances-bail';
 import { analyserTousDiagnostics, diagnosticsARenouveler } from '@/lib/diagnostics-expiration';
@@ -8,7 +8,8 @@ import { analyserTousDiagnostics, diagnosticsARenouveler } from '@/lib/diagnosti
 export async function GET(req: NextRequest) {
   if (process.env.NODE_ENV === 'production') {
     const auth = req.headers.get('authorization');
-    if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+    const secret = process.env.CRON_SECRET;
+    if (!secret || auth !== `Bearer ${secret}`) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
   }
@@ -58,12 +59,12 @@ export async function GET(req: NextRequest) {
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b;">
   <div style="background: #f8fafc; border-radius: 12px; padding: 32px 24px;">
     <h2 style="color: #0f172a; margin-top: 0;">🔔 ${label}</h2>
-    <p>Bonjour ${user.name || ''},</p>
-    <p>Une échéance arrive pour le bail de <strong>${bail.locataireNom}</strong> :</p>
+    <p>Bonjour ${escapeHtml(user.name || '')},</p>
+    <p>Une échéance arrive pour le bail de <strong>${escapeHtml(bail.locataireNom)}</strong> :</p>
     <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
       <p style="margin: 4px 0;"><strong>Type :</strong> ${label}</p>
       <p style="margin: 4px 0;"><strong>Date :</strong> ${dateStr}</p>
-      <p style="margin: 4px 0;"><strong>Locataire :</strong> ${bail.locataireNom}</p>
+      <p style="margin: 4px 0;"><strong>Locataire :</strong> ${escapeHtml(bail.locataireNom)}</p>
       <p style="margin: 4px 0;"><strong>Loyer :</strong> ${bail.loyerMensuel.toLocaleString('fr-FR')}€</p>
     </div>
     <p>Connectez-vous à BailBot pour gérer cette échéance.</p>
@@ -156,10 +157,10 @@ export async function GET(req: NextRequest) {
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b;">
   <div style="background: #f8fafc; border-radius: 12px; padding: 32px 24px;">
     <h2 style="color: #0f172a; margin-top: 0;">🔍 ${diag.label}</h2>
-    <p>Bonjour ${user.name || ''},</p>
+    <p>Bonjour ${escapeHtml(user.name || '')},</p>
     <p>Un diagnostic immobilier expire bientôt pour votre bien :</p>
     <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
-      <p style="margin: 4px 0;"><strong>Bien :</strong> ${bien.adresse}</p>
+      <p style="margin: 4px 0;"><strong>Bien :</strong> ${escapeHtml(bien.adresse)}</p>
       <p style="margin: 4px 0;"><strong>Diagnostic :</strong> ${diag.label}</p>
       <p style="margin: 4px 0;"><strong>Expiration :</strong> ${dateStr}</p>
       <p style="margin: 4px 0;"><strong>Jours restants :</strong> ${diag.joursRestants <= 0 ? 'Expiré' : `${diag.joursRestants} jours`}</p>

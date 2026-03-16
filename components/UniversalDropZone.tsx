@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useId } from 'react';
+import { useState, useCallback, useId, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { processDocument } from '@/lib/ocr';
 import {
@@ -90,7 +90,7 @@ export default function UniversalDropZone({ onDossierUpdate, onFilesUpdate, disa
   const [queue, setQueue] = useState<FichierEnAttente[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<FichierDossier[]>([]);
   const uid = useId();
-  let counter = 0;
+  const counterRef = useRef(0);
 
   const updateItem = useCallback((id: string, patch: Partial<FichierEnAttente>) => {
     setQueue((prev) => prev.map((item) => item.id === id ? { ...item, ...patch } : item));
@@ -146,7 +146,7 @@ export default function UniversalDropZone({ onDossierUpdate, onFilesUpdate, disa
     if (disabled) return;
 
     const newItems: FichierEnAttente[] = acceptedFiles.map((file) => ({
-      id: `${uid}-${++counter}-${Date.now()}`,
+      id: `${uid}-${++counterRef.current}-${Date.now()}`,
       file,
       statut: 'attente' as const,
       progress: 0,

@@ -109,13 +109,6 @@ export default function GenerateurBailModal({ dossier, loyerHC: loyerHCProp, cha
     loadProfil();
   }, []);
 
-  // Pré-remplir IBAN bailleur depuis RIB si disponible
-  useEffect(() => {
-    if (dossier.iban && !ibanBailleur) {
-      // On ne pré-remplit pas l'IBAN bailleur depuis le locataire — différent !
-    }
-  }, [dossier.iban]);
-
   const dateFin = dateEffet && duree ? calculerDateFin(dateEffet, parseInt(duree) || 0) : '';
   const loyerCC = (parseFloat(loyerHC) || 0) + (parseFloat(charges) || 0);
 

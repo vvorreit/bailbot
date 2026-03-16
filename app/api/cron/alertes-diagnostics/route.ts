@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { sendMail } from "@/lib/mailer";
+import { sendMail, escapeHtml } from "@/lib/mailer";
 import { DIAGNOSTICS_CONFIG, type DiagnosticType } from "@/lib/diagnostics-config";
 import { logCronStart, logCronSuccess, logCronFailure } from "@/lib/cron-logger";
 
 export async function GET(req: NextRequest) {
   if (process.env.NODE_ENV === "production") {
     const auth = req.headers.get("authorization");
-    if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+    const secret = process.env.CRON_SECRET;
+    if (!secret || auth !== `Bearer ${secret}`) {
       return NextResponse.json({ error: "Non autorise" }, { status: 401 });
     }
   }
@@ -78,8 +79,8 @@ export async function GET(req: NextRequest) {
       ${urgencyLabel} &mdash; ${palier}
     </div>
     <h2 style="color: #0f172a; margin-top: 0;">Renouvellement : ${config.nom}</h2>
-    <p>Bonjour ${user.name || ""},</p>
-    <p>Votre <strong>${config.nom}</strong> pour le bien situ&eacute; au <strong>${bien.adresse}</strong> expire le <strong>${dateStr}</strong>.</p>
+    <p>Bonjour ${escapeHtml(user.name || "")},</p>
+    <p>Votre <strong>${config.nom}</strong> pour le bien situ&eacute; au <strong>${escapeHtml(bien.adresse)}</strong> expire le <strong>${dateStr}</strong>.</p>
     <p>Ce document est <strong>OBLIGATOIRE</strong> pour la mise en location (ref: ${config.legalRef}).</p>
     <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px; margin: 16px 0;">
       <p style="margin: 4px 0; color: #991b1b; font-weight: bold;">Sans ce document &agrave; jour, vous vous exposez &agrave; :</p>
@@ -90,7 +91,7 @@ export async function GET(req: NextRequest) {
     </div>
     <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
       <p style="margin: 4px 0;"><strong>Type :</strong> ${config.nom}</p>
-      <p style="margin: 4px 0;"><strong>Adresse :</strong> ${bien.adresse}</p>
+      <p style="margin: 4px 0;"><strong>Adresse :</strong> ${escapeHtml(bien.adresse)}</p>
       <p style="margin: 4px 0;"><strong>Expiration :</strong> ${dateStr}</p>
       <p style="margin: 4px 0;"><strong>Validit&eacute; l&eacute;gale :</strong> ${config.validiteAns ? config.validiteAns + " ans" : config.validiteMois ? config.validiteMois + " mois" : "Illimit&eacute;e"}</p>
     </div>

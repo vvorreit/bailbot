@@ -3,7 +3,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { sendMail, smtpConfigured } from "@/lib/mailer";
+import { sendMail, smtpConfigured, escapeHtml } from "@/lib/mailer";
 
 async function getUser() {
   const session = await getServerSession(authOptions);
@@ -44,11 +44,11 @@ export async function envoyerRelanceLoyer(data: {
             <p style="color: #991b1b; font-weight: bold; margin: 0; font-size: 14px;">Rappel de paiement</p>
           </div>
           <div style="white-space: pre-wrap; color: #334155; font-size: 14px; line-height: 1.6;">
-${data.message}
+${escapeHtml(data.message)}
           </div>
           <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
           <p style="color: #94a3b8; font-size: 11px; text-align: center;">
-            ${bien?.adresse || ""} — BailBot
+            ${escapeHtml(bien?.adresse || "")} — BailBot
           </p>
         </div>
       `,

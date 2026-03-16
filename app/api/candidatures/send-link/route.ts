@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { sendMail } from '@/lib/mailer';
+import { sendMail, escapeHtml } from '@/lib/mailer';
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     : '';
 
   const messageHtml = message
-    ? message.replace(/\n/g, '<br>')
+    ? escapeHtml(message).replace(/\n/g, '<br>')
     : '';
 
   await sendMail({
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   <div style="background: #f8fafc; border-radius: 12px; padding: 32px 24px;">
     <h2 style="color: #0f172a; margin-top: 0;">D&eacute;posez votre dossier de candidature</h2>
     ${messageHtml ? `<div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0; font-size: 14px; line-height: 1.6;">${messageHtml}</div>` : ''}
-    ${bienAdresse ? `<p><strong>Bien concern&eacute; :</strong> ${bienAdresse}</p>` : ''}
+    ${bienAdresse ? `<p><strong>Bien concern&eacute; :</strong> ${escapeHtml(bienAdresse)}</p>` : ''}
     <div style="text-align: center; margin: 28px 0;">
       <a href="${lienDepot}"
          style="display: inline-block; background: #10b981; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">

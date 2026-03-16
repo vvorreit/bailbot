@@ -126,24 +126,20 @@ export default function Dashboard() {
     const dossierParam = params.get("dossier");
 
     if (dossierParam === "loaded") {
-      try {
-        // Lit le cookie df_profile (httpOnly: false → lisible côté JS)
-        const match = document.cookie.match(/(?:^|; )df_profile=([^;]*)/);
-        if (match) {
-          const profile = JSON.parse(decodeURIComponent(match[1]));
-          const parsed = parseDossierFacileProfile(profile);
-          setDossier((prev) => ({ ...prev, ...parsed }));
-          setDfImportStatus("loaded");
+      fetch("/api/auth/dossierfacile/profile")
+        .then((res) => res.json())
+        .then(({ profile }) => {
+          if (profile) {
+            const parsed = parseDossierFacileProfile(profile);
+            setDossier((prev) => ({ ...prev, ...parsed }));
+            setDfImportStatus("loaded");
+          }
+        })
+        .catch((err) => {
+          console.error("[DossierFacile] Profile fetch error:", err);
+          setDfImportStatus("error");
+        });
 
-          // Supprime le cookie après lecture (usage unique)
-          document.cookie = "df_profile=; Max-Age=0; path=/";
-        }
-      } catch (err) {
-        console.error("[DossierFacile] Cookie parse error:", err);
-        setDfImportStatus("error");
-      }
-
-      // Nettoie le query param sans recharger la page
       const url = new URL(window.location.href);
       url.searchParams.delete("dossier");
       window.history.replaceState({}, "", url.toString());

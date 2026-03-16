@@ -3,7 +3,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { sendMail } from "@/lib/mailer";
+import { sendMail, escapeHtml } from "@/lib/mailer";
 
 export interface EdlPieceData {
   nom: string;
@@ -140,7 +140,7 @@ export async function sendEdlByEmail(
     <h2 style="color: #0f172a; margin-top: 0;">📋 État des lieux ${typeLabel}</h2>
     <p>L'état des lieux ${typeLabel} a été réalisé le ${dateStr} pour le bien :</p>
     <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
-      <p style="margin: 4px 0;"><strong>Adresse :</strong> ${bien?.adresse || "—"}</p>
+      <p style="margin: 4px 0;"><strong>Adresse :</strong> ${escapeHtml(bien?.adresse || "—")}</p>
       <p style="margin: 4px 0;"><strong>Date :</strong> ${dateStr}</p>
       <p style="margin: 4px 0;"><strong>Type :</strong> ${edl.type === "ENTREE" ? "Entrée" : "Sortie"}</p>
     </div>
