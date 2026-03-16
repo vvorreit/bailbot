@@ -106,7 +106,7 @@ function SignInForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-colors active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 transition-colors active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? "Connexion..." : "Se connecter"}
             </button>

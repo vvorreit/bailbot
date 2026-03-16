@@ -12,6 +12,7 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      allowDangerousEmailAccountLinking: true,
       authorization: {
         params: {
           access_type: "offline",
@@ -74,78 +75,86 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user, account, trigger, session }) {
-      // Premier login Google : stocker les tokens
-      if (account && account.provider === "google") {
-        token.accessToken = account.access_token;
-        token.refreshToken = account.refresh_token;
-        token.accessTokenExpires = account.expires_at
-          ? account.expires_at * 1000
-          : Date.now() + 3600 * 1000;
-      }
+      try {
+        // Premier login Google : stocker les tokens
+        if (account && account.provider === "google") {
+          token.accessToken = account.access_token;
+          token.refreshToken = account.refresh_token;
+          token.accessTokenExpires = account.expires_at
+            ? account.expires_at * 1000
+            : Date.now() + 3600 * 1000;
+        }
 
-      if (user) {
-        token.id = user.id;
+        if (user) {
+          token.id = user.id;
 
-        const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
-          include: { team: true },
-        });
-
-        token.role = dbUser?.role ?? "USER";
-        token.clientCount = dbUser?.clientCount ?? 0;
-        token.teamId = dbUser?.teamId ?? undefined;
-        token.teamRole = dbUser?.teamRole ?? undefined;
-        token.metier = dbUser?.metier ?? null;
-
-        const isTeamPro = dbUser?.team?.plan === "PRO" || dbUser?.team?.plan === "ENTERPRISE";
-        token.isPro = dbUser?.isPro || isTeamPro || false;
-        token.rechercheMasquee = dbUser?.rechercheMasquee ?? false;
-        token.onboardingCompleted = dbUser?.onboardingCompleted ?? false;
-      }
-
-      if (trigger === "update" && session) {
-        return { ...token, ...session };
-      }
-
-      // Refresh automatique du token Google si expiré
-      if (
-        token.refreshToken &&
-        token.accessTokenExpires &&
-        Date.now() >= (token.accessTokenExpires as number)
-      ) {
-        try {
-          const response = await fetch("https://oauth2.googleapis.com/token", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({
-              client_id: process.env.GOOGLE_CLIENT_ID!,
-              client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-              grant_type: "refresh_token",
-              refresh_token: token.refreshToken as string,
-            }),
+          const dbUser = await prisma.user.findUnique({
+            where: { id: user.id },
+            include: { team: true },
           });
-          const refreshed = await response.json();
-          if (!response.ok) throw refreshed;
-          token.accessToken = refreshed.access_token;
-          token.accessTokenExpires = Date.now() + refreshed.expires_in * 1000;
-          if (refreshed.refresh_token) {
-            token.refreshToken = refreshed.refresh_token;
-          }
-        } catch {
-          token.error = "RefreshAccessTokenError";
-        }
-      }
 
-      // Invalider le token si le mot de passe a été changé après l'émission du token
-      if (token.id && !user) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.id as string },
-          select: { passwordChangedAt: true },
-        });
-        const tokenIssuedMs = ((token.iat as number) ?? 0) * 1000;
-        if (dbUser?.passwordChangedAt && dbUser.passwordChangedAt.getTime() > tokenIssuedMs) {
-          return { ...token, error: "SessionInvalidated" };
+          token.role = dbUser?.role ?? "USER";
+          token.clientCount = dbUser?.clientCount ?? 0;
+          token.teamId = dbUser?.teamId ?? undefined;
+          token.teamRole = dbUser?.teamRole ?? undefined;
+          token.metier = dbUser?.metier ?? null;
+
+          const isTeamPro = dbUser?.team?.plan === "PRO" || dbUser?.team?.plan === "ENTERPRISE";
+          token.isPro = dbUser?.isPro || isTeamPro || false;
+          token.rechercheMasquee = dbUser?.rechercheMasquee ?? false;
+          token.onboardingCompleted = dbUser?.onboardingCompleted ?? false;
         }
+
+        if (trigger === "update" && session) {
+          return { ...token, ...session };
+        }
+
+        // Refresh automatique du token Google si expiré
+        if (
+          token.refreshToken &&
+          token.accessTokenExpires &&
+          Date.now() >= (token.accessTokenExpires as number)
+        ) {
+          try {
+            const response = await fetch("https://oauth2.googleapis.com/token", {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: new URLSearchParams({
+                client_id: process.env.GOOGLE_CLIENT_ID!,
+                client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+                grant_type: "refresh_token",
+                refresh_token: token.refreshToken as string,
+              }),
+            });
+            const refreshed = await response.json();
+            if (!response.ok) throw refreshed;
+            token.accessToken = refreshed.access_token;
+            token.accessTokenExpires = Date.now() + refreshed.expires_in * 1000;
+            if (refreshed.refresh_token) {
+              token.refreshToken = refreshed.refresh_token;
+            }
+          } catch {
+            token.error = "RefreshAccessTokenError";
+          }
+        }
+
+        // Invalider le token si le mot de passe a été changé après l'émission du token
+        if (token.id && !user) {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { passwordChangedAt: true },
+          });
+          const tokenIssuedMs = ((token.iat as number) ?? 0) * 1000;
+          if (
+            dbUser?.passwordChangedAt &&
+            tokenIssuedMs > 0 &&
+            dbUser.passwordChangedAt.getTime() > tokenIssuedMs
+          ) {
+            return { ...token, error: "SessionInvalidated" };
+          }
+        }
+      } catch (error) {
+        console.error("[NextAuth] JWT callback error:", error);
       }
 
       return token;
@@ -173,6 +182,7 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/auth/signin",
+    error: "/auth/error",
   },
   session: {
     strategy: "jwt",
