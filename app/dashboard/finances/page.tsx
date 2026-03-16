@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import { TrendingUp, Banknote, Calculator, Receipt } from "lucide-react";
+import { TrendingUp, Banknote, Calculator, Receipt, FileSpreadsheet } from "lucide-react";
 
 const FinancesContent = dynamic(() => import("./FinancesContent"), {
   ssr: false,
@@ -20,6 +20,10 @@ const RegularisationContent = dynamic(() => import("./RegularisationTab"), {
   ssr: false,
   loading: () => <TabLoader />,
 });
+const ExportComptableContent = dynamic(() => import("./ExportComptableSection"), {
+  ssr: false,
+  loading: () => <TabLoader />,
+});
 
 function TabLoader() {
   return (
@@ -34,6 +38,7 @@ const TABS = [
   { key: "paiements", label: "Paiements & impayes", icon: Banknote },
   { key: "comptabilite", label: "Comptabilite", icon: Calculator },
   { key: "charges", label: "Charges", icon: Receipt },
+  { key: "export", label: "Export comptable", icon: FileSpreadsheet },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -72,6 +77,7 @@ export default function FinancesPage() {
       {tab === "paiements" && <ImpayesContent />}
       {tab === "comptabilite" && <ComptabiliteContent />}
       {tab === "charges" && <RegularisationContent />}
+      {tab === "export" && <ExportComptableContent />}
     </div>
   );
 }
