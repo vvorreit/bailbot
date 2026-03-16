@@ -21,7 +21,7 @@ type Filtre = "tous" | "expires" | "expire-bientot" | "manquants";
 export default function DiagnosticsOverviewClient({ data }: Props) {
   const [filtre, setFiltre] = useState<Filtre>("tous");
 
-  const allDiags = data.flatMap((b) => b.diagnostics);
+  const allDiags = (data ?? []).flatMap((b) => b.diagnostics);
   const stats = {
     valides: allDiags.filter((d) => d.statut === "valide" || d.statut === "illimite").length,
     aRenouveler: allDiags.filter((d) => d.statut === "expire-bientot" || d.statut === "expire").length,
