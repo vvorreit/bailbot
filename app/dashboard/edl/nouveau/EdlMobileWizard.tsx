@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeft,
@@ -39,6 +39,14 @@ const labelCls = 'block text-xs font-semibold text-gray-500 uppercase tracking-w
 /* ─── Main Component ─────────────────────────────────────────────────────── */
 
 export default function EdlMobileWizard() {
+  return (
+    <Suspense fallback={<div className="max-w-2xl mx-auto px-4 py-6 text-center text-slate-400">Chargement…</div>}>
+      <EdlMobileWizardInner />
+    </Suspense>
+  );
+}
+
+function EdlMobileWizardInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [step, setStep] = useState(0);

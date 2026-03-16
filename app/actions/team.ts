@@ -165,38 +165,41 @@ export async function acceptInvite(token: string) {
 
   const userId = (session.user as any).id;
 
-  // Check seat limit before accepting
-  const teamWithData = await prisma.team.findUnique({
-    where: { id: invitation.teamId },
-    include: { users: { select: { id: true } } },
-  });
-  const teamOwner = teamWithData ? await prisma.user.findUnique({ where: { id: teamWithData.ownerId }, select: { plan: true } }) : null;
-  const limit = await getTeamSeatsLimit(teamOwner?.plan ?? "FREE");
-  if ((teamWithData?.users.length ?? 0) >= limit) {
-    throw new Error("L'équipe est complète, aucun poste disponible.");
-  }
-
-  // Check if user is already in a team (optional: force leave current team?)
-  // For MVP, fail if in team.
+  // Check if user is already in a team
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (user?.teamId) {
      if (user.teamId === invitation.teamId) return { success: true }; // Already joined
      throw new Error("Vous êtes déjà dans une équipe. Quittez-la d'abord.");
   }
 
-  // Update user
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      teamId: invitation.teamId,
-      teamRole: invitation.role
+  // Use transaction to prevent race condition between seat check and acceptance
+  const teamName = await prisma.$transaction(async (tx) => {
+    const teamWithData = await tx.team.findUnique({
+      where: { id: invitation.teamId },
+      include: { users: { select: { id: true } } },
+    });
+    const teamOwner = teamWithData ? await tx.user.findUnique({ where: { id: teamWithData.ownerId }, select: { plan: true } }) : null;
+    const limit = await getTeamSeatsLimit(teamOwner?.plan ?? "FREE");
+    if ((teamWithData?.users.length ?? 0) >= limit) {
+      throw new Error("L'équipe est complète, aucun poste disponible.");
     }
+
+    // Update user
+    await tx.user.update({
+      where: { id: userId },
+      data: {
+        teamId: invitation.teamId,
+        teamRole: invitation.role
+      }
+    });
+
+    // Delete invitation
+    await tx.invitation.delete({ where: { id: invitation.id } });
+
+    return invitation.team.name;
   });
 
-  // Delete invitation
-  await prisma.invitation.delete({ where: { id: invitation.id } });
-
-  return { success: true, teamName: invitation.team.name };
+  return { success: true, teamName };
 }
 
 export async function getTeamDetails() {

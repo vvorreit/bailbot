@@ -7,7 +7,7 @@ import crypto from "crypto";
  */
 function verifyWebhookSignature(payload: string, signature: string | null): boolean {
   const secret = process.env.YOUSIGN_WEBHOOK_SECRET;
-  if (!secret) return true; /* no secret configured → skip verification */
+  if (!secret) return false; /* no secret configured → fail secure */
   if (!signature) return false;
 
   const expected = crypto

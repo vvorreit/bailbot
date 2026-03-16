@@ -5,6 +5,8 @@ import { prisma } from '@/lib/db';
 import { sendMail } from '@/lib/mailer';
 import { getTemplate } from '@/lib/templates-relance-candidat';
 
+export const dynamic = "force-dynamic";
+
 // GET /api/relances/candidat — liste les relances du gestionnaire connecté
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);

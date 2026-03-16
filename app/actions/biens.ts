@@ -85,7 +85,20 @@ export async function updateBien(id: string, data: Record<string, any>) {
   const userId = await getUserId();
   const bien = await prisma.bien.findFirst({ where: { id, userId } });
   if (!bien) throw new Error("Bien introuvable");
-  return prisma.bien.update({ where: { id }, data });
+
+  // Whitelist allowed fields to prevent mass assignment
+  const allowedFields = [
+    "adresse", "typeBien", "surface", "nombrePieces", "etage",
+    "parking", "cave", "meuble", "descriptionLot", "gestionLocative",
+    "nomSyndic", "adresseSyndic", "montantChargesCopro",
+    "anneeConstruction", "dpe", "ges",
+  ] as const;
+  const sanitized: Record<string, any> = {};
+  for (const key of allowedFields) {
+    if (key in data) sanitized[key] = data[key];
+  }
+
+  return prisma.bien.update({ where: { id }, data: sanitized });
 }
 
 export async function deleteBien(id: string) {

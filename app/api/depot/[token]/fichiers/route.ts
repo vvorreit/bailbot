@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 
+export const dynamic = "force-dynamic";
+
 // GET /api/depot/[token]/fichiers — gestionnaire authentifié
 export async function GET(
   req: NextRequest,

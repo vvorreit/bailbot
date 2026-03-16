@@ -70,6 +70,18 @@ export async function restituerDepotGarantie(
   });
   if (!user) throw new Error("Utilisateur introuvable");
 
+  // Verify the bail belongs to the current user via its bien
+  const bail = await prisma.bailActif.findFirst({
+    where: { id: bailId },
+  });
+  if (!bail) throw new Error("Bail introuvable");
+  const bien = await prisma.bien.findFirst({
+    where: { id: bail.bienId, userId: user.id },
+  });
+  if (!bien) {
+    throw new Error("Bail introuvable ou accès non autorisé");
+  }
+
   await prisma.bailActif.update({
     where: { id: bailId },
     data: {
