@@ -75,7 +75,7 @@ export async function genererMiseEnDemeurePDF(
 
   const montantTotal = moisImpayes.reduce((sum, p) => sum + (p.montantRecu ? p.loyerCC - p.montantRecu : p.loyerCC), 0);
   const premiereEcheance = new Date(
-    Math.min(...moisImpayes.map((p) => p.dateAttendue))
+    Math.min(...moisImpayes.map((p) => p.dateAttendue.getTime()))
   ).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 
   doc.setFont('helvetica', 'normal');

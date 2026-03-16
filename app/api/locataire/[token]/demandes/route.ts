@@ -47,6 +47,10 @@ export async function POST(
     return NextResponse.json({ error: 'Type et message requis' }, { status: 400 });
   }
 
+  if (typeof message !== 'string' || message.length > 5000) {
+    return NextResponse.json({ error: 'Message trop long (max 5000 caractères)' }, { status: 400 });
+  }
+
   if (!TYPES_VALIDES.includes(type)) {
     return NextResponse.json({ error: 'Type de demande invalide' }, { status: 400 });
   }

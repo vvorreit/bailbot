@@ -170,27 +170,32 @@ export async function markOnboardingComplete() {
  * Retourne { shouldSkip: true } si l'utilisateur doit skip l'onboarding.
  */
 export async function checkAndCompleteOnboarding() {
-  const session = await getSession();
-  if (!session?.user?.email) return { shouldSkip: false };
+  try {
+    const session = await getSession();
+    if (!session?.user?.email) return { shouldSkip: false };
 
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-    select: { id: true, onboardingCompleted: true },
-  });
-  if (!user) return { shouldSkip: false };
-
-  if (user.onboardingCompleted) return { shouldSkip: true };
-
-  const bailCount = await prisma.bailActif.count({ where: { userId: user.id } });
-  const bienCount = await prisma.bien.count({ where: { userId: user.id } });
-
-  if (bailCount > 0 || bienCount > 0) {
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { onboardingCompleted: true },
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true, onboardingCompleted: true },
     });
-    return { shouldSkip: true };
-  }
+    if (!user) return { shouldSkip: false };
 
-  return { shouldSkip: false };
+    if (user.onboardingCompleted) return { shouldSkip: true };
+
+    const bailCount = await prisma.bailActif.count({ where: { userId: user.id } });
+    const bienCount = await prisma.bien.count({ where: { userId: user.id } });
+
+    if (bailCount > 0 || bienCount > 0) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { onboardingCompleted: true },
+      });
+      return { shouldSkip: true };
+    }
+
+    return { shouldSkip: false };
+  } catch (error) {
+    console.error("[onboarding] checkAndCompleteOnboarding error:", error);
+    return { shouldSkip: false };
+  }
 }

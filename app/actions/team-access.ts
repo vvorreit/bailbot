@@ -62,6 +62,27 @@ export async function assignBailToCollaborateur(bailId: string, collaborateurId:
     throw new Error("Seuls les administrateurs peuvent assigner des bails.");
   }
 
+  // Verify the bail's bien belongs to a user in the same team
+  const teamUserIds = await getTeamUserIds(user.teamId);
+  const bail = await prisma.bailActif.findFirst({
+    where: { id: bailId },
+  });
+  if (!bail) throw new Error("Bail introuvable dans votre équipe.");
+  const bailBien = await prisma.bien.findFirst({
+    where: { id: bail.bienId },
+    select: { userId: true },
+  });
+  if (!bailBien || !teamUserIds.includes(bailBien.userId)) {
+    throw new Error("Bail introuvable dans votre équipe.");
+  }
+
+  if (collaborateurId) {
+    const collaborateur = await prisma.user.findUnique({ where: { id: collaborateurId } });
+    if (!collaborateur || collaborateur.teamId !== user.teamId) {
+      throw new Error("Ce collaborateur ne fait pas partie de votre équipe.");
+    }
+  }
+
   await prisma.bailActif.update({
     where: { id: bailId },
     data: { assigneA: collaborateurId },

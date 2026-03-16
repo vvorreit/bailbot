@@ -59,7 +59,15 @@ export async function updatePaiement(id: string, data: Record<string, any>) {
   const userId = await getUserId();
   const p = await prisma.paiementBien.findFirst({ where: { id, userId } });
   if (!p) throw new Error("Paiement introuvable");
-  return prisma.paiementBien.update({ where: { id }, data });
+
+  // Whitelist allowed fields to prevent mass assignment
+  const allowedFields = ["montant", "datePaiement", "methodePaiement", "statut", "notes", "reference"] as const;
+  const sanitized: Record<string, any> = {};
+  for (const key of allowedFields) {
+    if (key in data) sanitized[key] = data[key];
+  }
+
+  return prisma.paiementBien.update({ where: { id }, data: sanitized });
 }
 
 export async function deletePaiement(id: string) {

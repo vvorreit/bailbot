@@ -152,6 +152,7 @@ export async function sendEdlByEmail(
 </div>`;
 
   const emails = [locataireEmail, bailleurEmail].filter(Boolean);
+  const errors: string[] = [];
   for (const email of emails) {
     try {
       await sendMail({
@@ -159,9 +160,14 @@ export async function sendEdlByEmail(
         subject: `[BailBot] État des lieux ${typeLabel} — ${bien?.adresse || ""}`,
         html,
       });
-    } catch {
-      /* non-bloquant */
+    } catch (err) {
+      errors.push(email);
+      console.error(`Failed to send EDL email to ${email}:`, err);
     }
+  }
+
+  if (errors.length === emails.length && emails.length > 0) {
+    return { success: false };
   }
 
   return { success: true };
