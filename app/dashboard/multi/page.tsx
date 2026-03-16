@@ -478,19 +478,12 @@ export default function MultiDossierPage() {
               <span className="text-xs text-slate-400">{candidaturesDuBien.length} candidature{candidaturesDuBien.length > 1 ? 's' : ''}</span>
               {candidaturesDuBien.length >= 2 && (
                 <button
-                  onClick={() => {
-                    if (selectedForCompare.length === 2) {
-                      setShowComparateur(true);
-                    } else {
-                      showToast('Sélectionnez exactement 2 dossiers à comparer');
-                    }
-                  }}
-                  disabled={selectedForCompare.length !== 2}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors disabled:opacity-40"
-                  title="Comparer deux candidats"
+                  onClick={() => setShowComparateur(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors"
+                  title="Classement et comparaison des candidats"
                 >
                   <GitCompareArrows className="w-3.5 h-3.5" />
-                  Comparer ({selectedForCompare.length}/2)
+                  Classement ({candidaturesDuBien.length})
                 </button>
               )}
               {candidaturesDuBien.length > 0 && (
@@ -662,19 +655,13 @@ export default function MultiDossierPage() {
         />
       )}
 
-      {showComparateur && selectedForCompare.length === 2 && (() => {
-        const cA = candidaturesDuBien.find((c) => c.id === selectedForCompare[0]);
-        const cB = candidaturesDuBien.find((c) => c.id === selectedForCompare[1]);
-        if (!cA || !cB || !selectedBien) return null;
-        return (
-          <ComparateurCandidats
-            candidatA={cA}
-            candidatB={cB}
-            loyerCC={selectedBien.loyer + selectedBien.charges}
-            onClose={() => setShowComparateur(false)}
-          />
-        );
-      })()}
+      {showComparateur && candidaturesDuBien.length >= 2 && selectedBien && (
+        <ComparateurCandidats
+          candidats={candidaturesDuBien}
+          loyerCC={selectedBien.loyer + selectedBien.charges}
+          onClose={() => setShowComparateur(false)}
+        />
+      )}
     </div>
     </FeatureGate>
   );
