@@ -52,8 +52,9 @@ USER nextjs
 
 EXPOSE 3000
 
+# PORT est injecté par Scaleway Serverless Containers — valeur par défaut 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Applique les migrations en attente puis démarre l'app
-CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node server.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]

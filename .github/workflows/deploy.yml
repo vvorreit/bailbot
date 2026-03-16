@@ -1,40 +1,36 @@
-name: CI/CD
+name: Deploy to Scaleway
 
 on:
   push:
-    branches: [main]
+    branches: [particulier]
+  workflow_dispatch:
 
 env:
-  IMAGE: ghcr.io/${{ github.repository_owner }}/optibot
+  SCW_REGISTRY: rg.fr-par.scw.cloud
+  SCW_NAMESPACE: bailbot
+  IMAGE_NAME: rg.fr-par.scw.cloud/bailbot/bailbot-app
 
 jobs:
-  # ─── 1. Build & push l'image Docker sur GHCR ───────────────────────────────
-  build:
-    name: Build & Push image
+  build-and-push:
+    name: Build & Push to Scaleway Registry
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write          # nécessaire pour pousser sur ghcr.io
-
     outputs:
       image_tag: ${{ steps.meta.outputs.version }}
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Login to GHCR
+      - name: Login to Scaleway Registry
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: rg.fr-par.scw.cloud
+          username: nologin
+          password: ${{ secrets.SCW_SECRET_KEY }}
 
-      - name: Docker metadata (tag = sha court)
+      - name: Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.IMAGE }}
+          images: ${{ env.IMAGE_NAME }}
           tags: |
             type=sha,prefix=,format=short
             type=raw,value=latest
@@ -48,44 +44,33 @@ jobs:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha       # cache des layers entre les runs
+          cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
             NEXT_PUBLIC_GA_ID=${{ secrets.NEXT_PUBLIC_GA_ID }}
 
-  # ─── 2. Déploiement sur le serveur via SSH ──────────────────────────────────
   deploy:
-    name: Deploy to production
+    name: Deploy to Scaleway Serverless Container
     runs-on: ubuntu-latest
-    needs: build
-    environment: production         # optionnel : protection de branche dans GitHub
-
+    needs: build-and-push
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            set -e
+      - name: Install Scaleway CLI
+        run: |
+          curl -s https://raw.githubusercontent.com/scaleway/scaleway-cli/master/scripts/get.sh | sh
+          scw version
 
-            # Authentification GHCR sur le serveur
-            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USER }}" --password-stdin
+      - name: Deploy container
+        env:
+          SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+          SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+          SCW_DEFAULT_PROJECT_ID: ${{ secrets.SCW_PROJECT_ID }}
+          SCW_DEFAULT_REGION: fr-par
+          SCW_DEFAULT_ZONE: fr-par-1
+        run: |
+          scw container container update \
+            ${{ secrets.SCW_CONTAINER_ID }} \
+            registry-image=${{ env.IMAGE_NAME }}:latest \
+            --wait
 
-            cd /app/optibot
-
-            # Récupère la dernière version du docker-compose
-            git pull origin main
-
-            # Tire la nouvelle image (déjà compilée sur GitHub Actions)
-            docker compose pull app
-
-            # Redémarre le conteneur app sans downtime notable
-            docker compose up -d --no-build app
-
-            # Nettoyage des anciennes images
-            docker image prune -f
-
-            echo "✓ Déploiement terminé"
+          scw container container deploy ${{ secrets.SCW_CONTAINER_ID }}
+          echo "✓ Déployé sur Scaleway Serverless"
