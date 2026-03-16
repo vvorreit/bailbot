@@ -4,13 +4,34 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { sendMail } from "@/lib/mailer";
+import { rateLimit } from "@/lib/rateLimit";
 
-export async function getPortailLocataireData(token: string) {
+export async function getPortailLocataireData(token: string, ip?: string) {
+  /* Rate limiting: max 10 attempts/hour per IP */
+  if (ip) {
+    const allowed = await rateLimit(`portail:${ip}`, 10, 60 * 60 * 1000);
+    if (!allowed) return null;
+  }
+
   const espace = await prisma.espaceLocataire.findUnique({
     where: { token },
     include: { demandes: { orderBy: { createdAt: "desc" } } },
   });
   if (!espace || !espace.actif || espace.expiresAt < new Date()) return null;
+
+  /* Audit log */
+  try {
+    await prisma.auditLog.create({
+      data: {
+        userId: espace.userId,
+        action: "PORTAIL_ACCESS",
+        details: `espaceId=${espace.id} bailId=${espace.bailId}`,
+        ip: ip || null,
+      },
+    });
+  } catch {
+    /* non-blocking */
+  }
 
   const bail = await prisma.bailActif.findFirst({
     where: { id: espace.bailId },
@@ -47,6 +68,19 @@ export async function soumettreDemandeLocataire(token: string, type: string, mes
       message,
     },
   });
+
+  /* Audit log */
+  try {
+    await prisma.auditLog.create({
+      data: {
+        userId: espace.userId,
+        action: "PORTAIL_DEMANDE",
+        details: `espaceId=${espace.id} type=${type}`,
+      },
+    });
+  } catch {
+    /* non-blocking */
+  }
 
   return { success: true };
 }

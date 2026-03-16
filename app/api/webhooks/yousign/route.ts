@@ -1,12 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import crypto from "crypto";
+
+/**
+ * Verify Yousign webhook HMAC signature (X-Yousign-Signature-256)
+ */
+function verifyWebhookSignature(payload: string, signature: string | null): boolean {
+  const secret = process.env.YOUSIGN_WEBHOOK_SECRET;
+  if (!secret) return true; /* no secret configured → skip verification */
+  if (!signature) return false;
+
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(payload, "utf8")
+    .digest("hex");
+
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(signature, "hex"),
+      Buffer.from(expected, "hex")
+    );
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Yousign Webhook — receives signature events (signed, refused, expired)
  * Configure this URL in the Yousign dashboard: /api/webhooks/yousign
  */
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  const rawBody = await req.text();
+
+  /* HMAC verification */
+  const signature = req.headers.get("x-yousign-signature-256");
+  if (!verifyWebhookSignature(rawBody, signature)) {
+    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+  }
+
+  const body = JSON.parse(rawBody);
 
   const eventType: string = body.event_name || body.event || "";
   const signatureRequestId: string =
@@ -51,6 +83,19 @@ export async function POST(req: NextRequest) {
       where: { id: signatureRequest.id },
       data: { yousignStatus: "expired" },
     });
+  }
+
+  /* Audit log */
+  try {
+    await prisma.auditLog.create({
+      data: {
+        userId: signatureRequest.userId,
+        action: "YOUSIGN_WEBHOOK",
+        details: `event=${eventType} signatureRequestId=${signatureRequestId}`,
+      },
+    });
+  } catch {
+    /* non-blocking */
   }
 
   return NextResponse.json({ ok: true, event: eventType });
