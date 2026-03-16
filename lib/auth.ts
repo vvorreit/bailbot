@@ -33,14 +33,28 @@ export const authOptions: NextAuthOptions = {
           where: { email: credentials.email },
         });
 
-        if (!user?.password) return null;
+        if (!user?.password) {
+          await prisma.auditLog.create({
+            data: { action: 'LOGIN_FAILED', details: `Tentative sur ${credentials.email} (compte inexistant ou OAuth)` },
+          }).catch(() => {});
+          return null;
+        }
 
         const valid = await bcrypt.compare(credentials.password, user.password);
-        if (!valid) return null;
+        if (!valid) {
+          await prisma.auditLog.create({
+            data: { userId: user.id, action: 'LOGIN_FAILED', details: 'Mot de passe incorrect' },
+          }).catch(() => {});
+          return null;
+        }
 
         if (!user.emailVerified) {
           throw new Error("EmailNotVerified");
         }
+
+        await prisma.auditLog.create({
+          data: { userId: user.id, action: 'LOGIN', details: 'Connexion credentials' },
+        }).catch(() => {});
 
         return user;
       },
