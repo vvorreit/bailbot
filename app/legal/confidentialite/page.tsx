@@ -27,7 +27,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-bold mb-4 border-b pb-2">2. Responsable de traitement</h2>
             <p className="text-slate-600 leading-relaxed">
-              Le responsable du traitement des données est BailBot. Pour toute question relative à vos données personnelles, contactez-nous à : <strong>contact@optibot.fr</strong>.
+              Le responsable du traitement des données est BailBot. Pour toute question relative à vos données personnelles, contactez-nous à : <strong>contact@bailbot.fr</strong>.
             </p>
           </section>
 
@@ -106,7 +106,7 @@ export default function PrivacyPage() {
               <li><strong>Droit de retrait du consentement</strong> : à tout moment via la bannière cookies ou les paramètres de votre compte.</li>
             </ul>
             <p className="text-slate-600 leading-relaxed mt-4">
-              Pour exercer vos droits, rendez-vous dans <Link href="/dashboard/account/rgpd" className="text-blue-600 hover:underline font-semibold">Mon compte &gt; Vie privée</Link> ou contactez-nous à : <strong>contact@optibot.fr</strong>.
+              Pour exercer vos droits, rendez-vous dans <Link href="/dashboard/account/rgpd" className="text-blue-600 hover:underline font-semibold">Mon compte &gt; Vie privée</Link> ou contactez-nous à : <strong>contact@bailbot.fr</strong>.
             </p>
           </section>
 
@@ -120,7 +120,22 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold mb-4 border-b pb-2">10. Réclamation</h2>
+            <h2 className="text-xl font-bold mb-4 border-b pb-2">10. Violation de données personnelles</h2>
+            <p className="text-slate-600 leading-relaxed mb-4">
+              Conformément à l&apos;article 33 du RGPD, en cas de violation de données à caractère personnel, BailBot s&apos;engage à :
+            </p>
+            <ul className="list-disc pl-6 text-slate-600 space-y-2">
+              <li><strong>Notifier la CNIL dans un délai de 72 heures</strong> après en avoir pris connaissance, sauf si la violation n&apos;est pas susceptible d&apos;engendrer un risque pour les droits et libertés des personnes concernées.</li>
+              <li><strong>Informer les personnes concernées dans les meilleurs délais</strong> (article 34 du RGPD), lorsque la violation est susceptible d&apos;engendrer un risque élevé pour leurs droits et libertés.</li>
+              <li><strong>Documenter toute violation</strong> dans un registre interne (nature de la violation, catégories de données et de personnes concernées, conséquences probables, mesures correctives prises).</li>
+            </ul>
+            <p className="text-slate-600 leading-relaxed mt-4">
+              Si vous suspectez une violation de vos données, contactez immédiatement : <strong>contact@bailbot.fr</strong>.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold mb-4 border-b pb-2">11. Réclamation</h2>
             <p className="text-slate-600 leading-relaxed">
               Si vous estimez que le traitement de vos données ne respecte pas la réglementation, vous pouvez introduire une réclamation auprès de la <strong>CNIL</strong> (Commission Nationale de l&apos;Informatique et des Libertés) : <a href="https://www.cnil.fr" className="text-blue-600 hover:underline font-semibold" target="_blank" rel="noopener noreferrer">www.cnil.fr</a>.
             </p>

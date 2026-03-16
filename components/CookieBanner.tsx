@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Shield, X, ChevronDown } from "lucide-react";
 import { grantAnalyticsConsent, revokeAnalyticsConsent } from "@/lib/analytics";
+import { saveConsentRGPD } from "@/app/actions/rgpd";
 import Link from "next/link";
 
 const CONSENT_KEY = "bailbot_analytics_consent";
@@ -20,21 +21,30 @@ export function CookieBanner() {
     }
   }, []);
 
+  function persistConsent(analyticsConsent: boolean, marketingConsent: boolean) {
+    const ua = navigator.userAgent;
+    saveConsentRGPD("analytics", analyticsConsent, undefined, ua).catch(() => {});
+    saveConsentRGPD("marketing", marketingConsent, undefined, ua).catch(() => {});
+  }
+
   function acceptAll() {
     grantAnalyticsConsent();
     localStorage.setItem(MARKETING_KEY, "granted");
+    persistConsent(true, true);
     setVisible(false);
   }
 
   function acceptSelected() {
     if (analytics) grantAnalyticsConsent(); else revokeAnalyticsConsent();
     localStorage.setItem(MARKETING_KEY, marketing ? "granted" : "denied");
+    persistConsent(analytics, marketing);
     setVisible(false);
   }
 
   function declineAll() {
     revokeAnalyticsConsent();
     localStorage.setItem(MARKETING_KEY, "denied");
+    persistConsent(false, false);
     setVisible(false);
   }
 
