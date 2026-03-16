@@ -251,6 +251,11 @@ model BailActif {
   fraisGestionPct     Decimal?    @default(0) @db.Decimal(5, 2)
   trancheMarginalePct Decimal?    @default(30) @db.Decimal(5, 2)
 
+  // Depot de garantie (restitution)
+  depositGarantieRestitue        Float?
+  depositGarantieRestitutionDate DateTime?
+  depositGarantieDeductions      Json?
+
   createdAt           DateTime    @default(now())
   alertes             AlerteBail[]
   quittancesAuto      QuittanceAuto[]
@@ -725,6 +730,63 @@ model PretImmobilier {
   fraisDossier       Decimal? @default(0) @db.Decimal(10, 2)
   garantie           Decimal? @default(0) @db.Decimal(10, 2)
   createdAt          DateTime @default(now())
+
+  @@index([userId])
+  @@index([bienId])
+}
+
+// ─── Signature Electronique ──────────────────────────────────────────────────
+
+model SignatureRequest {
+  id            String    @id @default(cuid())
+  userId        String
+  documentType  String    // "bail" | "edl"
+  documentId    String
+  token         String    @unique @default(cuid())
+  signataire    String
+  email         String
+  signatureData String?   @db.Text
+  signedAt      DateTime?
+  expiresAt     DateTime
+  createdAt     DateTime  @default(now())
+
+  @@index([userId])
+  @@index([documentId])
+}
+
+// ─── Coffre-fort Documentaire ────────────────────────────────────────────────
+
+model Document {
+  id        String   @id @default(cuid())
+  userId    String
+  bienId    String?
+  bailId    String?
+  nom       String
+  type      String   // "dpe", "diagnostic", "contrat", "quittance", "photo_edl", "autre"
+  url       String
+  taille    Int?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([bienId])
+}
+
+// ─── Regularisation des Charges ──────────────────────────────────────────────
+
+model RegularisationCharges {
+  id                   String    @id @default(cuid())
+  userId               String
+  bienId               String
+  bailId               String?
+  annee                Int
+  chargesReelles       Float
+  provisionsMensuelles Float
+  totalProvisions      Float
+  solde                Float
+  statut               String    @default("en_cours")
+  dateRegularisation   DateTime?
+  notes                String?
+  createdAt            DateTime  @default(now())
 
   @@index([userId])
   @@index([bienId])
