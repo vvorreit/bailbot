@@ -5,10 +5,11 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import {
   CheckCircle, ArrowRight, ChevronDown, ChevronUp,
-  Building2, ShieldCheck, FileText, AlertTriangle,
+  Building2, ShieldCheck, FileText, Scale,
   Clock, Check, X, Star, PenLine, Receipt,
-  TrendingUp, Users, Lock, FileSearch
+  TrendingUp, TrendingDown, Users, Lock, FileSearch, Euro, Lightbulb
 } from "lucide-react";
+import { createCheckoutSession } from "./dashboard/actions";
 
 function FAQItem({ question, answer }: { question: string; answer: string }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,54 +28,6 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
     </div>
   );
 }
-
-const plans = [
-  {
-    name: "Essentiel",
-    monthly: 39,
-    annualPerMonth: 33,
-    annualTotal: 399,
-    maxBiens: 2,
-    popular: false,
-    features: [
-      "Baux ALUR conformes",
-      "Quittances automatiques",
-      "Portail locataire",
-      "Support email",
-    ],
-  },
-  {
-    name: "Sérénité",
-    monthly: 59,
-    annualPerMonth: 50,
-    annualTotal: 599,
-    maxBiens: 5,
-    popular: true,
-    features: [
-      "Tout le plan Essentiel",
-      "Analyse OCR dossiers",
-      "Signature eIDAS (Yousign)",
-      "Indexation IRL automatique",
-      "Export FEC comptable",
-      "Support prioritaire",
-    ],
-  },
-  {
-    name: "Portfolio",
-    monthly: 89,
-    annualPerMonth: 76,
-    annualTotal: 899,
-    maxBiens: 10,
-    popular: false,
-    features: [
-      "Tout le plan Sérénité",
-      "Tableaux de bord avancés",
-      "Multi-bien / multi-locataire",
-      "Onboarding personnalisé",
-      "Support prioritaire dédié",
-    ],
-  },
-];
 
 const features = [
   {
@@ -166,8 +119,8 @@ const faqData = [
     answer: "Oui. L'export FEC (Fichier des Écritures Comptables) généré par BailBot est au format standard exigé par l'administration fiscale française. Votre comptable peut l'importer directement dans son logiciel de comptabilité.",
   },
   {
-    question: "Que faire si j'ai plus de 10 biens ?",
-    answer: "Contactez-nous à contact@optibot.fr pour un plan sur mesure adapté à votre portefeuille. Nous proposons des tarifs dégressifs pour les propriétaires gérant plus de 10 biens.",
+    question: "Les frais BailBot sont-ils déductibles fiscalement ?",
+    answer: "Oui. En régime réel, les frais de gestion locative (dont BailBot) sont déductibles de vos revenus fonciers. BailBot est une charge déductible au même titre qu'une assurance ou des frais de gestion d'agence.",
   },
 ];
 
@@ -183,9 +136,33 @@ function ComparisonCell({ value }: { value: boolean }) {
   );
 }
 
+const dangerCards = [
+  {
+    icon: Scale,
+    chiffre: "Bail annulable",
+    description: "Un bail avec une clause illégale peut être annulé par le tribunal. 1 bailleur sur 3 est concerné.",
+  },
+  {
+    icon: Clock,
+    chiffre: "18 mois",
+    description: "Durée moyenne d'une procédure d'expulsion. Un dossier locataire mal vérifié au départ peut coûter 18 mois de loyers perdus.",
+  },
+  {
+    icon: Euro,
+    chiffre: "1 mois de loyer",
+    description: "Amende maximale pour un dépôt de garantie rendu hors délai ou avec déductions injustifiées.",
+  },
+  {
+    icon: TrendingDown,
+    chiffre: "∞ €/an perdus",
+    description: "La révision IRL non appliquée chaque année, c'est de l'argent perdu définitivement. Elle ne se rattrape pas.",
+  },
+];
+
 export default function LandingClient() {
   const { data: session, status } = useSession();
   const [isAnnual, setIsAnnual] = useState(true);
+  const [isStripeLoading, setIsStripeLoading] = useState<string | null>(null);
 
   if (status === "loading") {
     return (
@@ -196,6 +173,18 @@ export default function LandingClient() {
   }
 
   const dashHref = "/dashboard";
+
+  const handleCheckout = async (plan: "ESSENTIEL" | "SERENITE") => {
+    setIsStripeLoading(plan);
+    try {
+      const { url } = await createCheckoutSession(plan);
+      if (url) window.location.href = url;
+    } catch (err: any) {
+      alert(err?.message || "Erreur lors du paiement. Réessayez.");
+    } finally {
+      setIsStripeLoading(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-emerald-100 selection:text-emerald-900">
@@ -277,6 +266,12 @@ export default function LandingClient() {
             </span>
           </div>
 
+          {/* Déduction fiscale argument */}
+          <div className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 bg-amber-50 border border-amber-200 rounded-full text-sm font-bold text-amber-800">
+            <Lightbulb className="w-4 h-4 text-amber-600" />
+            Déductible de vos revenus fonciers en régime réel
+          </div>
+
           {/* Social stats */}
           <div className="flex flex-wrap justify-center gap-10 mt-10">
             {[
@@ -293,32 +288,57 @@ export default function LandingClient() {
         </div>
       </section>
 
-      {/* ─── SECTION 3 — PROBLÈME (Pain) ─── */}
-      <section className="py-24 bg-gradient-to-b from-red-50/60 to-orange-50/40 px-6 border-y border-red-100/50">
-        <div className="max-w-4xl mx-auto">
+      {/* ─── SECTION 3 — PROBLÈME (Danger cards) ─── */}
+      <section className="py-24 bg-slate-50 px-6 border-y border-slate-100">
+        <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <h2 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 mb-4">
-              Louer sans BailBot, c'est jouer avec le feu.
-            </h2>
+            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-4">Risques</h2>
+            <h3 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 mb-4">
+              Ce que coûte vraiment la gestion sans BailBot
+            </h3>
+            <p className="text-lg text-slate-500 font-medium max-w-2xl mx-auto">
+              Chaque erreur de gestion locative a un prix. Voici les plus fréquentes.
+            </p>
           </div>
-          <div className="space-y-6 mb-12">
-            {[
-              "Un bail non-conforme ALUR peut être annulé par le tribunal",
-              "Un dépôt de garantie mal géré = amende jusqu'à 1 mois de loyer",
-              "Une révision IRL oubliée = argent perdu définitivement",
-              "Un dossier locataire non vérifié = 18 mois de procédure d'expulsion",
-            ].map((pain) => (
-              <div key={pain} className="flex items-start gap-4 bg-white/80 p-5 rounded-2xl border border-red-100">
-                <AlertTriangle className="w-6 h-6 text-red-500 shrink-0 mt-0.5" />
-                <p className="text-lg font-bold text-slate-800">{pain}</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            {dangerCards.map((card, i) => (
+              <div
+                key={i}
+                className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300"
+              >
+                <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mb-5">
+                  <card.icon className="w-6 h-6 text-slate-600" />
+                </div>
+                <p className="text-3xl font-black text-slate-900 mb-3">{card.chiffre}</p>
+                <p className="text-slate-500 font-medium leading-relaxed">{card.description}</p>
               </div>
             ))}
           </div>
-          <div className="bg-white p-8 rounded-3xl border border-orange-200 text-center">
-            <p className="text-lg text-slate-600 font-medium italic">
-              &ldquo;63% des bailleurs particuliers ont au moins une clause illégale dans leur bail.&rdquo;
-            </p>
-            <p className="text-sm text-slate-400 font-bold mt-2">— ANIL 2023</p>
+
+          <div className="flex flex-wrap justify-center gap-6 mb-10 text-sm font-bold text-slate-700">
+            <span className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-emerald-600" />
+              Conforme ALUR 2024 — mis à jour automatiquement
+            </span>
+            <span className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-emerald-600" />
+              Signature eIDAS — valeur légale certifiée
+            </span>
+            <span className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-emerald-600" />
+              Déductible de vos revenus fonciers
+            </span>
+          </div>
+
+          <div className="text-center">
+            <a
+              href="#tarifs"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-emerald-600 transition-all text-sm uppercase tracking-widest group"
+            >
+              Protégez-vous maintenant
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </a>
           </div>
         </div>
       </section>
@@ -342,6 +362,25 @@ export default function LandingClient() {
                 <p className="text-slate-500 font-medium leading-relaxed">{f.desc}</p>
               </div>
             ))}
+          </div>
+
+          {/* Argument financier */}
+          <div className="mt-16 bg-emerald-50 border border-emerald-100 rounded-[32px] p-10">
+            <h4 className="text-2xl font-black text-slate-900 text-center mb-8">
+              BailBot se rembourse tout seul
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                "Un impayé évité = 22 mois de BailBot remboursés",
+                "Moins cher qu'une heure de consultation juridique",
+                "Déductible à 100% en régime réel",
+              ].map((stat) => (
+                <div key={stat} className="flex items-start gap-3 text-sm font-bold text-slate-700">
+                  <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>{stat}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -415,7 +454,7 @@ export default function LandingClient() {
                 ))}
                 <tr className="border-b border-slate-50">
                   <td className="py-4 pr-4 font-bold text-slate-700">Prix</td>
-                  <td className="py-4 px-4 text-center font-black text-emerald-600">dès 39€/mois</td>
+                  <td className="py-4 px-4 text-center font-black text-emerald-600">dès 0€/mois</td>
                   <td className="py-4 px-4 text-center font-bold text-slate-400">0€</td>
                   <td className="py-4 px-4 text-center font-bold text-slate-400">0-30€/mois</td>
                   <td className="py-4 px-4 text-center font-bold text-slate-400">Variable</td>
@@ -459,67 +498,127 @@ export default function LandingClient() {
 
           {/* 3 plans */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
-            {plans.map((plan) => {
-              const price = isAnnual ? plan.annualPerMonth : plan.monthly;
-              return (
-                <div
-                  key={plan.name}
-                  className={`p-10 rounded-[40px] flex flex-col relative transition-all duration-500 ${
-                    plan.popular
-                      ? "border-4 border-emerald-600 bg-white shadow-[0_50px_80px_-20px_rgba(16,185,129,0.2)] scale-105 z-10"
-                      : "border border-slate-100 bg-white hover:shadow-2xl"
-                  }`}
-                >
-                  {plan.popular && (
-                    <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-[0.2em] px-6 py-2.5 rounded-full shadow-xl">
-                      Plus populaire
-                    </div>
-                  )}
-                  <h3 className="text-2xl font-black mb-1 uppercase tracking-tight">
-                    {plan.name}
-                  </h3>
-                  <p className="text-slate-400 text-sm font-bold mb-6">
-                    Jusqu'à {plan.maxBiens} bien{plan.maxBiens > 1 ? "s" : ""}
-                  </p>
-                  <div className="mb-8">
-                    <div className="text-5xl font-black whitespace-nowrap">
-                      {price}€
-                      <span className="text-lg text-slate-400 font-bold">/mois</span>
-                    </div>
-                    {isAnnual && (
-                      <div className="text-xs text-emerald-600 font-bold mt-1">
-                        soit {plan.annualTotal}€/an
-                      </div>
-                    )}
-                  </div>
-                  <ul className="space-y-4 mb-10 flex-grow">
-                    {plan.features.map((feat) => (
-                      <li key={feat} className="flex items-center gap-3 text-sm font-bold text-slate-700">
-                        <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" /> {feat}
-                      </li>
-                    ))}
-                  </ul>
-                  <Link
-                    href={dashHref}
-                    className={`w-full py-4 font-black rounded-2xl text-center uppercase tracking-widest text-xs transition-all ${
-                      plan.popular
-                        ? "bg-emerald-600 text-white hover:bg-emerald-700 shadow-xl shadow-emerald-200"
-                        : "bg-slate-900 text-white hover:bg-emerald-600"
-                    }`}
-                  >
-                    Démarrer l'essai
-                  </Link>
+
+            {/* Plan Gratuit */}
+            <div className="p-10 rounded-[40px] flex flex-col relative border border-slate-100 bg-white hover:shadow-2xl transition-all duration-500">
+              <h3 className="text-2xl font-black mb-1 uppercase tracking-tight">Gratuit</h3>
+              <p className="text-slate-400 text-sm font-bold mb-6">1 bien</p>
+              <div className="mb-8">
+                <div className="text-5xl font-black whitespace-nowrap">
+                  0€
+                  <span className="text-lg text-slate-400 font-bold">/mois</span>
                 </div>
-              );
-            })}
+              </div>
+              <ul className="space-y-4 mb-10 flex-grow">
+                {["1 bien", "Baux ALUR basiques", "Quittances manuelles"].map((feat) => (
+                  <li key={feat} className="flex items-center gap-3 text-sm font-bold text-slate-700">
+                    <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" /> {feat}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href={dashHref}
+                className="w-full py-4 font-black rounded-2xl text-center uppercase tracking-widest text-xs bg-slate-900 text-white hover:bg-emerald-600 transition-all"
+              >
+                Démarrer gratuitement
+              </Link>
+              <p className="text-xs text-slate-400 font-medium text-center mt-3">Aucune carte requise</p>
+            </div>
+
+            {/* Plan Essentiel */}
+            <div className="p-10 rounded-[40px] flex flex-col relative border border-slate-100 bg-white hover:shadow-2xl transition-all duration-500">
+              <h3 className="text-2xl font-black mb-1 uppercase tracking-tight">Essentiel</h3>
+              <p className="text-slate-400 text-sm font-bold mb-6">Jusqu&apos;à 3 biens</p>
+              <div className="mb-8">
+                <div className="text-5xl font-black whitespace-nowrap">
+                  {isAnnual ? "6,83" : "9,90"}€
+                  <span className="text-lg text-slate-400 font-bold">/mois</span>
+                </div>
+                {isAnnual && (
+                  <div className="text-xs text-emerald-600 font-bold mt-1">
+                    soit 82€/an
+                  </div>
+                )}
+              </div>
+              <ul className="space-y-4 mb-6 flex-grow">
+                {[
+                  "3 biens max",
+                  "Baux ALUR conformes",
+                  "Quittances automatiques",
+                  "Portail locataire",
+                  "IRL automatique",
+                  "Analyse dossier basique",
+                ].map((feat) => (
+                  <li key={feat} className="flex items-center gap-3 text-sm font-bold text-slate-700">
+                    <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" /> {feat}
+                  </li>
+                ))}
+              </ul>
+              <div className="space-y-1 mb-6">
+                <p className="text-xs text-slate-500 font-bold text-center">Moins qu&apos;un café par semaine</p>
+                <p className="text-xs text-emerald-600 font-bold text-center">≈ 6€ réels après déduction fiscale*</p>
+              </div>
+              <button
+                onClick={() => handleCheckout("ESSENTIEL")}
+                disabled={isStripeLoading === "ESSENTIEL"}
+                className="w-full py-4 font-black rounded-2xl text-center uppercase tracking-widest text-xs bg-slate-900 text-white hover:bg-emerald-600 transition-all disabled:opacity-50"
+              >
+                {isStripeLoading === "ESSENTIEL" ? "Chargement..." : "Démarrer l'essai 14j"}
+              </button>
+            </div>
+
+            {/* Plan Sérénité — RECOMMANDÉ */}
+            <div className="p-10 rounded-[40px] flex flex-col relative border-4 border-emerald-600 bg-white shadow-[0_50px_80px_-20px_rgba(16,185,129,0.2)] scale-105 z-10 transition-all duration-500">
+              <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-[0.2em] px-6 py-2.5 rounded-full shadow-xl">
+                Plus populaire
+              </div>
+              <h3 className="text-2xl font-black mb-1 uppercase tracking-tight">Sérénité</h3>
+              <p className="text-slate-400 text-sm font-bold mb-6">Biens illimités</p>
+              <div className="mb-8">
+                <div className="text-5xl font-black whitespace-nowrap">
+                  {isAnnual ? "12,42" : "17,90"}€
+                  <span className="text-lg text-slate-400 font-bold">/mois</span>
+                </div>
+                {isAnnual && (
+                  <div className="text-xs text-emerald-600 font-bold mt-1">
+                    soit 149€/an
+                  </div>
+                )}
+              </div>
+              <ul className="space-y-4 mb-6 flex-grow">
+                {[
+                  "Biens illimités",
+                  "Tout Essentiel +",
+                  "Analyse OCR + BailScore",
+                  "Signature eIDAS Yousign",
+                  "Finances & rendements",
+                  "Export FEC comptable",
+                  "États des lieux complets",
+                  "Diagnostics avec alertes",
+                  "Support prioritaire",
+                ].map((feat) => (
+                  <li key={feat} className="flex items-center gap-3 text-sm font-bold text-slate-700">
+                    <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" /> {feat}
+                  </li>
+                ))}
+              </ul>
+              <p className="text-xs text-emerald-600 font-bold text-center mb-6">≈ 11€ réels après déduction fiscale*</p>
+              <button
+                onClick={() => handleCheckout("SERENITE")}
+                disabled={isStripeLoading === "SERENITE"}
+                className="w-full py-4 font-black rounded-2xl text-center uppercase tracking-widest text-xs bg-emerald-600 text-white hover:bg-emerald-700 shadow-xl shadow-emerald-200 transition-all disabled:opacity-50"
+              >
+                {isStripeLoading === "SERENITE" ? "Chargement..." : "Démarrer l'essai 14j"}
+              </button>
+            </div>
           </div>
 
           <div className="text-center mt-10 space-y-2">
             <p className="text-sm text-slate-400 font-medium">
-              Aucune carte de crédit requise pour l'essai · Annulable à tout moment · Support inclus
+              Aucune carte de crédit requise pour l&apos;essai · Annulable à tout moment · Support inclus
             </p>
-            <p className="text-sm text-emerald-600 font-bold">
-              Prix valables jusqu'au 31 mars 2026 — offre de lancement
+            <p className="text-xs text-slate-500 font-medium mt-4">
+              * En régime réel, les frais de gestion locative sont déductibles de vos revenus fonciers. BailBot est une charge déductible.
             </p>
           </div>
         </div>
@@ -549,7 +648,7 @@ export default function LandingClient() {
             <Building2 className="w-8 h-8" />
           </div>
           <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-tight">
-            Votre première location conforme commence aujourd'hui.
+            Votre première location conforme commence aujourd&apos;hui.
           </h2>
           <p className="text-xl text-slate-400 font-medium mb-12">
             Rejoignez 1 200 propriétaires qui gèrent sereinement leurs locations.
