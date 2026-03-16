@@ -4,8 +4,8 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { Wrench, ClipboardList, Stethoscope } from "lucide-react";
 
-const EDLContent = dynamic(() => import("../etats-des-lieux/page"), { ssr: false, loading: () => <TabLoader /> });
-const DiagnosticsContent = dynamic(() => import("../diagnostics/page"), { ssr: false, loading: () => <TabLoader /> });
+const EDLContent = dynamic(() => import("../etats-des-lieux/EdlListe"), { ssr: false, loading: () => <TabLoader /> });
+const DiagnosticsContent = dynamic(() => import("../diagnostics/DiagnosticsOverviewClient"), { ssr: false, loading: () => <TabLoader /> });
 const TravauxContent = dynamic(() => import("../travaux/page"), { ssr: false, loading: () => <TabLoader /> });
 
 const TABS = [
