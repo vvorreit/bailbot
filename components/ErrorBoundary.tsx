@@ -24,6 +24,22 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // Auto-reload on ChunkLoadError (Turbopack cache corruption)
+    if (
+      error.name === "ChunkLoadError" ||
+      error.message?.includes("Failed to load chunk") ||
+      error.message?.includes("Loading chunk") ||
+      error.message?.includes("ChunkLoadError")
+    ) {
+      const reloadKey = "bailbot_chunk_reload";
+      const lastReload = sessionStorage.getItem(reloadKey);
+      const now = Date.now();
+      if (!lastReload || now - parseInt(lastReload) > 10000) {
+        sessionStorage.setItem(reloadKey, String(now));
+        window.location.reload();
+        return;
+      }
+    }
     console.error("[ErrorBoundary]", error, errorInfo);
     import("@/lib/analytics").then(({ trackEvent }) => {
       trackEvent("error_boundary", {

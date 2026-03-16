@@ -41,6 +41,20 @@ export default async function RootLayout({
   return (
     <html lang="fr">
       <head>
+        {/* Auto-reload on ChunkLoadError (Turbopack cache corruption) */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          window.addEventListener('error', function(e) {
+            if (e.message && (e.message.includes('Failed to load chunk') || e.message.includes('ChunkLoadError'))) {
+              var key = 'bailbot_chunk_reload';
+              var last = sessionStorage.getItem(key);
+              var now = Date.now();
+              if (!last || now - parseInt(last) > 10000) {
+                sessionStorage.setItem(key, String(now));
+                window.location.reload();
+              }
+            }
+          });
+        ` }} />
         <meta name="theme-color" content="#059669" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
