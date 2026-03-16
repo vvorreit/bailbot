@@ -8,12 +8,13 @@ import {
   Building2, FileSearch, Home, FileSignature, Banknote, Calculator,
   Users, MessageSquare, ClipboardList, Wrench, Layers, BarChart2,
   Settings, ShieldCheck, CreditCard, LogOut, ChevronsLeft, ChevronsRight,
-  Menu, X, TrendingUp, Mail, Lock, Bell,
+  Menu, X, TrendingUp, Mail, Lock, Bell, Stethoscope,
 } from "lucide-react";
 import { createPortalSession } from "@/app/dashboard/actions";
 import MessageTemplates from "@/components/MessageTemplates";
 import RevisionLoyerModal from "@/components/RevisionLoyerModal";
 import { getNbImpayes } from "@/app/actions/stats-nav";
+import { getNbDiagnosticsExpires } from "@/app/actions/diagnostics-gestion";
 import { hasAccess, METIER_LABELS } from "@/lib/features";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { LucideIcon } from "lucide-react";
@@ -31,6 +32,7 @@ export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [nbImpayes, setNbImpayes] = useState(0);
+  const [nbDiagExpires, setNbDiagExpires] = useState(0);
   const [messagesOpen, setMessagesOpen] = useState(false);
   const [revisionOpen, setRevisionOpen] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
@@ -48,6 +50,7 @@ export default function Sidebar() {
 
   useEffect(() => {
     getNbImpayes().then(setNbImpayes).catch(() => {});
+    getNbDiagnosticsExpires().then(setNbDiagExpires).catch(() => {});
   }, []);
 
   const toggleCollapse = useCallback(() => {
@@ -106,6 +109,7 @@ export default function Sidebar() {
       label: "OUTILS",
       items: [
         { href: "/dashboard/etats-des-lieux", label: "Etats des lieux", icon: ClipboardList, show: hasAccess(metier, "ETAT_DES_LIEUX") },
+        { href: "/dashboard/diagnostics", label: "Diagnostics", icon: Stethoscope, badge: nbDiagExpires, show: hasAccess(metier, "DIAGNOSTICS") },
         { href: "/dashboard/travaux", label: "Travaux", icon: Wrench, show: hasAccess(metier, "MES_LOGEMENTS") },
         { href: "/dashboard/multi", label: "Multi-dossiers", icon: Layers, show: hasAccess(metier, "KANBAN_CANDIDATS") },
         { href: "/dashboard/stats", label: "Statistiques", icon: BarChart2, show: hasAccess(metier, "STATS_DASHBOARD") },

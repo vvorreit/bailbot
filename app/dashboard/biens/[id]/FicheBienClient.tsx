@@ -13,6 +13,7 @@ import {
   ClipboardList,
   History,
   Download,
+  Stethoscope,
 } from 'lucide-react';
 import { genererQuittancePDF } from '@/lib/generateur-quittance';
 import ConformiteReportWidget from '@/components/ConformiteReport';
@@ -261,6 +262,23 @@ export default function FicheBienClient({ data }: Props) {
             loyerActuel={bien.loyer ?? 0}
             surface={bien.surface ?? null}
           />
+
+          {/* Diagnostics obligatoires */}
+          <section className="bg-white rounded-2xl border border-slate-100 p-6">
+            <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <Stethoscope className="w-4 h-4 text-orange-600" />
+              Diagnostics
+            </h2>
+            <p className="text-xs text-slate-500 mb-3">Documents obligatoires pour la mise en location</p>
+            <Link
+              href={`/dashboard/biens/${bien.id}/diagnostics`}
+              className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-orange-50 text-orange-700 text-sm font-bold rounded-xl hover:bg-orange-100 transition-colors"
+            >
+              <Stethoscope className="w-4 h-4" />
+              Gerer les diagnostics
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+          </section>
 
           {/* États des lieux */}
           <section className="bg-white rounded-2xl border border-slate-100 p-6">
