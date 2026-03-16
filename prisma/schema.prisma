@@ -481,25 +481,32 @@ enum CategorieTravaux {
 }
 
 model Travaux {
-  id           String            @id @default(cuid())
-  userId       String
-  bienId       String
-  titre        String
-  description  String?
-  statut       StatutTravaux     @default(A_FAIRE)
-  categorie    CategorieTravaux
-  montantDevis Float?
-  montantReel  Float?
-  dateDebut    DateTime?
-  dateFin      DateTime?
-  artisanNom   String?
-  artisanTel   String?
-  artisanEmail String?
-  deductible   Boolean           @default(true)
-  notes        String?
-  documents    TravauxDocument[]
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
+  id              String            @id @default(cuid())
+  userId          String
+  bienId          String
+  titre           String
+  description     String?
+  statut          StatutTravaux     @default(A_FAIRE)
+  categorie       CategorieTravaux
+  montantDevis    Float?
+  montantReel     Float?
+  budgetEstime    Float?
+  montantFinal    Float?
+  dateDebut       DateTime?
+  dateFin         DateTime?
+  dateFinReelle   DateTime?
+  artisanNom      String?
+  artisanTel      String?
+  artisanEmail    String?
+  deductible      Boolean           @default(true)
+  notes           String?
+  edlEntreeId     String?
+  edlSortieId     String?
+  documents       TravauxDocument[]
+  devis           DevisEntreprise[]
+  photos          PhotoTravaux[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 
   @@index([userId])
   @@index([bienId])
@@ -514,6 +521,39 @@ model TravauxDocument {
   taille    Int?
   createdAt DateTime @default(now())
   travaux   Travaux  @relation(fields: [travauxId], references: [id], onDelete: Cascade)
+
+  @@index([travauxId])
+}
+
+model DevisEntreprise {
+  id               String   @id @default(cuid())
+  travauxId        String
+  entrepriseNom    String
+  entrepriseTel    String?
+  entrepriseEmail  String?
+  entrepriseSiret  String?
+  montantHT        Float
+  montantTTC       Float
+  tvaRate          Float    @default(10.0)
+  dateDevis        DateTime?
+  validiteJours    Int      @default(30)
+  statut           String   @default("en_attente") // en_attente, accepte, refuse
+  notes            String?
+  fichierUrl       String?
+  createdAt        DateTime @default(now())
+  travaux          Travaux  @relation(fields: [travauxId], references: [id], onDelete: Cascade)
+
+  @@index([travauxId])
+}
+
+model PhotoTravaux {
+  id          String   @id @default(cuid())
+  travauxId   String
+  url         String
+  type        String   @default("pendant") // avant, pendant, apres
+  description String?
+  createdAt   DateTime @default(now())
+  travaux     Travaux  @relation(fields: [travauxId], references: [id], onDelete: Cascade)
 
   @@index([travauxId])
 }
@@ -607,7 +647,39 @@ model ProfilBailleurTable {
   telephone  String?
   email      String?
   siret      String?
+  iban       String?  // Chiffré AES-256-GCM côté application
   createdAt  DateTime @default(now())
   updatedAt  DateTime @default(now())
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── RGPD : Consentement utilisateur ─────────────────────────────────────────
+
+model ConsentRGPD {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // "analytics", "marketing", "necessary"
+  consenti    Boolean
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  revokedAt   DateTime?
+
+  @@index([userId])
+  @@index([type])
+}
+
+// ─── RGPD : Journal d'audit ──────────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String   // "LOGIN", "LOGIN_FAILED", "EXPORT_DATA", "DELETE_ACCOUNT", "PURGE_RGPD", etc.
+  details   String?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
 }

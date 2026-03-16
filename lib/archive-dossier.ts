@@ -13,9 +13,8 @@ import type { CompletudeDossier } from './completude-dossier';
 // ─── Types communs ─────────────────────────────────────────────────────────────
 
 export interface FichierDossier {
-  nom: string;       // Nom du fichier (ex: "CNI_recto.jpg")
-  type: string;      // MIME type
-  data: Blob | File; // Contenu
+  type: string;      // Catégorie document ("cni", "bulletin", etc.)
+  file: File;        // Fichier uploadé
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -178,7 +177,7 @@ export async function genererArchiveDossier(
   if (fichiers.length > 0) {
     const docs = zip.folder('documents');
     for (const fichier of fichiers) {
-      docs!.file(fichier.nom, fichier.data);
+      docs!.file(fichier.file.name, fichier.file);
     }
   }
 

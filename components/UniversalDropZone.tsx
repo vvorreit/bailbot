@@ -9,6 +9,7 @@ import {
   DocumentType,
   DossierLocataire,
 } from '@/lib/parsers';
+import type { FichierDossier } from '@/lib/archive-dossier';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -24,11 +25,6 @@ interface FichierEnAttente {
   progress?: number;
   confidence?: number;
   label?: string;
-}
-
-interface FichierDossier {
-  type: DropType;
-  file: File;
 }
 
 interface Props {

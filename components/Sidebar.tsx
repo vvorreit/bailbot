@@ -81,7 +81,7 @@ export default function Sidebar() {
     {
       label: "CANDIDATURES",
       items: [
-        { href: "/dashboard", label: "Analyser un dossier", icon: FileSearch, show: true },
+        { href: "/dashboard/analyse", label: "Analyser un dossier", icon: FileSearch, show: true },
         { href: "/dashboard/depot", label: "Tous les candidats", icon: Users, show: true },
       ],
     },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { getTemplates, type MessageTemplate } from "@/app/actions/templates";
+import { getTemplates, type MessageTemplateDTO as MessageTemplate } from "@/app/actions/templates";
 
 /**
  * Interpole les variables {{var}} dans un texte.

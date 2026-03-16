@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import { FileSearch, Home, Banknote, Bell, Menu } from "lucide-react";
 import { BottomNav } from "@/components/ui/BottomNav";
-import { listerImpayes } from "@/lib/db-local";
+import { getNbImpayes } from "@/app/actions/stats-nav";
 import type { NavItem } from "@/components/ui/BottomNav";
 
 export default function DashboardBottomNav() {
   const [nbImpayes, setNbImpayes] = useState(0);
 
   useEffect(() => {
-    listerImpayes().then((list) => setNbImpayes(list.length)).catch(() => {});
+    getNbImpayes().then(setNbImpayes).catch(() => {});
   }, []);
 
   const items: NavItem[] = [

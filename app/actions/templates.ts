@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
-export interface MessageTemplate {
+export interface MessageTemplateDTO {
   id: string;
   nom: string;
   type: string;
@@ -14,9 +14,8 @@ export interface MessageTemplate {
   createdAt: string;
 }
 
-const TEMPLATES_DEFAUT: MessageTemplate[] = [
+const TEMPLATES_DEFAUT: Omit<MessageTemplateDTO, "id" | "createdAt">[] = [
   {
-    id: "relance-loyer",
     nom: "Relance loyer",
     type: "RELANCE_LOYER",
     sujet: "Rappel de paiement — {{adresse}}",
@@ -33,10 +32,8 @@ En cas de difficultés, n'hésitez pas à nous contacter.
 Cordialement,
 L'équipe BailBot`,
     variables: ["nom_locataire", "adresse", "montant", "date"],
-    createdAt: new Date().toISOString(),
   },
   {
-    id: "confirmation-visite",
     nom: "Confirmation de visite",
     type: "CONFIRMATION_VISITE",
     sujet: "Confirmation de visite — {{adresse}}",
@@ -49,10 +46,8 @@ Merci de vous présenter muni(e) d'une pièce d'identité.
 Cordialement,
 L'équipe BailBot`,
     variables: ["nom_locataire", "adresse", "date"],
-    createdAt: new Date().toISOString(),
   },
   {
-    id: "refus-candidature",
     nom: "Refus de candidature",
     type: "REFUS_CANDIDATURE",
     sujet: "Suite à votre candidature — {{adresse}}",
@@ -67,10 +62,8 @@ Nous vous souhaitons bonne chance dans vos recherches.
 Cordialement,
 L'équipe BailBot`,
     variables: ["nom_locataire", "adresse"],
-    createdAt: new Date().toISOString(),
   },
   {
-    id: "bienvenue-locataire",
     nom: "Bienvenue locataire",
     type: "BIENVENUE_LOCATAIRE",
     sujet: "Bienvenue dans votre logement — {{adresse}}",
@@ -87,10 +80,8 @@ Votre espace locataire est accessible ici : {{lien}}
 Cordialement,
 L'équipe BailBot`,
     variables: ["nom_locataire", "adresse", "date", "montant", "lien"],
-    createdAt: new Date().toISOString(),
   },
   {
-    id: "rappel-echeance",
     nom: "Rappel échéance",
     type: "RAPPEL_ECHEANCE",
     sujet: "Rappel — Échéance à venir pour {{adresse}}",
@@ -105,10 +96,8 @@ Merci de prendre les dispositions nécessaires.
 Cordialement,
 L'équipe BailBot`,
     variables: ["nom_locataire", "adresse", "date"],
-    createdAt: new Date().toISOString(),
   },
   {
-    id: "restitution-depot",
     nom: "Restitution dépôt de garantie",
     type: "RESTITUTION_DEPOT",
     sujet: "Restitution du dépôt de garantie — {{adresse}}",
@@ -123,98 +112,153 @@ Le virement sera effectué dans les prochains jours.
 Cordialement,
 L'équipe BailBot`,
     variables: ["nom_locataire", "adresse", "montant"],
-    createdAt: new Date().toISOString(),
   },
 ];
 
-async function getUser() {
+async function getUserId(): Promise<string> {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) throw new Error("Non autorisé");
-  const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-  if (!user) throw new Error("Utilisateur introuvable");
-  return user;
-}
-
-export async function getTemplates(): Promise<MessageTemplate[]> {
-  const user = await getUser();
-  const templates = user.messageTemplates as MessageTemplate[] | null;
-  if (!templates || !Array.isArray(templates) || templates.length === 0) {
-    return TEMPLATES_DEFAUT;
-  }
-  return templates;
-}
-
-export async function saveTemplates(templates: MessageTemplate[]) {
-  const user = await getUser();
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { messageTemplates: templates as any },
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { id: true },
   });
+  if (!user) throw new Error("Utilisateur introuvable");
+  return user.id;
+}
+
+function toDTO(row: {
+  id: string;
+  nom: string;
+  type: string;
+  sujet: string;
+  corps: string;
+  variables: string[];
+  createdAt: Date;
+}): MessageTemplateDTO {
+  return {
+    id: row.id,
+    nom: row.nom,
+    type: row.type,
+    sujet: row.sujet,
+    corps: row.corps,
+    variables: row.variables,
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
+async function seedDefaults(userId: string): Promise<MessageTemplateDTO[]> {
+  const rows = await prisma.$transaction(
+    TEMPLATES_DEFAUT.map((t) =>
+      prisma.messageTemplate.create({
+        data: { userId, ...t },
+      })
+    )
+  );
+  return rows.map(toDTO);
+}
+
+export async function getTemplates(): Promise<MessageTemplateDTO[]> {
+  const userId = await getUserId();
+  const rows = await prisma.messageTemplate.findMany({
+    where: { userId },
+    orderBy: { createdAt: "asc" },
+  });
+  if (rows.length === 0) return seedDefaults(userId);
+  return rows.map(toDTO);
+}
+
+export async function saveTemplates(templates: MessageTemplateDTO[]) {
+  const userId = await getUserId();
+  await prisma.$transaction([
+    prisma.messageTemplate.deleteMany({ where: { userId } }),
+    ...templates.map((t) =>
+      prisma.messageTemplate.create({
+        data: {
+          userId,
+          nom: t.nom,
+          type: t.type,
+          sujet: t.sujet,
+          corps: t.corps,
+          variables: t.variables,
+        },
+      })
+    ),
+  ]);
   return { success: true };
 }
 
-export async function saveTemplate(template: MessageTemplate) {
-  const user = await getUser();
-  const existing = (user.messageTemplates as MessageTemplate[] | null) || TEMPLATES_DEFAUT;
-  const index = existing.findIndex((t) => t.id === template.id);
-
-  let updated: MessageTemplate[];
-  if (index >= 0) {
-    updated = [...existing];
-    updated[index] = template;
-  } else {
-    updated = [...existing, template];
-  }
-
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { messageTemplates: updated as any },
+export async function saveTemplate(template: MessageTemplateDTO) {
+  const userId = await getUserId();
+  const existing = await prisma.messageTemplate.findFirst({
+    where: { id: template.id, userId },
   });
+
+  if (existing) {
+    await prisma.messageTemplate.update({
+      where: { id: template.id },
+      data: {
+        nom: template.nom,
+        type: template.type,
+        sujet: template.sujet,
+        corps: template.corps,
+        variables: template.variables,
+        updatedAt: new Date(),
+      },
+    });
+  } else {
+    await prisma.messageTemplate.create({
+      data: {
+        userId,
+        nom: template.nom,
+        type: template.type,
+        sujet: template.sujet,
+        corps: template.corps,
+        variables: template.variables,
+      },
+    });
+  }
   return { success: true };
 }
 
 export async function deleteTemplate(templateId: string) {
-  const user = await getUser();
-  const existing = (user.messageTemplates as MessageTemplate[] | null) || TEMPLATES_DEFAUT;
-  const updated = existing.filter((t) => t.id !== templateId);
-
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { messageTemplates: updated as any },
+  const userId = await getUserId();
+  await prisma.messageTemplate.deleteMany({
+    where: { id: templateId, userId },
   });
   return { success: true };
 }
 
 export async function duplicateTemplate(templateId: string) {
-  const user = await getUser();
-  const existing = (user.messageTemplates as MessageTemplate[] | null) || TEMPLATES_DEFAUT;
-  const source = existing.find((t) => t.id === templateId);
+  const userId = await getUserId();
+  const source = await prisma.messageTemplate.findFirst({
+    where: { id: templateId, userId },
+  });
   if (!source) throw new Error("Template introuvable");
 
-  const copy: MessageTemplate = {
-    ...source,
-    id: `${source.id}-copie-${Date.now()}`,
-    nom: `${source.nom} (copie)`,
-    createdAt: new Date().toISOString(),
-  };
-
-  const updated = [...existing, copy];
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { messageTemplates: updated as any },
+  const copy = await prisma.messageTemplate.create({
+    data: {
+      userId,
+      nom: `${source.nom} (copie)`,
+      type: source.type,
+      sujet: source.sujet,
+      corps: source.corps,
+      variables: source.variables,
+    },
   });
-  return { success: true, template: copy };
+  return { success: true, template: toDTO(copy) };
 }
 
 export async function resetTemplates() {
-  const user = await getUser();
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { messageTemplates: TEMPLATES_DEFAUT as any },
-  });
+  const userId = await getUserId();
+  await prisma.messageTemplate.deleteMany({ where: { userId } });
+  await seedDefaults(userId);
   return { success: true };
 }
 
-export async function getDefaultTemplates(): Promise<MessageTemplate[]> {
-  return TEMPLATES_DEFAUT;
+export async function getDefaultTemplates(): Promise<MessageTemplateDTO[]> {
+  return TEMPLATES_DEFAUT.map((t, i) => ({
+    ...t,
+    id: `default-${i}`,
+    createdAt: new Date().toISOString(),
+  }));
 }

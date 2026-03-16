@@ -10,30 +10,33 @@ export async function POST(req: NextRequest) {
   }
 
   const subscription = await req.json();
-  if (!subscription?.endpoint) {
+  if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
     return NextResponse.json({ error: "Subscription invalide" }, { status: 400 });
   }
 
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
-    select: { id: true, pushSubscriptions: true },
+    select: { id: true },
   });
 
   if (!user) {
     return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 });
   }
 
-  const existing = (user.pushSubscriptions as any[]) ?? [];
-  const alreadyExists = existing.some((s: any) => s.endpoint === subscription.endpoint);
-
-  if (!alreadyExists) {
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        pushSubscriptions: [...existing, subscription],
-      },
-    });
-  }
+  await prisma.pushSubscription.upsert({
+    where: { endpoint: subscription.endpoint },
+    update: {
+      p256dh: subscription.keys.p256dh,
+      auth: subscription.keys.auth,
+      updatedAt: new Date(),
+    },
+    create: {
+      userId: user.id,
+      endpoint: subscription.endpoint,
+      p256dh: subscription.keys.p256dh,
+      auth: subscription.keys.auth,
+    },
+  });
 
   return NextResponse.json({ success: true });
 }

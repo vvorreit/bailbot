@@ -11,7 +11,7 @@ const createPrismaClient = () => {
   }
 
   const pool = new Pool({ connectionString });
-  const adapter = new PrismaPg(pool);
+  const adapter = new PrismaPg(pool as never);
 
   return new PrismaClient({
     adapter,

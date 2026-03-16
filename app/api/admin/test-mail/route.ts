@@ -20,7 +20,7 @@ export async function GET() {
 
   try {
     const result = await sendMail({
-      to: (session.user as any).email,
+      to: (session!.user as any).email,
       subject: "BailBot — Test email ✓",
       html: `<p>Email de test envoyé depuis BailBot à ${new Date().toISOString()}.<br/>Si vous recevez ceci, Resend est correctement configuré.</p>`,
     });

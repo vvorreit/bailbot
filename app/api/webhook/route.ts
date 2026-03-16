@@ -62,10 +62,11 @@ export async function POST(req: Request) {
     }
 
     if (event.type === "invoice.payment_failed") {
-      const invoice = event.data.object as Stripe.Invoice;
-      const subscriptionId = invoice.subscription as string;
-      // Log uniquement — on ne rétrograde pas immédiatement (Stripe retente 3 fois)
-      console.warn(`Paiement échoué pour subscription ${subscriptionId}. Tentative ${invoice.attempt_count}`);
+      const invoice = event.data.object as unknown as Record<string, unknown>;
+      const sub = invoice.subscription;
+      const subscriptionId = typeof sub === 'string' ? sub : (sub as { id?: string })?.id ?? 'unknown';
+      const attemptCount = typeof invoice.attempt_count === 'number' ? invoice.attempt_count : '?';
+      console.warn(`Paiement échoué pour subscription ${subscriptionId}. Tentative ${attemptCount}`);
     }
 
     if (event.type === "customer.subscription.deleted") {

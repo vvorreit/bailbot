@@ -24,22 +24,23 @@ interface PushPayload {
 export async function sendPushToUser(userId: string, payload: PushPayload) {
   ensureVapid();
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { pushSubscriptions: true },
+  const subscriptions = await prisma.pushSubscription.findMany({
+    where: { userId },
   });
 
-  const subscriptions = (user?.pushSubscriptions as any[]) ?? [];
   if (subscriptions.length === 0) return { sent: 0, failed: 0 };
 
   let sent = 0;
   let failed = 0;
-  const validSubs: any[] = [];
+  const expiredIds: string[] = [];
 
   for (const sub of subscriptions) {
     try {
       await webPush.sendNotification(
-        sub,
+        {
+          endpoint: sub.endpoint,
+          keys: { p256dh: sub.p256dh, auth: sub.auth },
+        },
         JSON.stringify({
           title: payload.title,
           body: payload.body,
@@ -47,23 +48,19 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
           icon: payload.icon ?? "/icon-192x192.png",
         })
       );
-      validSubs.push(sub);
       sent++;
-    } catch (err: any) {
-      if (err.statusCode === 410 || err.statusCode === 404) {
-        failed++;
-      } else {
-        validSubs.push(sub);
-        failed++;
+    } catch (err: unknown) {
+      const statusCode = (err as { statusCode?: number }).statusCode;
+      if (statusCode === 410 || statusCode === 404) {
+        expiredIds.push(sub.id);
       }
+      failed++;
     }
   }
 
-  // Nettoyer les subscriptions expirées
-  if (validSubs.length !== subscriptions.length) {
-    await prisma.user.update({
-      where: { id: userId },
-      data: { pushSubscriptions: validSubs },
+  if (expiredIds.length > 0) {
+    await prisma.pushSubscription.deleteMany({
+      where: { id: { in: expiredIds } },
     });
   }
 

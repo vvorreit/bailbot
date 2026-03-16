@@ -15,7 +15,7 @@ import MessageTemplates from "@/components/MessageTemplates";
 import SearchDossiers from "@/components/SearchDossiers";
 import ThemeToggle from "@/components/ThemeToggle";
 import RevisionLoyerModal from "@/components/RevisionLoyerModal";
-import { listerImpayes } from "@/lib/db-local";
+import { getNbImpayes } from "@/app/actions/stats-nav";
 import { hasAccess, METIER_LABELS } from "@/lib/features";
 import type { LucideIcon } from "lucide-react";
 
@@ -44,7 +44,7 @@ export default function NavMenu() {
   const rechercheMasquee = user?.rechercheMasquee ?? false;
 
   useEffect(() => {
-    listerImpayes().then((list) => setNbImpayes(list.length)).catch(() => {});
+    getNbImpayes().then(setNbImpayes).catch(() => {});
   }, []);
 
   useEffect(() => {

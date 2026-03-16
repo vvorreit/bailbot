@@ -41,7 +41,7 @@ async function extractTextFromPDFNative(file: File): Promise<string> {
       str: item.str,
       x: item.transform[4],
       y: item.transform[5], // Attention: Y est souvent inversé (0 en bas) dans les PDF
-      w: item.width || 0
+      w: (item as unknown as { width?: number }).width || 0
     }));
 
     // 2. On trie les items : D'abord par Y (descendant = haut vers bas), puis par X (ascendant = gauche vers droite)

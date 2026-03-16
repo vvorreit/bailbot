@@ -79,8 +79,8 @@ export const authOptions: NextAuthOptions = {
 
         token.role = dbUser?.role ?? "USER";
         token.clientCount = dbUser?.clientCount ?? 0;
-        token.teamId = dbUser?.teamId;
-        token.teamRole = dbUser?.teamRole;
+        token.teamId = dbUser?.teamId ?? undefined;
+        token.teamRole = dbUser?.teamRole ?? undefined;
         token.metier = dbUser?.metier ?? null;
 
         const isTeamPro = dbUser?.team?.plan === "PRO" || dbUser?.team?.plan === "ENTERPRISE";

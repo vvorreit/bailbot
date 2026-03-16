@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Building2, ChevronRight, ChevronLeft, Check, Bell, Home, User, Briefcase } from "lucide-react";
+import { Input } from "@/components/ui/Input";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import {
   saveOnboardingStep1,
@@ -222,36 +223,29 @@ export default function OnboardingPage() {
                   <h2 className="text-lg font-black text-slate-900">Vos informations</h2>
                 </div>
                 <div className="space-y-4">
-                  <div>
-                    <label className="text-xs font-bold text-slate-600 mb-1 block">Nom complet *</label>
-                    <input
-                      type="text"
-                      value={nom}
-                      onChange={(e) => setNom(e.target.value)}
-                      placeholder="Jean Dupont"
-                      className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-600 mb-1 block">Telephone</label>
-                    <input
-                      type="tel"
-                      value={telephone}
-                      onChange={(e) => setTelephone(e.target.value)}
-                      placeholder="06 12 34 56 78"
-                      className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-600 mb-1 block">Ville</label>
-                    <input
-                      type="text"
-                      value={ville}
-                      onChange={(e) => setVille(e.target.value)}
-                      placeholder="Paris"
-                      className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                    />
-                  </div>
+                  <Input
+                    label="Nom complet *"
+                    type="text"
+                    value={nom}
+                    onChange={(e) => setNom(e.target.value)}
+                    placeholder="Jean Dupont"
+                    aria-required="true"
+                    error={error && !nom.trim() ? "Le nom est requis" : undefined}
+                  />
+                  <Input
+                    label="Telephone"
+                    type="tel"
+                    value={telephone}
+                    onChange={(e) => setTelephone(e.target.value)}
+                    placeholder="06 12 34 56 78"
+                  />
+                  <Input
+                    label="Ville"
+                    type="text"
+                    value={ville}
+                    onChange={(e) => setVille(e.target.value)}
+                    placeholder="Paris"
+                  />
                 </div>
               </>
             )}
@@ -265,37 +259,28 @@ export default function OnboardingPage() {
                 </div>
                 <p className="text-sm text-slate-500 mb-5">Ces informations pre-rempliront vos contrats et quittances.</p>
                 <div className="space-y-4">
-                  <div>
-                    <label className="text-xs font-bold text-slate-600 mb-1 block">Nom complet du bailleur</label>
-                    <input
-                      type="text"
-                      value={bailleurNom}
-                      onChange={(e) => setBailleurNom(e.target.value)}
-                      placeholder="Jean Dupont / SCI Dupont"
-                      className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-600 mb-1 block">Adresse du bailleur</label>
-                    <input
-                      type="text"
-                      value={bailleurAdresse}
-                      onChange={(e) => setBailleurAdresse(e.target.value)}
-                      placeholder="12 rue de la Paix, 75002 Paris"
-                      className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                    />
-                  </div>
+                  <Input
+                    label="Nom complet du bailleur"
+                    type="text"
+                    value={bailleurNom}
+                    onChange={(e) => setBailleurNom(e.target.value)}
+                    placeholder="Jean Dupont / SCI Dupont"
+                  />
+                  <Input
+                    label="Adresse du bailleur"
+                    type="text"
+                    value={bailleurAdresse}
+                    onChange={(e) => setBailleurAdresse(e.target.value)}
+                    placeholder="12 rue de la Paix, 75002 Paris"
+                  />
                   {metier !== "PROPRIETAIRE" && (
-                    <div>
-                      <label className="text-xs font-bold text-slate-600 mb-1 block">SIRET (agence / gestionnaire)</label>
-                      <input
-                        type="text"
-                        value={siret}
-                        onChange={(e) => setSiret(e.target.value)}
-                        placeholder="123 456 789 00010"
-                        className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                      />
-                    </div>
+                    <Input
+                      label="SIRET (agence / gestionnaire)"
+                      type="text"
+                      value={siret}
+                      onChange={(e) => setSiret(e.target.value)}
+                      placeholder="123 456 789 00010"
+                    />
                   )}
                 </div>
               </>
@@ -310,37 +295,28 @@ export default function OnboardingPage() {
                 </div>
                 <p className="text-sm text-slate-500 mb-5">Optionnel — vous pourrez en ajouter plus tard.</p>
                 <div className="space-y-4">
-                  <div>
-                    <label className="text-xs font-bold text-slate-600 mb-1 block">Adresse du bien</label>
-                    <input
-                      type="text"
-                      value={bienAdresse}
-                      onChange={(e) => setBienAdresse(e.target.value)}
-                      placeholder="25 avenue des Champs-Elysees, 75008 Paris"
-                      className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                    />
-                  </div>
+                  <Input
+                    label="Adresse du bien"
+                    type="text"
+                    value={bienAdresse}
+                    onChange={(e) => setBienAdresse(e.target.value)}
+                    placeholder="25 avenue des Champs-Elysees, 75008 Paris"
+                  />
                   <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs font-bold text-slate-600 mb-1 block">Surface (m2)</label>
-                      <input
-                        type="number"
-                        value={bienSurface}
-                        onChange={(e) => setBienSurface(e.target.value)}
-                        placeholder="45"
-                        className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-slate-600 mb-1 block">Loyer CC (EUR)</label>
-                      <input
-                        type="number"
-                        value={bienLoyer}
-                        onChange={(e) => setBienLoyer(e.target.value)}
-                        placeholder="850"
-                        className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                      />
-                    </div>
+                    <Input
+                      label="Surface (m2)"
+                      type="number"
+                      value={bienSurface}
+                      onChange={(e) => setBienSurface(e.target.value)}
+                      placeholder="45"
+                    />
+                    <Input
+                      label="Loyer CC (EUR)"
+                      type="number"
+                      value={bienLoyer}
+                      onChange={(e) => setBienLoyer(e.target.value)}
+                      placeholder="850"
+                    />
                   </div>
                 </div>
               </>

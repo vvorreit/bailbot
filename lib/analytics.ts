@@ -6,7 +6,8 @@ type AnalyticsEvent =
   | "payment_recorded"
   | "quittance_generated"
   | "search_used"
-  | "onboarding_completed";
+  | "onboarding_completed"
+  | "error_boundary";
 
 interface PostHogLike {
   capture: (event: string, properties?: Record<string, unknown>) => void;

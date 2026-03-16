@@ -25,6 +25,13 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("[ErrorBoundary]", error, errorInfo);
+    import("@/lib/analytics").then(({ trackEvent }) => {
+      trackEvent("error_boundary", {
+        error_message: error.message,
+        error_stack: error.stack?.slice(0, 500),
+        component_stack: errorInfo.componentStack?.slice(0, 500),
+      });
+    }).catch(() => {});
   }
 
   handleRetry = () => {

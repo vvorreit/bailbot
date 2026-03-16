@@ -50,6 +50,62 @@ export interface DossierLocataire {
   garant?: Garant;
 }
 
+// ─── Types Mutuelle / Ordonnance ─────────────────────────────────────────────
+
+export interface Personne {
+  nom: string;
+  prenom: string;
+  numeroSecuriteSociale: string;
+  dateNaissance: string;
+}
+
+export interface MutuelleData {
+  organisme: string;
+  numeroAMC: string;
+  numeroAdherent: string;
+  numeroTeletransmission: string;
+  typeConv: string;
+  dateDebutValidite: string;
+  dateFinValidite: string;
+  nom: string;
+  prenom: string;
+  numeroSecuriteSociale: string;
+  dateNaissance: string;
+  personnes: Personne[];
+}
+
+export interface CorrectionOeil {
+  sphere: string;
+  cylindre: string;
+  axe: string;
+  addition: string;
+}
+
+export interface CorrectionLentille {
+  sphere: string;
+  cylindre: string;
+  axe: string;
+  addition: string;
+  rayonCourbure: string;
+  diametre: string;
+}
+
+export interface OrdonnanceData {
+  nomOphtalmologue: string;
+  nomPatient: string;
+  prenomPatient: string;
+  dateNaissancePatient: string;
+  dateOrdonnance: string;
+  dateValidite: string;
+  distancePupillaire?: string;
+  typePrescription: "lunettes" | "lentilles" | "les deux";
+  lunettesOD: CorrectionOeil;
+  lunettesOG: CorrectionOeil;
+  lentillesOD: CorrectionLentille;
+  lentillesOG: CorrectionLentille;
+  remarques: string;
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function clean(s: string): string {

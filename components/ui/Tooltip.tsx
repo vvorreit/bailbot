@@ -17,7 +17,7 @@ const positionClasses: Record<string, string> = {
 export function Tooltip({ content, children, position = "top" }: TooltipProps) {
   const [visible, setVisible] = useState(false);
   const tooltipId = useId();
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   function show() {
     clearTimeout(timeoutRef.current);

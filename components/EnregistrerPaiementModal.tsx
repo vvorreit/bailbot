@@ -6,7 +6,7 @@ import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { creerPaiement, listerPaiements, type Bien } from '@/lib/db-local';
 import { useMessageTemplate, interpolerTemplate } from '@/hooks/useMessageTemplate';
 import { envoyerRelanceLoyer } from '@/app/actions/envoyer-relance';
-import type { MessageTemplate } from '@/app/actions/templates';
+import type { MessageTemplateDTO as MessageTemplate } from '@/app/actions/templates';
 
 interface Props {
   biens: Bien[];

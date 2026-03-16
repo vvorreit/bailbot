@@ -192,7 +192,7 @@ function uuid(): string {
 
 export async function creerBien(bien: Omit<Bien, 'id' | 'createdAt'>): Promise<Bien> {
   const db = await getDB();
-  const record: Bien = { typeBail: 'HABITATION_VIDE', ...bien, id: uuid(), createdAt: Date.now() };
+  const record: Bien = { ...bien, typeBail: bien.typeBail ?? 'HABITATION_VIDE', id: uuid(), createdAt: Date.now() };
   await db.put('biens', record);
   return record;
 }

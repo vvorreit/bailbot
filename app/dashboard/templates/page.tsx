@@ -17,7 +17,7 @@ import {
   deleteTemplate,
   duplicateTemplate,
   resetTemplates,
-  type MessageTemplate,
+  type MessageTemplateDTO as MessageTemplate,
 } from "@/app/actions/templates";
 import TemplateEditor from "@/components/TemplateEditor";
 

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { X, Eye, Code, Save } from "lucide-react";
-import { type MessageTemplate } from "@/app/actions/templates";
+import { type MessageTemplateDTO as MessageTemplate } from "@/app/actions/templates";
 import { interpolerTemplate } from "@/hooks/useMessageTemplate";
 
 const VARIABLES_DISPONIBLES = [
