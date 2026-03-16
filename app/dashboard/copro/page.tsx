@@ -608,8 +608,10 @@ function CoproContent() {
         </div>
 
         {docsFiltres.length === 0 ? (
-          <div className="px-6 py-12 text-center text-sm text-slate-400">
-            Aucun document pour {anneeFiltre}
+          <div className="px-6 py-12 text-center space-y-3">
+            <Building2 className="w-10 h-10 text-slate-200 mx-auto" />
+            <p className="text-sm font-semibold text-slate-400">Aucun relevé de charges pour {anneeFiltre}</p>
+            <p className="text-xs text-slate-300 max-w-xs mx-auto">Importez un appel de charges de votre syndic (PDF) via le bouton ci-dessus pour analyser automatiquement vos postes de dépenses.</p>
           </div>
         ) : (
           <div className="divide-y divide-slate-50">
