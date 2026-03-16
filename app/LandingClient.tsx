@@ -364,6 +364,9 @@ export default function LandingClient() {
             <h3 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900">
               BailBot fait tout ce que vous devez faire — automatiquement.
             </h3>
+            <p className="text-lg text-slate-500 font-medium mt-6 max-w-2xl mx-auto">
+              Moins de charge mentale. Plus de sérénité. Vos locations gèrent elles-mêmes.
+            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((f, i) => (
