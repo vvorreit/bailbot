@@ -428,7 +428,7 @@ export default function Dashboard() {
                     disabled={isStripeLoading !== null}
                     className="w-full px-3 py-2 rounded-xl bg-slate-100 text-slate-700 text-[11px] font-black hover:bg-slate-200 transition-colors disabled:opacity-50"
                   >
-                    {isStripeLoading === "DUO" ? "Chargement..." : "Agence — 49€/user/mois"}
+                    {isStripeLoading === "DUO" ? "Chargement..." : "Premium — 49€/user/mois"}
                   </button>
                 </div>
               </>
@@ -466,7 +466,7 @@ export default function Dashboard() {
                     disabled={isStripeLoading !== null}
                     className="w-full px-3 py-2 rounded-xl bg-slate-100 text-slate-700 text-[11px] font-black hover:bg-slate-200 transition-colors disabled:opacity-50"
                   >
-                    {isStripeLoading === "DUO" ? "Chargement..." : "Passer Agence — 49€/user/mois"}
+                    {isStripeLoading === "DUO" ? "Chargement..." : "Passer Premium — 49€/user/mois"}
                   </button>
                 )}
               </div>

@@ -15,18 +15,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
-      url: "https://bailbot.fr/agence",
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.9,
-    },
-    {
-      url: "https://bailbot.fr/pro",
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.9,
-    },
-    {
       url: "https://bailbot.fr/legal/cgu",
       lastModified: new Date(),
       changeFrequency: "yearly",

@@ -255,7 +255,7 @@ export default function AdminDashboard() {
         {tab === "analytics" && analytics && (
           <div className="space-y-8">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              <KpiCard label="MRR estimé" value={`${analytics.mrrEstimate.toLocaleString("fr-FR", { minimumFractionDigits: 0 })} €`} sub="base €32.90/Pro" icon={Euro} color="green" />
+              <KpiCard label="MRR estimé" value={`${analytics.mrrEstimate.toLocaleString("fr-FR", { minimumFractionDigits: 0 })} €`} sub="base €9.90/Particulier" icon={Euro} color="green" />
               <KpiCard label="Utilisateurs" value={analytics.totalUsers} sub={`+${analytics.newThisMonth} ce mois`} icon={Users} color="blue" trend={{ value: analytics.newThisMonth - analytics.newLastMonth, label: "vs mois préc." }} />
               <KpiCard label="Comptes Pro" value={analytics.proUsers} icon={CreditCard} color="indigo" />
               <KpiCard label="Conversion" value={`${analytics.conversionRate}%`} sub="Free → Pro" icon={TrendingUp} color="purple" />

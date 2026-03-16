@@ -168,7 +168,7 @@ export default function DepotPage() {
           <CheckCircle2 className="w-14 h-14 text-emerald-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-slate-900 mb-2">Dépôt validé</h1>
           <p className="text-slate-500">
-            Vos documents ont été transmis de manière chiffrée. L'agence va les traiter sous peu.
+            Vos documents ont été transmis de manière chiffrée. Le propriétaire va les traiter sous peu.
           </p>
           <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-sm text-emerald-700 font-semibold">
             Votre dossier a été envoyé avec succès. Nous vous recontactons sous 48h.
@@ -212,7 +212,7 @@ export default function DepotPage() {
           )}
           {!cle && (
             <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-700">
-              ⚠️ Clé de chiffrement manquante. Utilisez le lien complet fourni par l'agence.
+              ⚠️ Clé de chiffrement manquante. Utilisez le lien complet fourni par le propriétaire.
             </div>
           )}
         </div>
@@ -287,7 +287,7 @@ export default function DepotPage() {
           <Shield className="w-5 h-5 mt-0.5 shrink-0 text-emerald-600" />
           <p>
             <strong>Vos documents sont chiffrés dans votre navigateur avant envoi.</strong>{' '}
-            Personne ne peut les lire en transit — ni BailBot, ni des tiers. Seule l'agence peut les déchiffrer.
+            Personne ne peut les lire en transit — ni BailBot, ni des tiers. Seul le propriétaire peut les déchiffrer.
           </p>
         </div>
 

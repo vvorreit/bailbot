@@ -80,7 +80,7 @@ export default function DossierFacileConnectPage() {
               <div>
                 <p className="font-semibold text-slate-800">Informations à fournir</p>
                 <ul className="text-xs mt-1 space-y-1 list-disc list-inside text-slate-500">
-                  <li>Nom de l'organisation : BailBot / Nom de votre agence</li>
+                  <li>Nom de l'organisation : BailBot</li>
                   <li>URL de la plateforme : https://bailbot.fr</li>
                   <li>
                     Redirect URI :{" "}

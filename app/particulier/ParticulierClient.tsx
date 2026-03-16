@@ -199,7 +199,7 @@ export default function ParticulierClient() {
               <p className="text-slate-500 font-medium mt-4">Commencez gratuitement — 3 dossiers inclus sans carte bancaire.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
               {/* Plan Occasion */}
               <div className="p-10 rounded-[40px] border border-slate-200 bg-white flex flex-col group hover:shadow-2xl transition-all duration-500">
                 <h3 className="text-2xl font-black mb-2 uppercase tracking-tight text-slate-900">Occasion</h3>
@@ -266,39 +266,6 @@ export default function ParticulierClient() {
                 </Link>
               </div>
 
-              {/* Plan Pro Agence */}
-              <div className="p-10 rounded-[40px] border border-slate-200 bg-white flex flex-col group hover:shadow-2xl transition-all duration-500">
-                <h3 className="text-2xl font-black mb-2 uppercase tracking-tight text-slate-900">
-                  Pro <span className="text-emerald-600">Agence</span>
-                </h3>
-                <p className="text-slate-500 text-sm mb-8 font-medium italic">Pour les agences immobilières.</p>
-                <div className="mb-8">
-                  <div className="text-5xl font-black text-slate-900">
-                    59€
-                    <span className="text-lg text-slate-400 font-bold">/mois</span>
-                  </div>
-                </div>
-                <ul className="space-y-4 mb-10 flex-grow">
-                  {[
-                    "Multi-utilisateurs",
-                    "CRM Kanban",
-                    "Stats avancées",
-                    "Portail dépôt locataire",
-                    "Support prioritaire",
-                  ].map((f) => (
-                    <li key={f} className="flex items-center gap-3 text-sm font-bold text-slate-700">
-                      <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" aria-hidden="true" /> {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="/dashboard"
-                  aria-label="Essayer le plan Premium BailBot"
-                  className="w-full py-4 bg-slate-100 text-slate-700 font-black rounded-2xl hover:bg-slate-200 transition-all text-center uppercase tracking-widest text-xs"
-                >
-                  Essayer Premium →
-                </Link>
-              </div>
             </div>
           </div>
         </section>
@@ -328,8 +295,8 @@ export default function ParticulierClient() {
                 answer="Le bail suit le modèle légal loi ALUR. Il doit être signé par les deux parties pour être valable. Nous recommandons une relecture par un professionnel juridique en cas de doute."
               />
               <FAQItem
-                question="Puis-je passer au plan Pro plus tard ?"
-                answer="Oui, à tout moment depuis votre compte. Vos dossiers existants sont conservés et vous bénéficiez immédiatement des fonctionnalités Pro."
+                question="Puis-je changer de formule plus tard ?"
+                answer="Oui, à tout moment depuis votre compte. Vos dossiers existants sont conservés et vous bénéficiez immédiatement des fonctionnalités de votre nouvelle formule."
               />
             </div>
           </div>
