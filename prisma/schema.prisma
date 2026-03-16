@@ -815,20 +815,38 @@ model PretImmobilier {
 // ─── Signature Electronique ──────────────────────────────────────────────────
 
 model SignatureRequest {
-  id            String    @id @default(cuid())
-  userId        String
-  documentType  String    // "bail" | "edl"
-  documentId    String
-  token         String    @unique @default(cuid())
-  signataire    String
-  email         String
-  signatureData String?   @db.Text
-  signedAt      DateTime?
-  expiresAt     DateTime
-  createdAt     DateTime  @default(now())
+  id               String    @id @default(cuid())
+  userId           String
+  documentType     String    // "bail" | "edl"
+  documentId       String
+  token            String    @unique @default(cuid())
+  signataire       String
+  email            String
+  signatureData    String?   @db.Text
+  signedAt         DateTime?
+  expiresAt        DateTime
+  createdAt        DateTime  @default(now())
+  yousignRequestId String?   @unique
+  yousignStatus    String?   // "ongoing" | "done" | "refused" | "expired"
+  certificatUrl    String?
 
   @@index([userId])
   @@index([documentId])
+}
+
+// ─── Monitoring Cron ──────────────────────────────────────────────────────────
+
+model CronRun {
+  id         String    @id @default(cuid())
+  cronName   String
+  status     String    // "SUCCESS" | "FAILURE" | "RUNNING"
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  result     Json?
+  error      String?
+
+  @@index([cronName])
+  @@index([startedAt])
 }
 
 // ─── Coffre-fort Documentaire ────────────────────────────────────────────────

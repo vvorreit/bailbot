@@ -35,9 +35,9 @@ export default function SignatureModal({ documentType, documentId, onClose, onSu
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <div className="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md">
         <div className="flex items-center justify-between p-5 border-b border-slate-100">
           <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
             <PenTool className="w-5 h-5 text-emerald-600" />
@@ -55,6 +55,7 @@ export default function SignatureModal({ documentType, documentId, onClose, onSu
             </div>
             <p className="text-sm font-bold text-slate-900 mb-1">Lien de signature envoye</p>
             <p className="text-xs text-slate-500">Un email a ete envoye a {email}</p>
+            <p className="text-[10px] text-slate-400 mt-1">Signature electronique avancee eIDAS — prestataire certifie Yousign</p>
             <button
               onClick={onClose}
               className="mt-4 px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700"
