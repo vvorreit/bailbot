@@ -73,7 +73,6 @@ model User {
 
   rechercheMasquee Boolean @default(false)
   onboardingCompleted Boolean @default(false)
-  pushSubscriptions   Json    @default("[]")
 
   // Profil bailleur (rempli a l'onboarding)
   telephone      String?
@@ -82,12 +81,12 @@ model User {
   bailleurAdresse String?
   siret          String?
 
-  messageTemplates Json? @default("[]") // US 25 — modèles de message personnalisables
-
-  profilBailleur Json? // US 18 — profil bailleur complet pour pré-remplissage PDF
-
   createdAt     DateTime  @default(now())
   lastActiveAt  DateTime  @default(now())
+
+  pushSubscriptionRows PushSubscription[]
+  messageTemplateRows  MessageTemplate[]
+  profilBailleurRow    ProfilBailleurTable?
 
   @@index([teamId])
   @@index([role])
@@ -239,6 +238,7 @@ model BailActif {
   motifSortie         String?
   assigneA            String?     // US 23 — userId du collaborateur assigné
   tokenProprietaire   String?     @unique // US 24 — token portail propriétaire
+  tokenProprietaireExpiresAt DateTime? // Expiration du token propriétaire
   createdAt           DateTime    @default(now())
   alertes             AlerteBail[]
   quittancesAuto      QuittanceAuto[]
@@ -564,4 +564,50 @@ model RelanceLoyer {
   @@index([userId])
   @@index([bailId])
   @@index([bienId])
+}
+
+// ─── Tables migrées depuis JSON blobs User ──────────────────────────────────
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model MessageTemplate {
+  id        String   @id @default(cuid())
+  userId    String
+  nom       String
+  type      String
+  sujet     String
+  corps     String
+  variables String[] @default([])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model ProfilBailleurTable {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  nom        String?
+  prenom     String?
+  adresse    String?
+  codePostal String?
+  ville      String?
+  telephone  String?
+  email      String?
+  siret      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

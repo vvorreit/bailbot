@@ -37,6 +37,25 @@ export default async function PortailProprietairePage({ params }: { params: Prom
 
   if (!data) notFound();
 
+  if ('expired' in data && data.expired) {
+    return (
+      <main className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100 max-w-md text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h1 className="text-xl font-black text-slate-900 mb-2">Lien expire</h1>
+          <p className="text-sm text-slate-500">
+            Ce lien d&apos;acces au portail proprietaire a expire. Contactez votre gestionnaire pour obtenir un nouveau lien.
+          </p>
+          <p className="text-xs text-slate-400 mt-6">BailBot — Gestion locative simplifiee</p>
+        </div>
+      </main>
+    );
+  }
+
   const { bien, bail, gestionnaire, revenus, paiements, quittances, alertes } = data;
 
   return (

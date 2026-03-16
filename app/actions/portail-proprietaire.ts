@@ -15,7 +15,7 @@ async function getUserId(): Promise<string> {
 }
 
 /**
- * Génère un token propriétaire pour un bail et retourne le lien.
+ * Génère un token propriétaire pour un bail avec expiration 1 an.
  */
 export async function genererTokenProprietaire(bailId: string) {
   const userId = await getUserId();
@@ -23,14 +23,74 @@ export async function genererTokenProprietaire(bailId: string) {
   if (!bail) throw new Error("Bail introuvable");
 
   const token = randomBytes(32).toString("hex");
+  const expiresAt = new Date();
+  expiresAt.setFullYear(expiresAt.getFullYear() + 1);
 
   await prisma.bailActif.update({
     where: { id: bailId },
-    data: { tokenProprietaire: token },
+    data: { tokenProprietaire: token, tokenProprietaireExpiresAt: expiresAt },
   });
 
   const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
-  return { token, lien: `${baseUrl}/proprietaire/${token}` };
+  return { token, lien: `${baseUrl}/proprietaire/${token}`, expiresAt: expiresAt.toISOString() };
+}
+
+/**
+ * Renouvelle le token propriétaire (nouveau token + expiration 1 an).
+ */
+export async function renewTokenProprietaire(bailId: string) {
+  const userId = await getUserId();
+  const bail = await prisma.bailActif.findFirst({ where: { id: bailId, userId } });
+  if (!bail) throw new Error("Bail introuvable");
+
+  const token = randomBytes(32).toString("hex");
+  const expiresAt = new Date();
+  expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+
+  await prisma.bailActif.update({
+    where: { id: bailId },
+    data: { tokenProprietaire: token, tokenProprietaireExpiresAt: expiresAt },
+  });
+
+  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  return { token, lien: `${baseUrl}/proprietaire/${token}`, expiresAt: expiresAt.toISOString() };
+}
+
+/**
+ * Révoque le token propriétaire (suppression du lien).
+ */
+export async function revokeTokenProprietaire(bailId: string) {
+  const userId = await getUserId();
+  const bail = await prisma.bailActif.findFirst({ where: { id: bailId, userId } });
+  if (!bail) throw new Error("Bail introuvable");
+
+  await prisma.bailActif.update({
+    where: { id: bailId },
+    data: { tokenProprietaire: null, tokenProprietaireExpiresAt: null },
+  });
+
+  return { success: true };
+}
+
+/**
+ * Récupère les infos du token d'un bail (expiration, lien actif).
+ */
+export async function getTokenInfo(bailId: string) {
+  const userId = await getUserId();
+  const bail = await prisma.bailActif.findFirst({
+    where: { id: bailId, userId },
+    select: { tokenProprietaire: true, tokenProprietaireExpiresAt: true },
+  });
+  if (!bail) throw new Error("Bail introuvable");
+
+  if (!bail.tokenProprietaire) return { active: false, lien: null, expiresAt: null };
+
+  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  return {
+    active: true,
+    lien: `${baseUrl}/proprietaire/${bail.tokenProprietaire}`,
+    expiresAt: bail.tokenProprietaireExpiresAt?.toISOString() ?? null,
+  };
 }
 
 /**
@@ -105,6 +165,11 @@ export async function getPortailProprietaire(token: string) {
   });
 
   if (!bail) return null;
+
+  /* Vérifier expiration du token */
+  if (bail.tokenProprietaireExpiresAt && new Date() > bail.tokenProprietaireExpiresAt) {
+    return { expired: true as const };
+  }
 
   const bien = await prisma.bien.findFirst({ where: { id: bail.bienId } });
   if (!bien) return null;

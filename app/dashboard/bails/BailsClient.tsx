@@ -18,7 +18,12 @@ import {
   Check,
 } from 'lucide-react';
 import { genererBailPDF, type DonneesBail } from '@/lib/generateur-bail';
-import { envoyerLienProprietaire } from '@/app/actions/portail-proprietaire';
+import {
+  envoyerLienProprietaire,
+  getTokenInfo,
+  renewTokenProprietaire,
+  revokeTokenProprietaire,
+} from '@/app/actions/portail-proprietaire';
 import { useSession } from 'next-auth/react';
 import { listerBiens, type Bien } from '@/lib/db-local';
 import CreerBailActifModal from '@/components/CreerBailActifModal';
@@ -567,6 +572,12 @@ function PartagerProprietaireButton({ bailId }: { bailId: string }) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ lien: string; sent: boolean } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [tokenInfo, setTokenInfo] = useState<{ active: boolean; lien: string | null; expiresAt: string | null } | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  useEffect(() => {
+    getTokenInfo(bailId).then(setTokenInfo).catch(() => {});
+  }, [bailId]);
 
   const handleEnvoyer = async () => {
     if (!email) return;
@@ -574,6 +585,7 @@ function PartagerProprietaireButton({ bailId }: { bailId: string }) {
     try {
       const res = await envoyerLienProprietaire(bailId, email);
       setResult({ lien: res.lien, sent: res.sent });
+      getTokenInfo(bailId).then(setTokenInfo).catch(() => {});
     } catch {
       /* ignore */
     } finally {
@@ -581,24 +593,78 @@ function PartagerProprietaireButton({ bailId }: { bailId: string }) {
     }
   };
 
-  const handleCopy = async () => {
-    if (!result?.lien) return;
-    await navigator.clipboard.writeText(result.lien);
+  const handleCopy = async (lien: string) => {
+    await navigator.clipboard.writeText(lien);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const handleRenew = async () => {
+    setActionLoading(true);
+    try {
+      await renewTokenProprietaire(bailId);
+      const info = await getTokenInfo(bailId);
+      setTokenInfo(info);
+      setResult(null);
+    } catch {} finally { setActionLoading(false); }
+  };
+
+  const handleRevoke = async () => {
+    setActionLoading(true);
+    try {
+      await revokeTokenProprietaire(bailId);
+      setTokenInfo({ active: false, lien: null, expiresAt: null });
+      setResult(null);
+    } catch {} finally { setActionLoading(false); }
+  };
+
+  /* Token actif — afficher infos + actions */
+  if (tokenInfo?.active && tokenInfo.lien) {
+    const expiresDate = tokenInfo.expiresAt ? new Date(tokenInfo.expiresAt).toLocaleDateString('fr-FR') : null;
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => handleCopy(tokenInfo.lien!)}
+            className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold rounded-xl hover:bg-blue-100 transition-colors"
+          >
+            {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+            {copied ? 'Copie !' : 'Copier le lien'}
+          </button>
+          <button
+            onClick={handleRenew}
+            disabled={actionLoading}
+            className="px-3 py-2 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 transition-colors disabled:opacity-50"
+          >
+            {actionLoading ? '...' : 'Renouveler'}
+          </button>
+          <button
+            onClick={handleRevoke}
+            disabled={actionLoading}
+            className="px-3 py-2 text-xs font-bold text-red-700 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors disabled:opacity-50"
+          >
+            {actionLoading ? '...' : 'Revoquer'}
+          </button>
+        </div>
+        {expiresDate && (
+          <p className="text-[10px] text-slate-400">Expire le {expiresDate}</p>
+        )}
+        {result?.sent && <span className="text-[10px] text-emerald-600 font-bold">Email envoye</span>}
+      </div>
+    );
+  }
 
   if (result) {
     return (
       <div className="flex items-center gap-2">
         <button
-          onClick={handleCopy}
+          onClick={() => handleCopy(result.lien)}
           className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold rounded-xl hover:bg-blue-100 transition-colors"
         >
           {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
-          {copied ? 'Copié !' : 'Copier le lien'}
+          {copied ? 'Copie !' : 'Copier le lien'}
         </button>
-        {result.sent && <span className="text-[10px] text-emerald-600 font-bold">Email envoyé</span>}
+        {result.sent && <span className="text-[10px] text-emerald-600 font-bold">Email envoye</span>}
       </div>
     );
   }
@@ -634,7 +700,7 @@ function PartagerProprietaireButton({ bailId }: { bailId: string }) {
       className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-bold rounded-xl transition-colors border border-blue-200"
     >
       <Share2 className="w-4 h-4" />
-      Portail propriétaire
+      Portail proprietaire
     </button>
   );
 }
