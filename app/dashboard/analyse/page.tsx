@@ -36,7 +36,7 @@ import {
   createPortalSession,
   generateAutofillPayload,
   upgradePlan,
-} from "./actions";
+} from "../actions";
 import { Copy, FileText, ShieldCheck, Building2 } from "lucide-react";
 import GenerateurBailModal from "@/components/GenerateurBailModal";
 import ImprimerDossier from "@/components/ImprimerDossier";
