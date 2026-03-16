@@ -5,14 +5,15 @@ import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Building2, FileSearch, Home, FileSignature, Banknote, Calculator,
-  Users, MessageSquare, ClipboardList, Wrench, Layers, BarChart2,
-  Settings, ShieldCheck, CreditCard, LogOut, ChevronsLeft, ChevronsRight,
-  Menu, X, TrendingUp, Mail, Lock, Bell, Stethoscope,
+  Building2, FileSearch, Home, FileSignature, Banknote,
+  Users, Wrench, Settings, ShieldCheck, CreditCard, LogOut,
+  ChevronsLeft, ChevronsRight, Menu, X, TrendingUp, Mail,
+  Calendar,
 } from "lucide-react";
 import { createPortalSession } from "@/app/dashboard/actions";
 import MessageTemplates from "@/components/MessageTemplates";
 import RevisionLoyerModal from "@/components/RevisionLoyerModal";
+import NotificationCenter from "@/components/NotificationCenter";
 import { getNbImpayes } from "@/app/actions/stats-nav";
 import { getNbDiagnosticsExpires } from "@/app/actions/diagnostics-gestion";
 import { hasAccess, METIER_LABELS } from "@/lib/features";
@@ -21,9 +22,12 @@ import type { LucideIcon } from "lucide-react";
 
 const SIDEBAR_KEY = "sidebar-collapsed";
 
-interface NavGroup {
+interface NavItem {
+  href: string;
   label: string;
-  items: { href: string; label: string; icon: LucideIcon; badge?: number; show: boolean }[];
+  icon: LucideIcon;
+  badge?: number;
+  show: boolean;
 }
 
 export default function Sidebar() {
@@ -39,9 +43,8 @@ export default function Sidebar() {
 
   const user = session?.user as any;
   const isAdmin = user?.role === "ADMIN";
-  const showTeam = Boolean(session);
-  const isPro = user?.isPro;
   const metier = user?.metier ?? null;
+  const isPro = user?.isPro;
 
   useEffect(() => {
     const stored = localStorage.getItem(SIDEBAR_KEY);
@@ -80,56 +83,25 @@ export default function Sidebar() {
   const isActive = (href: string) =>
     pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
 
-  const navGroups: NavGroup[] = [
-    {
-      label: "CANDIDATURES",
-      items: [
-        { href: "/dashboard/analyse", label: "Analyser un dossier", icon: FileSearch, show: true },
-        { href: "/dashboard/depot", label: "Tous les candidats", icon: Users, show: true },
-      ],
-    },
-    {
-      label: "BIENS",
-      items: [
-        { href: "/dashboard", label: "Mes biens", icon: Home, show: hasAccess(metier, "MES_LOGEMENTS") },
-        { href: "/dashboard/copro", label: "Copropriete", icon: Building2, show: hasAccess(metier, "ANALYSE_COPRO") },
-      ],
-    },
-    {
-      label: "GESTION",
-      items: [
-        { href: "/dashboard/bails", label: "Baux actifs", icon: FileSignature, show: hasAccess(metier, "VIE_DU_BAIL") },
-        { href: "/dashboard/impayes", label: "Paiements & impayes", icon: Banknote, badge: nbImpayes, show: hasAccess(metier, "DASHBOARD_IMPAYES") || hasAccess(metier, "SUIVI_PAIEMENTS") },
-        { href: "/dashboard/comptabilite", label: "Comptabilite", icon: Calculator, show: hasAccess(metier, "COMPTABILITE_FISCALE") },
-        { href: "/dashboard/finances", label: "Finances & rendements", icon: TrendingUp, show: hasAccess(metier, "COMPTABILITE_FISCALE") },
-        { href: "/dashboard/espaces-locataires", label: "Demandes locataires", icon: MessageSquare, show: hasAccess(metier, "ESPACE_LOCATAIRE") },
-      ],
-    },
-    {
-      label: "OUTILS",
-      items: [
-        { href: "/dashboard/etats-des-lieux", label: "Etats des lieux", icon: ClipboardList, show: hasAccess(metier, "ETAT_DES_LIEUX") },
-        { href: "/dashboard/diagnostics", label: "Diagnostics", icon: Stethoscope, badge: nbDiagExpires, show: hasAccess(metier, "DIAGNOSTICS") },
-        { href: "/dashboard/travaux", label: "Travaux", icon: Wrench, show: hasAccess(metier, "MES_LOGEMENTS") },
-        { href: "/dashboard/multi", label: "Multi-dossiers", icon: Layers, show: hasAccess(metier, "KANBAN_CANDIDATS") },
-        { href: "/dashboard/stats", label: "Statistiques", icon: BarChart2, show: hasAccess(metier, "STATS_DASHBOARD") },
-      ],
-    },
-    {
-      label: "COMPTE",
-      items: [
-        { href: "/dashboard/account", label: "Parametres", icon: Settings, show: true },
-        { href: "/dashboard/team", label: "Equipe", icon: Users, show: showTeam && hasAccess(metier, "MULTI_USERS") },
-        ...(isAdmin ? [{ href: "/admin", label: "Administration", icon: ShieldCheck, show: true }] : []),
-      ],
-    },
+  /* ─── 5 main entries + Agenda ─────────────────────────────────────────── */
+  const mainNav: NavItem[] = [
+    { href: "/dashboard", label: "Biens", icon: Home, show: hasAccess(metier, "MES_LOGEMENTS") },
+    { href: "/dashboard/candidatures", label: "Candidatures", icon: FileSearch, show: true },
+    { href: "/dashboard/bails", label: "Baux & Locataires", icon: FileSignature, badge: nbImpayes > 0 ? nbImpayes : undefined, show: hasAccess(metier, "VIE_DU_BAIL") },
+    { href: "/dashboard/finances", label: "Finances", icon: TrendingUp, show: hasAccess(metier, "COMPTABILITE_FISCALE") || hasAccess(metier, "SUIVI_PAIEMENTS") },
+    { href: "/dashboard/propriete", label: "Propriete", icon: Wrench, badge: nbDiagExpires > 0 ? nbDiagExpires : undefined, show: hasAccess(metier, "MES_LOGEMENTS") },
+    { href: "/dashboard/agenda", label: "Agenda", icon: Calendar, show: true },
   ];
 
-  const visibleGroups = navGroups
-    .map((g) => ({ ...g, items: g.items.filter((i) => i.show) }))
-    .filter((g) => g.items.length > 0);
+  const accountNav: NavItem[] = [
+    { href: "/dashboard/account", label: "Parametres", icon: Settings, show: true },
+    ...(isAdmin ? [{ href: "/admin", label: "Administration", icon: ShieldCheck, show: true }] : []),
+  ];
 
-  function NavItem({ href, label, icon: Icon, badge, onClick }: {
+  const visibleMain = mainNav.filter((i) => i.show);
+  const visibleAccount = accountNav.filter((i) => i.show);
+
+  function NavItemComponent({ href, label, icon: Icon, badge, onClick }: {
     href: string; label: string; icon: LucideIcon; badge?: number; onClick?: () => void;
   }) {
     const active = isActive(href);
@@ -208,30 +180,26 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-4" aria-label="Navigation principale">
-        {visibleGroups.map((group) => (
-          <div key={group.label}>
-            {(!isCollapsed || mobileOpen) && (
-              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-3 py-1 mb-1">
-                {group.label}
-              </p>
-            )}
-            {isCollapsed && !mobileOpen && group !== visibleGroups[0] && (
-              <div className="mx-3 mb-2 border-t border-slate-100" />
-            )}
-            <div className="space-y-0.5">
-              {group.items.map((item) => (
-                <NavItem
-                  key={item.href}
-                  href={item.href}
-                  label={item.label}
-                  icon={item.icon}
-                  badge={item.badge}
-                  onClick={() => setMobileOpen(false)}
-                />
-              ))}
-            </div>
+        {/* Main navigation */}
+        <div>
+          {(!isCollapsed || mobileOpen) && (
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-3 py-1 mb-1">
+              NAVIGATION
+            </p>
+          )}
+          <div className="space-y-0.5">
+            {visibleMain.map((item) => (
+              <NavItemComponent
+                key={item.href}
+                href={item.href}
+                label={item.label}
+                icon={item.icon}
+                badge={item.badge}
+                onClick={() => setMobileOpen(false)}
+              />
+            ))}
           </div>
-        ))}
+        </div>
 
         {/* Quick actions */}
         <div className={`border-t border-slate-100 pt-3 ${isCollapsed && !mobileOpen ? "" : "mt-2"}`}>
@@ -243,11 +211,31 @@ export default function Sidebar() {
           <ActionButton label="Revision IRL" icon={TrendingUp} onClick={() => { setMobileOpen(false); setRevisionOpen(true); }} />
           <ActionButton label="Messages" icon={Mail} onClick={() => { setMobileOpen(false); setMessagesOpen(true); }} />
         </div>
+
+        {/* Account */}
+        <div className={`border-t border-slate-100 pt-3`}>
+          {(!isCollapsed || mobileOpen) && (
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-3 py-1 mb-1">
+              COMPTE
+            </p>
+          )}
+          <div className="space-y-0.5">
+            {visibleAccount.map((item) => (
+              <NavItemComponent
+                key={item.href}
+                href={item.href}
+                label={item.label}
+                icon={item.icon}
+                onClick={() => setMobileOpen(false)}
+              />
+            ))}
+          </div>
+        </div>
       </nav>
 
       {/* User section at bottom */}
       <div className="border-t border-slate-200 shrink-0">
-        {/* User info */}
+        {/* Notification bell + User info */}
         <div className={`flex items-center gap-3 p-3 ${isCollapsed && !mobileOpen ? "justify-center" : ""}`}>
           <div className="w-8 h-8 bg-gradient-to-tr from-slate-700 to-slate-900 rounded-xl flex items-center justify-center text-white text-xs font-black shrink-0">
             {user?.image ? (
@@ -271,6 +259,7 @@ export default function Sidebar() {
               </div>
             </div>
           )}
+          {(!isCollapsed || mobileOpen) && <NotificationCenter />}
         </div>
 
         {/* Facturation + Deconnexion */}
@@ -329,15 +318,18 @@ export default function Sidebar() {
           </div>
           <span className="text-base font-black text-slate-900">BailBot</span>
         </Link>
-        <Link href="/dashboard/account" className="p-2 -mr-2">
-          <div className="w-8 h-8 bg-gradient-to-tr from-slate-700 to-slate-900 rounded-xl flex items-center justify-center text-white text-xs font-black">
-            {user?.image ? (
-              <img src={user.image} alt="Profil" className="w-8 h-8 rounded-xl object-cover" loading="lazy" />
-            ) : (
-              initials
-            )}
-          </div>
-        </Link>
+        <div className="flex items-center gap-1">
+          <NotificationCenter />
+          <Link href="/dashboard/account" className="p-2 -mr-2">
+            <div className="w-8 h-8 bg-gradient-to-tr from-slate-700 to-slate-900 rounded-xl flex items-center justify-center text-white text-xs font-black">
+              {user?.image ? (
+                <img src={user.image} alt="Profil" className="w-8 h-8 rounded-xl object-cover" loading="lazy" />
+              ) : (
+                initials
+              )}
+            </div>
+          </Link>
+        </div>
       </header>
 
       {/* Mobile overlay */}

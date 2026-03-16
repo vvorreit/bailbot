@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   Building2,
   Home,
@@ -24,8 +25,11 @@ import {
   Bell,
   Banknote,
   MessageSquare,
+  BarChart2,
+  Wallet,
 } from "lucide-react";
 import { FeatureGate } from "@/components/FeatureGate";
+import { getDashboardKPIs } from "@/app/actions/kpi";
 import {
   listerBiens,
   listerCandidatures,
@@ -40,6 +44,9 @@ import {
   type Annexe,
   type TypeAnnexe,
 } from "@/lib/db-local";
+
+const StatsContent = dynamic(() => import("./stats/page"), { ssr: false, loading: () => <div className="flex items-center justify-center py-24"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div> });
+const CoproContent = dynamic(() => import("./copro/page"), { ssr: false, loading: () => <div className="flex items-center justify-center py-24"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div> });
 
 /* ─── Types locaux ────────────────────────────────────────────────────────── */
 
@@ -122,13 +129,112 @@ function formatDate(ts?: number): string {
   return new Date(ts).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
 }
 
-/* ─── Composant Principal ─────────────────────────────────────────────────── */
+/* ─── KPI Band ──────────────────────────────────────────────────────────── */
+
+function KPIBand() {
+  const [kpis, setKpis] = useState<any>(null);
+
+  useEffect(() => {
+    getDashboardKPIs().then(setKpis).catch(() => {});
+  }, []);
+
+  if (!kpis) return null;
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div className="bg-white rounded-2xl border border-slate-100 p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <Wallet className="w-5 h-5" />
+          </div>
+          <span className="text-[10px] font-bold text-slate-400 uppercase">Loyers ce mois</span>
+        </div>
+        <p className="text-xl font-black text-slate-900">
+          {kpis.loyersEncaisses.toLocaleString("fr-FR")} <span className="text-sm font-bold text-slate-400">/ {kpis.loyersAttendus.toLocaleString("fr-FR")} EUR</span>
+        </p>
+      </div>
+      <div className="bg-white rounded-2xl border border-slate-100 p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+            <Home className="w-5 h-5" />
+          </div>
+          <span className="text-[10px] font-bold text-slate-400 uppercase">Taux occupation</span>
+        </div>
+        <p className="text-xl font-black text-slate-900">{kpis.tauxOccupation}%</p>
+      </div>
+      <div className="bg-white rounded-2xl border border-slate-100 p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${kpis.nbImpayes > 0 ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"}`}>
+            <AlertTriangle className="w-5 h-5" />
+          </div>
+          <span className="text-[10px] font-bold text-slate-400 uppercase">Impayes</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <p className={`text-xl font-black ${kpis.nbImpayes > 0 ? "text-red-600" : "text-slate-900"}`}>{kpis.nbImpayes}</p>
+          {kpis.nbImpayes > 0 && (
+            <span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">{kpis.nbImpayes}</span>
+          )}
+        </div>
+      </div>
+      <div className="bg-white rounded-2xl border border-slate-100 p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+            <CalendarClock className="w-5 h-5" />
+          </div>
+          <span className="text-[10px] font-bold text-slate-400 uppercase">Echeances</span>
+        </div>
+        <p className="text-sm font-bold text-slate-700">
+          {kpis.bailsExpirants.length} bail{kpis.bailsExpirants.length > 1 ? "s" : ""}, {kpis.diagsExpirants.length} diag{kpis.diagsExpirants.length > 1 ? "s" : ""}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Composant Principal avec Tabs ─────────────────────────────────────── */
+
+const DASHBOARD_TABS = [
+  { key: "biens", label: "Mes biens", icon: Home },
+  { key: "stats", label: "Statistiques", icon: BarChart2 },
+  { key: "copro", label: "Copropriete", icon: Building2 },
+] as const;
+
+type DashboardTab = (typeof DASHBOARD_TABS)[number]["key"];
 
 export default function LogementsPage() {
+  const [tab, setTab] = useState<DashboardTab>("biens");
+
   return (
-    <FeatureGate feature="MES_LOGEMENTS">
-      <LogementsContent />
-    </FeatureGate>
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      {/* KPI Band */}
+      <KPIBand />
+
+      {/* Tab navigation */}
+      <div className="flex gap-1 mb-6 bg-slate-100 rounded-xl p-1">
+        {DASHBOARD_TABS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors flex-1 justify-center ${
+              tab === t.key
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            <t.icon className="w-4 h-4" />
+            <span className="hidden sm:inline">{t.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {tab === "biens" && (
+        <FeatureGate feature="MES_LOGEMENTS">
+          <LogementsContent />
+        </FeatureGate>
+      )}
+      {tab === "stats" && <StatsContent />}
+      {tab === "copro" && <CoproContent />}
+    </div>
   );
 }
 
@@ -255,7 +361,7 @@ function LogementsContent() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>

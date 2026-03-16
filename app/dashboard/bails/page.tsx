@@ -1,12 +1,7 @@
 export const dynamic = "force-dynamic";
 
-import { FeatureGate } from "@/components/FeatureGate";
-import BailsClient from "./BailsClient";
+import BailsTabsClient from "./BailsTabsClient";
 
 export default function BailsPage() {
-  return (
-    <FeatureGate feature="VIE_DU_BAIL">
-      <BailsClient />
-    </FeatureGate>
-  );
+  return <BailsTabsClient />;
 }
