@@ -13,8 +13,9 @@ import {
 
 async function getUser() {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.email) throw new Error("Non autorise");
-  const user = await prisma.user.findUnique({ where: { email: session.user.email } });
+  const userId = (session?.user as any)?.id;
+  if (!userId) throw new Error("Non autorise");
+  const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw new Error("Utilisateur introuvable");
   return user;
 }
