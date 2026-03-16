@@ -8,8 +8,10 @@ import {
   Building2, FileSearch, Home, FileSignature, Banknote,
   Users, Wrench, Settings, ShieldCheck, CreditCard, LogOut,
   ChevronsLeft, ChevronsRight, Menu, X, TrendingUp, Mail,
-  Calendar, Search, BookOpen,
+  Calendar, Search, BookOpen, MessageSquarePlus,
 } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
+import QuickMessageDrawer from "@/components/QuickMessageDrawer";
 import { createPortalSession } from "@/app/dashboard/actions";
 import MessageTemplates from "@/components/MessageTemplates";
 import RevisionLoyerModal from "@/components/RevisionLoyerModal";
@@ -41,6 +43,7 @@ export default function Sidebar() {
   const [messagesOpen, setMessagesOpen] = useState(false);
   const [revisionOpen, setRevisionOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [quickMessageOpen, setQuickMessageOpen] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
 
   const user = session?.user as any;
@@ -63,6 +66,10 @@ export default function Sidebar() {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setSearchOpen(true);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === "m") {
+        e.preventDefault();
+        setQuickMessageOpen((prev) => !prev);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -229,6 +236,7 @@ export default function Sidebar() {
           )}
           <ActionButton label="Revision IRL" icon={TrendingUp} onClick={() => { setMobileOpen(false); setRevisionOpen(true); }} />
           <ActionButton label="Messages" icon={Mail} onClick={() => { setMobileOpen(false); setMessagesOpen(true); }} />
+          <ActionButton label="Message rapide" icon={MessageSquarePlus} onClick={() => { setMobileOpen(false); setQuickMessageOpen(true); }} />
         </div>
 
         {/* Account */}
@@ -302,12 +310,13 @@ export default function Sidebar() {
           </div>
         )}
 
-        {/* Collapse toggle — desktop only */}
-        <div className="hidden md:block border-t border-slate-100">
+        {/* Collapse toggle + Theme toggle — desktop only */}
+        <div className="hidden md:flex items-center justify-between border-t border-slate-100 px-2">
+          <ThemeToggle />
           <button
             onClick={toggleCollapse}
             aria-label={isCollapsed ? "Ouvrir la sidebar" : "Replier la sidebar"}
-            className="flex items-center justify-center w-full py-2.5 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors"
+            className="flex items-center justify-center py-2.5 px-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors"
           >
             {isCollapsed ? (
               <ChevronsRight className="w-4 h-4" />
@@ -393,6 +402,7 @@ export default function Sidebar() {
       {messagesOpen && <MessageTemplates onClose={() => setMessagesOpen(false)} />}
       {revisionOpen && <RevisionLoyerModal onClose={() => setRevisionOpen(false)} />}
       {searchOpen && <SearchGlobal onClose={() => setSearchOpen(false)} />}
+      <QuickMessageDrawer open={quickMessageOpen} onClose={() => setQuickMessageOpen(false)} />
     </>
   );
 }

@@ -27,9 +27,12 @@ import {
   MessageSquare,
   BarChart2,
   Wallet,
+  Activity,
 } from "lucide-react";
 import { FeatureGate } from "@/components/FeatureGate";
 import { getDashboardKPIs } from "@/app/actions/kpi";
+import { getSantePortfolio } from "@/app/actions/sante-locative";
+import type { SanteResult, ScoreSante } from "@/lib/sante-locative";
 import {
   listerBiens,
   listerCandidatures,
@@ -246,6 +249,7 @@ function LogementsContent() {
   const [editBien, setEditBien] = useState<BienEnrichi | null>(null);
   const [nbDemandesNouv, setNbDemandesNouv] = useState(0);
   const [allPaiements, setAllPaiements] = useState<Paiement[]>([]);
+  const [santeMap, setSanteMap] = useState<Record<string, SanteResult>>({});
 
   const loadBiens = useCallback(async () => {
     try {
@@ -277,7 +281,7 @@ function LogementsContent() {
 
   useEffect(() => { loadBiens(); }, [loadBiens]);
 
-  // Charger les paiements globaux et les demandes locataires
+  // Charger les paiements globaux, les demandes locataires et la santé locative
   useEffect(() => {
     listerPaiements().then(setAllPaiements).catch(() => {});
     fetch("/api/espaces-locataires")
@@ -289,6 +293,13 @@ function LogementsContent() {
           0
         );
         setNbDemandesNouv(nb);
+      })
+      .catch(() => {});
+    getSantePortfolio()
+      .then((results) => {
+        const map: Record<string, SanteResult> = {};
+        for (const r of results) map[r.bienId] = r;
+        setSanteMap(map);
       })
       .catch(() => {});
   }, []);
@@ -310,6 +321,14 @@ function LogementsContent() {
     const tauxGlobal = total > 0 ? Math.round((loues / total) * 100) : 0;
     return { total, loues, vacants, revenusMensuels, tauxGlobal };
   }, [biens]);
+
+  const santeStats = useMemo(() => {
+    const entries = Object.values(santeMap);
+    const vert = entries.filter((s) => s.score === "VERT").length;
+    const orange = entries.filter((s) => s.score === "ORANGE").length;
+    const rouge = entries.filter((s) => s.score === "ROUGE").length;
+    return { vert, orange, rouge, total: entries.length };
+  }, [santeMap]);
 
   /* ─── Vue d'ensemble — Loyers du mois ────────────────────────────────── */
   const loyersMois = useMemo(() => {
@@ -402,6 +421,33 @@ function LogementsContent() {
           color={stats.vacants > 0 ? "red" : "slate"}
         />
       </div>
+
+      {/* Santé locative KPI */}
+      {santeStats.total > 0 && (
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="bg-white rounded-2xl border border-slate-100 p-4 flex items-center gap-3">
+            <span className="w-3 h-3 rounded-full bg-emerald-500 shrink-0" />
+            <div>
+              <p className="text-lg font-black text-slate-900">{santeStats.vert}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">En bonne santé</p>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl border border-slate-100 p-4 flex items-center gap-3">
+            <span className="w-3 h-3 rounded-full bg-amber-500 shrink-0" />
+            <div>
+              <p className="text-lg font-black text-slate-900">{santeStats.orange}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">Attention</p>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl border border-slate-100 p-4 flex items-center gap-3">
+            <span className="w-3 h-3 rounded-full bg-red-500 shrink-0" />
+            <div>
+              <p className="text-lg font-black text-slate-900">{santeStats.rouge}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">Alerte</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Vue d'ensemble */}
       {biens.length > 0 && (
@@ -528,6 +574,7 @@ function LogementsContent() {
             <BienCard
               key={bien.id}
               bien={bien}
+              sante={santeMap[bien.id]}
               onSupprimer={() => handleSupprimer(bien.id)}
               onModifier={() => { setEditBien(bien); setShowAjout(true); }}
             />
@@ -582,12 +629,20 @@ function StatCard({
 
 /* ─── Bien Card ───────────────────────────────────────────────────────────── */
 
+const SANTE_COLORS: Record<ScoreSante, { dot: string; label: string }> = {
+  VERT: { dot: "bg-emerald-500", label: "Bonne santé" },
+  ORANGE: { dot: "bg-amber-500", label: "Attention" },
+  ROUGE: { dot: "bg-red-500", label: "Alerte" },
+};
+
 function BienCard({
   bien,
+  sante,
   onSupprimer,
   onModifier,
 }: {
   bien: BienEnrichi;
+  sante?: SanteResult;
   onSupprimer: () => void;
   onModifier: () => void;
 }) {
@@ -618,6 +673,24 @@ function BienCard({
           <span className="text-xs font-bold text-slate-400">{TYPE_LABELS[bien.typeBail] || bien.typeBail}</span>
         </div>
         <div className="flex items-center gap-2">
+          {sante && (
+            <span
+              className="relative group"
+              title={sante.details.length > 0 ? sante.details.join('\n') : SANTE_COLORS[sante.score].label}
+            >
+              <span className={`block w-3 h-3 rounded-full ${SANTE_COLORS[sante.score].dot} shrink-0`} />
+              {sante.details.length > 0 && (
+                <div className="hidden group-hover:block absolute right-0 top-full mt-2 w-64 bg-white rounded-xl border border-slate-200 shadow-xl p-3 z-30">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase mb-1.5">{SANTE_COLORS[sante.score].label}</p>
+                  <ul className="space-y-1">
+                    {sante.details.map((d, i) => (
+                      <li key={i} className="text-xs text-slate-600">{d}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </span>
+          )}
           <span className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${cfg.bg} ${cfg.text}`}>
             <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />
             {cfg.label}

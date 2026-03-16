@@ -12,14 +12,14 @@
 }
 
 .dark {
-  --background: #0f172a;
+  --background: #020617;
   --foreground: #f1f5f9;
-  --bg-primary: #0f172a;
-  --bg-card: #1e293b;
+  --bg-primary: #020617;
+  --bg-card: #0f172a;
   --text-primary: #f1f5f9;
   --text-secondary: #94a3b8;
-  --border: #334155;
-  --emerald: #10b981;
+  --border: #1e293b;
+  --emerald: #34d399;
 }
 
 @theme inline {
@@ -38,11 +38,11 @@ body {
 
 /* Dark mode — pages principales et cards */
 .dark .bg-white {
-  background-color: #1e293b !important;
+  background-color: #0f172a !important;
 }
 
 .dark .bg-slate-50 {
-  background-color: #0f172a !important;
+  background-color: #020617 !important;
 }
 
 .dark .bg-slate-100 {
@@ -70,39 +70,198 @@ body {
 }
 
 .dark .border-slate-100 {
-  border-color: #334155 !important;
+  border-color: #1e293b !important;
 }
 
 .dark .border-slate-200 {
-  border-color: #334155 !important;
+  border-color: #1e293b !important;
 }
 
 .dark nav {
-  background-color: #1e293b !important;
-  border-color: #334155 !important;
+  background-color: #0f172a !important;
+  border-color: #1e293b !important;
 }
 
 .dark .shadow-xl {
-  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5), 0 10px 10px -5px rgba(0,0,0,0.3) !important;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.6), 0 10px 10px -5px rgba(0,0,0,0.4) !important;
+}
+
+.dark .shadow-sm {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4) !important;
+}
+
+.dark .shadow-2xl {
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7) !important;
 }
 
 /* Dashboard page */
 .dark [class*="bg-white rounded"] {
-  background-color: #1e293b;
+  background-color: #0f172a;
+}
+
+/* Sidebar & header */
+.dark aside {
+  background-color: #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+.dark header {
+  background-color: #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+/* Primary actions — warm emerald in dark */
+.dark .bg-emerald-600 {
+  background-color: #34d399 !important;
+  color: #022c22 !important;
+}
+
+.dark .bg-emerald-600:hover {
+  background-color: #6ee7b7 !important;
+}
+
+.dark .text-emerald-600 {
+  color: #34d399 !important;
+}
+
+.dark .text-emerald-700 {
+  color: #6ee7b7 !important;
+}
+
+.dark .bg-emerald-50 {
+  background-color: rgba(52, 211, 153, 0.1) !important;
+}
+
+/* Warm accents — amber glow on action buttons */
+.dark .bg-amber-50 {
+  background-color: rgba(251, 191, 36, 0.1) !important;
+}
+
+.dark .text-amber-600 {
+  color: #fbbf24 !important;
+}
+
+.dark .text-amber-700 {
+  color: #fcd34d !important;
+}
+
+/* Red badges — softer rose in dark */
+.dark .bg-red-50 {
+  background-color: rgba(251, 113, 133, 0.1) !important;
+}
+
+.dark .text-red-600 {
+  color: #fb7185 !important;
+}
+
+.dark .text-red-500 {
+  color: #fb7185 !important;
+}
+
+.dark .bg-red-500 {
+  background-color: #f43f5e !important;
+}
+
+.dark .bg-red-100 {
+  background-color: rgba(251, 113, 133, 0.15) !important;
+}
+
+/* Blue tints */
+.dark .bg-blue-50 {
+  background-color: rgba(96, 165, 250, 0.1) !important;
+}
+
+.dark .text-blue-600 {
+  color: #60a5fa !important;
+}
+
+.dark .text-blue-700 {
+  color: #93bbfd !important;
+}
+
+/* Indigo tints */
+.dark .bg-indigo-100 {
+  background-color: rgba(129, 140, 248, 0.15) !important;
+}
+
+.dark .text-indigo-600 {
+  color: #818cf8 !important;
+}
+
+/* Purple tints */
+.dark .bg-purple-50 {
+  background-color: rgba(168, 139, 255, 0.1) !important;
+}
+
+.dark .text-purple-700 {
+  color: #a78bfa !important;
+}
+
+/* Stat card icon backgrounds */
+.dark .bg-slate-50.text-slate-600 {
+  background-color: rgba(148, 163, 184, 0.1) !important;
+}
+
+/* Dropdown / popover menus */
+.dark .bg-white.rounded-xl,
+.dark .bg-white.rounded-2xl {
+  background-color: #0f172a !important;
+}
+
+/* Hover states */
+.dark .hover\:bg-slate-100:hover {
+  background-color: #1e293b !important;
+}
+
+.dark .hover\:bg-slate-50:hover {
+  background-color: #1e293b !important;
+}
+
+/* Badge backgrounds */
+.dark .bg-emerald-100 {
+  background-color: rgba(52, 211, 153, 0.15) !important;
+}
+
+.dark .bg-amber-100 {
+  background-color: rgba(251, 191, 36, 0.15) !important;
+}
+
+.dark .bg-blue-100 {
+  background-color: rgba(96, 165, 250, 0.15) !important;
+}
+
+/* Active nav item */
+.dark .bg-emerald-50.text-emerald-700 {
+  background-color: rgba(52, 211, 153, 0.1) !important;
+}
+
+/* Tab bar */
+.dark .bg-slate-900.text-white {
+  background-color: #1e293b !important;
+}
+
+/* Modal overlay backdrop */
+.dark .bg-black\/40 {
+  background-color: rgba(0, 0, 0, 0.6) !important;
 }
 
 /* Input fields dark mode */
 .dark input,
 .dark select,
 .dark textarea {
-  background-color: #0f172a !important;
+  background-color: #020617 !important;
   color: #f1f5f9 !important;
-  border-color: #334155 !important;
+  border-color: #1e293b !important;
 }
 
 .dark input::placeholder,
 .dark textarea::placeholder {
   color: #475569 !important;
+}
+
+/* Focus rings in dark */
+.dark :focus-visible {
+  outline-color: #34d399;
 }
 
 /* ── Impression dossier A4 ─────────────────────────────────────────────── */

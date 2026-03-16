@@ -17,6 +17,7 @@ import {
   Share2,
   Check,
   TrendingUp,
+  History,
 } from 'lucide-react';
 import EmptyState from '@/components/EmptyState';
 import { genererBailPDF, type DonneesBail } from '@/lib/generateur-bail';
@@ -32,6 +33,7 @@ import { listerBiens, type Bien } from '@/lib/db-local';
 import CreerBailActifModal from '@/components/CreerBailActifModal';
 import ClotureBailModal from '@/components/ClotureBailModal';
 import TimelineBail from '@/components/TimelineBail';
+import TimelineLocataire from '@/components/TimelineLocataire';
 import ConformiteReportWidget, { ConformiteBadge } from '@/components/ConformiteReport';
 import type { ConformiteReport as ConformiteReportType } from '@/lib/conformite/types';
 import AlertesEcheances, { type AlerteDiagnosticUI } from '@/components/AlertesEcheances';
@@ -310,6 +312,7 @@ function BailCard({
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [showClotureModal, setShowClotureModal] = useState(false);
   const [showIRLModal, setShowIRLModal] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(false);
 
   const irlDaysLeft = useMemo(() => {
     const now = new Date();
@@ -468,6 +471,13 @@ function BailCard({
           {/* Actions bail */}
           <div className="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center gap-2 sm:gap-3">
             <button
+              onClick={() => setShowTimeline(true)}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold rounded-xl transition-colors"
+            >
+              <History className="w-4 h-4" />
+              Timeline
+            </button>
+            <button
               onClick={() => setShowPdfModal(true)}
               className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold rounded-xl transition-colors"
             >
@@ -592,6 +602,15 @@ function BailCard({
           onApplied={() => {
             onReload?.();
           }}
+        />
+      )}
+
+      {/* Modal timeline locataire complète */}
+      {showTimeline && (
+        <TimelineLocataire
+          bailId={bail.id}
+          locataireNom={bail.locataireNom}
+          onClose={() => setShowTimeline(false)}
         />
       )}
     </div>
