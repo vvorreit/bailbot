@@ -3,9 +3,16 @@
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
+import { headers } from "next/headers";
 import { getTransporter, smtpConfigured, escapeHtml } from "@/lib/mailer";
 
-export async function registerUser(name: string, email: string, password: string) {
+export async function registerUser(
+  name: string,
+  email: string,
+  password: string,
+  dpaVersion?: string,
+  _clientUserAgent?: string,
+) {
   if (!name || !email || !password) {
     return { error: "Tous les champs sont requis." };
   }
@@ -14,6 +21,18 @@ export async function registerUser(name: string, email: string, password: string
     return { error: "Le mot de passe doit contenir au moins 8 caractères." };
   }
 
+  if (!dpaVersion) {
+    return { error: "Vous devez accepter les conditions générales pour continuer." };
+  }
+
+  // Récupération de l'IP et User-Agent côté serveur (fiable)
+  const reqHeaders = await headers();
+  const ipAddress =
+    reqHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    reqHeaders.get("x-real-ip") ??
+    null;
+  const userAgent = reqHeaders.get("user-agent") ?? null;
+
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
     return { error: "Un compte existe déjà avec cet email." };
@@ -21,8 +40,18 @@ export async function registerUser(name: string, email: string, password: string
 
   const hashed = await bcrypt.hash(password, 12);
 
-  await prisma.user.create({
+  const user = await prisma.user.create({
     data: { name, email, password: hashed },
+  });
+
+  // Enregistrement du consentement légal (RGPD Art. 9 / DPA)
+  await prisma.legalAcceptance.create({
+    data: {
+      userId: user.id,
+      dpaVersion,
+      ipAddress,
+      userAgent,
+    },
   });
 
   // Génération du token de vérification (24h)

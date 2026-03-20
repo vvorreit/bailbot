@@ -4,7 +4,7 @@ import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowRight, Mail } from "lucide-react";
+import { ArrowRight, Mail, CheckSquare, Square } from "lucide-react";
 import { registerUser } from "@/app/actions/auth";
 
 const SIGNUP_METIER_KEY = "bailbot_signup_metier";
@@ -14,6 +14,7 @@ function SignUpForm() {
   const metierParam = searchParams.get("metier");
 
   const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
+  const [dpaAccepted, setDpaAccepted] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
@@ -27,8 +28,18 @@ function SignUpForm() {
       return;
     }
 
+    if (!dpaAccepted) {
+      setError("Vous devez accepter les conditions générales pour continuer.");
+      return;
+    }
+
     setLoading(true);
-    const result = await registerUser(form.name, form.email, form.password);
+    const result = await registerUser(
+      form.name,
+      form.email,
+      form.password,
+      "1.1",
+    );
     if (result.error) {
       setError(result.error);
       setLoading(false);
@@ -151,9 +162,43 @@ function SignUpForm() {
               />
             </div>
 
+            {/* Checkbox CGU / DPA */}
+            <div
+              className="flex items-start gap-3 cursor-pointer select-none"
+              onClick={() => setDpaAccepted((v) => !v)}
+            >
+              <div className="mt-0.5 shrink-0">
+                {dpaAccepted ? (
+                  <CheckSquare className="w-5 h-5 text-emerald-600" />
+                ) : (
+                  <Square className="w-5 h-5 text-slate-300" />
+                )}
+              </div>
+              <p className="text-sm text-slate-500 font-medium leading-snug">
+                J'accepte les{" "}
+                <a
+                  href="/legal/cgu"
+                  target="_blank"
+                  className="text-emerald-600 font-bold hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Conditions Générales d'Utilisation
+                </a>{" "}
+                et la{" "}
+                <a
+                  href="/legal/dpa"
+                  target="_blank"
+                  className="text-emerald-600 font-bold hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Politique de traitement des données (DPA v1.1)
+                </a>
+              </p>
+            </div>
+
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !dpaAccepted}
               className="w-full py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 transition-colors active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
             >
               {loading ? "Création en cours..." : "Créer mon compte"}
