@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
 import { headers } from "next/headers";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { getTransporter, smtpConfigured, escapeHtml } from "@/lib/mailer";
 
 export async function registerUser(
@@ -83,6 +85,40 @@ export async function registerUser(
   } else {
     console.log("SMTP non configuré, lien de vérification :", verifyUrl);
   }
+
+  return { success: true };
+}
+
+/**
+ * Enregistre le consentement DPA/CGU pour un compte OAuth (post-création).
+ * Appelée depuis /auth/dpa-required après le callback Google.
+ */
+export async function acceptDpaOAuth(dpaVersion: string) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    return { error: "Non authentifié." };
+  }
+
+  const userId = (session.user as any).id as string;
+  if (!userId) {
+    return { error: "Session invalide." };
+  }
+
+  const reqHeaders = await headers();
+  const ipAddress =
+    reqHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    reqHeaders.get("x-real-ip") ??
+    null;
+  const userAgent = reqHeaders.get("user-agent") ?? null;
+
+  await prisma.legalAcceptance.create({
+    data: { userId, dpaVersion, ipAddress, userAgent },
+  });
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { needsDpaAcceptance: false },
+  });
 
   return { success: true };
 }

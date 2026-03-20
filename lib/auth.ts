@@ -103,6 +103,7 @@ export const authOptions: NextAuthOptions = {
           token.isPro = dbUser?.isPro || isTeamPro || false;
           token.rechercheMasquee = dbUser?.rechercheMasquee ?? false;
           token.onboardingCompleted = dbUser?.onboardingCompleted ?? false;
+          token.needsDpaAcceptance = dbUser?.needsDpaAcceptance ?? false;
         }
 
         if (trigger === "update" && session) {
@@ -170,6 +171,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).metier = token.metier ?? null;
         (session.user as any).rechercheMasquee = token.rechercheMasquee ?? false;
         (session.user as any).onboardingCompleted = token.onboardingCompleted ?? false;
+        (session.user as any).needsDpaAcceptance = token.needsDpaAcceptance ?? false;
         (session as any).error = token.error;
       }
       return session;
@@ -178,6 +180,26 @@ export const authOptions: NextAuthOptions = {
       if (url.startsWith("/")) return `${baseUrl}${url}`;
       else if (new URL(url).origin === baseUrl) return url;
       return baseUrl;
+    },
+  },
+  events: {
+    // Nouveau compte OAuth → flag DPA requis (le flux email/password gère le consentement au moment du signup)
+    async createUser({ user }) {
+      try {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id! },
+          select: { password: true },
+        });
+        // Pas de password = compte OAuth → DPA non encore accepté
+        if (!dbUser?.password) {
+          await prisma.user.update({
+            where: { id: user.id! },
+            data: { needsDpaAcceptance: true },
+          });
+        }
+      } catch (err) {
+        console.error("[NextAuth] createUser event error:", err);
+      }
     },
   },
   pages: {

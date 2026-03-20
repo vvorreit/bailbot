@@ -94,6 +94,7 @@ model User {
 
   rechercheMasquee Boolean @default(false)
   onboardingCompleted Boolean @default(false)
+  needsDpaAcceptance  Boolean @default(false) // true pour les nouveaux comptes OAuth avant acceptation DPA/CGU
 
   // Profil bailleur (rempli a l'onboarding)
   telephone      String?

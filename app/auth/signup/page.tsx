@@ -15,6 +15,7 @@ function SignUpForm() {
 
   const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
   const [dpaAccepted, setDpaAccepted] = useState(false);
+  const [cguAccepted, setCguAccepted] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
@@ -28,8 +29,8 @@ function SignUpForm() {
       return;
     }
 
-    if (!dpaAccepted) {
-      setError("Vous devez accepter les conditions générales pour continuer.");
+    if (!cguAccepted || !dpaAccepted) {
+      setError("Vous devez accepter les CGU et la politique de traitement des données pour continuer.");
       return;
     }
 
@@ -162,13 +163,13 @@ function SignUpForm() {
               />
             </div>
 
-            {/* Checkbox CGU / DPA */}
+            {/* Checkbox CGU */}
             <div
               className="flex items-start gap-3 cursor-pointer select-none"
-              onClick={() => setDpaAccepted((v) => !v)}
+              onClick={() => setCguAccepted((v) => !v)}
             >
               <div className="mt-0.5 shrink-0">
-                {dpaAccepted ? (
+                {cguAccepted ? (
                   <CheckSquare className="w-5 h-5 text-emerald-600" />
                 ) : (
                   <Square className="w-5 h-5 text-slate-300" />
@@ -183,8 +184,24 @@ function SignUpForm() {
                   onClick={(e) => e.stopPropagation()}
                 >
                   Conditions Générales d'Utilisation
-                </a>{" "}
-                et la{" "}
+                </a>
+              </p>
+            </div>
+
+            {/* Checkbox DPA */}
+            <div
+              className="flex items-start gap-3 cursor-pointer select-none"
+              onClick={() => setDpaAccepted((v) => !v)}
+            >
+              <div className="mt-0.5 shrink-0">
+                {dpaAccepted ? (
+                  <CheckSquare className="w-5 h-5 text-emerald-600" />
+                ) : (
+                  <Square className="w-5 h-5 text-slate-300" />
+                )}
+              </div>
+              <p className="text-sm text-slate-500 font-medium leading-snug">
+                J'accepte la{" "}
                 <a
                   href="/legal/dpa"
                   target="_blank"
@@ -198,7 +215,7 @@ function SignUpForm() {
 
             <button
               type="submit"
-              disabled={loading || !dpaAccepted}
+              disabled={loading || !dpaAccepted || !cguAccepted}
               className="w-full py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 transition-colors active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
             >
               {loading ? "Création en cours..." : "Créer mon compte"}
