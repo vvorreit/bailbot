@@ -727,6 +727,18 @@ export default function LandingClient() {
                   <Link href="/legal/dpa" className="block text-sm text-slate-400 hover:text-white transition-colors font-medium">
                     DPA
                   </Link>
+                  <button
+                    onClick={() => {
+                      if (typeof window !== "undefined") {
+                        localStorage.removeItem("bailbot_analytics_consent");
+                        localStorage.removeItem("bailbot_marketing_consent");
+                        window.location.reload();
+                      }
+                    }}
+                    className="block text-sm text-slate-400 hover:text-white transition-colors font-medium text-left"
+                  >
+                    Gérer mes cookies
+                  </button>
                 </div>
               </div>
               <div>
